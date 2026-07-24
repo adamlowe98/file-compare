@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Local PDF Drawing Analyzer</title>
+    <title>Local PDF & DGN Drawing Analyzer</title>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <style>
       :root {
@@ -249,13 +249,13 @@
   <body>
     <div class="container">
       <header>
-        <h1>PDF Drawing Analyzer</h1>
+        <h1>PDF & DGN Drawing Analyzer</h1>
         <p>Process hundreds of drawings locally. No files are uploaded to any server.</p>
       </header>
 
       <section class="upload-section">
-        <input type="file" id="file-input" multiple accept="application/pdf" />
-        <label for="file-input" class="upload-btn">Select PDF Files</label>
+        <input type="file" id="file-input" multiple accept="application/pdf,.dgn" />
+        <label for="file-input" class="upload-btn">Select PDF & DGN Files</label>
         
         <div id="progress-container" class="hidden progress-wrapper">
           <div class="progress-track">
@@ -323,6 +323,7 @@
 
             <optgroup label="Custom / Bentley Formats">
               <option value="Bentley 1200x1200">Bentley 1200x1200</option>
+              <option value="DGN Source File">DGN Source File</option>
               <option value="NON-STANDARD">Non-Standard / Custom</option>
             </optgroup>
           </select>
@@ -454,7 +455,7 @@
           await new Promise(resolve => setTimeout(resolve, 15));
 
           try {
-            const data = await processSinglePdf(file);
+            const data = await processFile(file);
             allFilesData.push(data);
           } catch (error) {
             console.error(`Error reading ${file.name}:`, error);
@@ -467,7 +468,7 @@
               drawingSize: 'ERROR',
               pageCount: 0,
               orientation: 'UNKNOWN',
-              error: 'Failed to read PDF'
+              error: 'Failed to read file format'
             });
           }
         }
@@ -479,8 +480,25 @@
         renderTable();
       }
 
-      async function processSinglePdf(file) {
+      async function processFile(file) {
+        const extension = file.name.split('.').pop().toLowerCase();
         const arrayBuffer = await file.arrayBuffer();
+
+        if (extension === 'dgn') {
+          return {
+            name: file.name,
+            sizeBytes: file.size,
+            sizeString: formatBytes(file.size),
+            widthMm: 0,
+            heightMm: 0,
+            widthIn: 0,
+            heightIn: 0,
+            drawingSize: 'DGN Source File',
+            pageCount: 1,
+            orientation: 'LANDSCAPE'
+          };
+        }
+
         const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
         
         const pageCount = pdfDoc.getPageCount();
@@ -664,16 +682,16 @@
             `;
           } else {
             tr.classList.remove('error-row');
-            const dims = currentUnit === 'MM' 
-              ? `${file.widthMm} x ${file.heightMm}`
-              : `${file.widthIn} x ${file.heightIn}`;
+            const dims = file.drawingSize === 'DGN Source File' 
+              ? 'N/A (.dgn)' 
+              : (currentUnit === 'MM' ? `${file.widthMm} x ${file.heightMm}` : `${file.widthIn} x ${file.heightIn}`);
 
             tr.innerHTML = `
               <td>${file.name}</td>
               <td>${file.sizeString}</td>
               <td>${dims}</td>
               <td><strong>${file.drawingSize}</strong></td>
-              <td>${file.pageCount}</td>
+              <td>${file.drawingSize === 'DGN Source File' ? 'N/A' : file.pageCount}</td>
             `;
           }
           resultsBody.appendChild(tr);
