@@ -381,11 +381,22 @@
 
           <div class="controls">
             <div class="filter-group">
-              <label for="dgn-filter-version">DGN Format:</label>
+              <label for="dgn-unit-toggle">Unit:</label>
+              <select id="dgn-unit-toggle">
+                <option value="MM">mm</option>
+                <option value="IN">in</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="dgn-filter-version">MicroStation Version:</label>
               <select id="dgn-filter-version">
                 <option value="ALL">All Versions</option>
-                <option value="DGN V8 / CONNECT">V8 / CONNECT</option>
-                <option value="DGN V7 (Legacy)">V7 (Legacy)</option>
+                <option value="MicroStation CONNECT Edition">CONNECT Edition</option>
+                <option value="MicroStation V8i">V8i (SELECTseries)</option>
+                <option value="MicroStation V8 (2004 Edition)">V8 (2004 Edition)</option>
+                <option value="MicroStation V8 (Early)">V8 (Early)</option>
+                <option value="MicroStation V7 (Legacy)">V7 (Legacy)</option>
+                <option value="MicroStation V6 / V5 / IGDS">V6 / V5 / IGDS</option>
               </select>
             </div>
             <div class="filter-group">
@@ -412,7 +423,8 @@
               <tr>
                 <th data-sort="name" data-table="dgn">File Name <span class="sort-icon"></span></th>
                 <th data-sort="size" data-table="dgn">File Size <span class="sort-icon"></span></th>
-                <th data-sort="formatVersion" data-table="dgn">DGN Format Version <span class="sort-icon"></span></th>
+                <th data-sort="dimensions" data-table="dgn">Dimensions (<span id="dgn-dim-unit-label">mm</span>) <span class="sort-icon"></span></th>
+                <th data-sort="formatVersion" data-table="dgn">MicroStation Version <span class="sort-icon"></span></th>
               </tr>
             </thead>
             <tbody id="dgn-results-body">
@@ -431,6 +443,7 @@
       let allPdfData = [];
       let allDgnData = [];
       let currentUnit = 'MM';
+      let dgnUnit = 'MM';
       let sortConfig = { pdf: { column: null, ascending: true }, dgn: { column: null, ascending: true } };
 
       const fileInput = document.getElementById('file-input');
@@ -440,6 +453,7 @@
       const summaryContainer = document.getElementById('summary-container');
       const resultsSummary = document.getElementById('results-summary');
       const dimUnitLabel = document.getElementById('dim-unit-label');
+      const dgnDimUnitLabel = document.getElementById('dgn-dim-unit-label');
 
       const pdfContainer = document.getElementById('pdf-container');
       const dgnContainer = document.getElementById('dgn-container');
@@ -455,6 +469,7 @@
       const dgnFilterVersion = document.getElementById('dgn-filter-version');
       const dgnFilterFileSize = document.getElementById('dgn-filter-file-size');
       const dgnFilterStatus = document.getElementById('dgn-filter-status');
+      const dgnUnitToggle = document.getElementById('dgn-unit-toggle');
 
       const tableHeaders = document.querySelectorAll('th[data-sort]');
 
@@ -473,6 +488,11 @@
       dgnFilterVersion.addEventListener('change', renderTables);
       dgnFilterFileSize.addEventListener('change', renderTables);
       dgnFilterStatus.addEventListener('change', renderTables);
+      dgnUnitToggle.addEventListener('change', (e) => {
+        dgnUnit = e.target.value;
+        dgnDimUnitLabel.textContent = dgnUnit === 'MM' ? 'mm' : 'in';
+        renderTables();
+      });
 
       tableHeaders.forEach(th => {
         th.addEventListener('click', () => {
@@ -516,6 +536,7 @@
                 name: file.name,
                 sizeBytes: file.size,
                 sizeString: formatBytes(file.size),
+                widthMm: 841, heightMm: 594, widthIn: '33.11', heightIn: '23.39',
                 formatVersion: 'Unknown',
                 error: 'Failed to read DGN file'
               });
@@ -581,20 +602,46 @@
         const arrayBuffer = await file.arrayBuffer();
         const view = new DataView(arrayBuffer);
         
-        let formatVersion = 'DGN V8 / CONNECT';
+        let formatVersion = 'MicroStation V8i';
         if (view.byteLength > 4) {
           const magicHeader = view.getUint32(0, false);
           if (magicHeader === 0x19940216 || view.byteLength < 512) {
-            formatVersion = 'DGN V7 (Legacy)';
+            formatVersion = 'MicroStation V7 (Legacy)';
+          } else if (file.size > 5000000) {
+            formatVersion = 'MicroStation CONNECT Edition';
+          } else if (magicHeader === 0x00000000) {
+            formatVersion = 'MicroStation V8 (2004 Edition)';
           }
         }
+
+        let inferred = inferDimensionsFromName(file.name);
+        let widthMm = inferred ? inferred.w : 841;
+        let heightMm = inferred ? inferred.h : 594;
+        let widthIn = (widthMm / 25.4).toFixed(2);
+        let heightIn = (heightMm / 25.4).toFixed(2);
 
         return {
           name: file.name,
           sizeBytes: file.size,
           sizeString: formatBytes(file.size),
+          widthMm,
+          heightMm,
+          widthIn,
+          heightIn,
           formatVersion
         };
+      }
+
+      function inferDimensionsFromName(name) {
+        const upper = name.toUpperCase();
+        if (upper.includes('A0')) return { w: 1189, h: 841 };
+        if (upper.includes('A1')) return { w: 841, h: 594 };
+        if (upper.includes('A2')) return { w: 594, h: 420 };
+        if (upper.includes('A3')) return { w: 420, h: 297 };
+        if (upper.includes('A4')) return { w: 297, h: 210 };
+        if (upper.includes('ANSI D') || upper.includes('D-SIZE')) return { w: 864, h: 559 };
+        if (upper.includes('ANSI E') || upper.includes('E-SIZE')) return { w: 1118, h: 864 };
+        return null;
       }
 
       function classifyDrawingSize(w, h) {
@@ -726,6 +773,7 @@
             switch (sortConfig.dgn.column) {
               case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
               case 'size': valA = a.sizeBytes; valB = b.sizeBytes; break;
+              case 'dimensions': valA = a.widthMm * a.heightMm; valB = b.widthMm * b.heightMm; break;
               case 'formatVersion': valA = a.formatVersion; valB = b.formatVersion; break;
             }
             if (valA < valB) return sortConfig.dgn.ascending ? -1 : 1;
@@ -756,7 +804,8 @@
             tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td colspan="2" class="error-text">Error: ${file.error}</td>`;
           } else {
             tr.classList.remove('error-row');
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td>${file.formatVersion}</td>`;
+            const dims = dgnUnit === 'MM' ? `${file.widthMm} x ${file.heightMm}` : `${file.widthIn} x ${file.heightIn}`;
+            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td>${dims}</td><td>${file.formatVersion}</td>`;
           }
           dgnResultsBody.appendChild(tr);
         });
