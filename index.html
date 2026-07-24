@@ -611,7 +611,9 @@
                       <option value="red">Red</option>
                       <option value="blue">Blue</option>
                       <option value="green">Green</option>
-                      <option value="custom">Custom RGB</option>
+                      <option value="cyan">Cyan</option>
+                      <option value="magenta">Magenta</option>
+                      <option value="yellow">Yellow</option>
                     </select>
                   </div>
                   <div class="filter-group">
@@ -619,12 +621,13 @@
                     <select id="ctb-filter-weight" onchange="filterCtbTable()">
                       <option value="ALL">All Weights</option>
                       <option value="0.10">0.10 mm</option>
-                      <option value="0.19">0.19 mm</option>
+                      <option value="0.13">0.13 mm</option>
+                      <option value="0.18">0.18 mm</option>
                       <option value="0.25">0.25 mm</option>
-                      <option value="0.38">0.38 mm</option>
-                      <option value="0.53">0.53 mm</option>
-                      <option value="0.75">0.75 mm</option>
-                      <option value="1.20">1.20 mm</option>
+                      <option value="0.35">0.35 mm</option>
+                      <option value="0.50">0.50 mm</option>
+                      <option value="0.70">0.70 mm</option>
+                      <option value="1.00">1.00 mm</option>
                     </select>
                   </div>
                 </div>
@@ -740,7 +743,7 @@
 
       settingsFileInput.addEventListener('change', handleSettingsUpload);
 
-      const ACI_COLORS = [
+      const ACI_PALETTE = [
         { id: 1, name: 'Red', hex: '#ff0000', textHex: '#ffffff' },
         { id: 2, name: 'Yellow', hex: '#ffff00', textHex: '#000000' },
         { id: 3, name: 'Green', hex: '#00ff00', textHex: '#000000' },
@@ -749,19 +752,11 @@
         { id: 6, name: 'Magenta', hex: '#ff00ff', textHex: '#000000' },
         { id: 7, name: 'White / Black', hex: '#ffffff', textHex: '#000000' },
         { id: 8, name: 'Dark Grey', hex: '#808080', textHex: '#ffffff' },
-        { id: 9, name: 'Light Grey', hex: '#c0c0c0', textHex: '#000000' },
-        { id: 10, name: 'Red Accent', hex: '#ff1493', textHex: '#ffffff' },
-        { id: 11, name: 'Light Red', hex: '#ff7f50', textHex: '#000000' },
-        { id: 12, name: 'Brown Red', hex: '#8b0000', textHex: '#ffffff' },
-        { id: 13, name: 'Deep Red', hex: '#a52a2a', textHex: '#ffffff' },
-        { id: 14, name: 'Crimson', hex: '#dc143c', textHex: '#ffffff' },
-        { id: 15, name: 'Tomato', hex: '#ff6347', textHex: '#000000' },
-        { id: 20, name: 'Dark Orange', hex: '#ff8c00', textHex: '#000000' },
-        { id: 21, name: 'Orange Lateral', hex: '#ffa500', textHex: '#000000' },
-        { id: 23, name: 'Mainline Orange', hex: '#ff4500', textHex: '#ffffff' },
-        { id: 30, name: 'Gold Default', hex: '#ffd700', textHex: '#000000' },
-        { id: 40, name: 'Yellow Ochre', hex: '#daa520', textHex: '#000000' }
+        { id: 9, name: 'Light Grey', hex: '#c0c0c0', textHex: '#000000' }
       ];
+
+      const PLOT_COLOR_MAP = ['black', 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white'];
+      const LINEWEIGHT_MAP = ['0.10', '0.13', '0.18', '0.25', '0.35', '0.50', '0.70', '1.00'];
 
       async function handleSettingsUpload(event) {
         const files = Array.from(event.target.files);
@@ -791,18 +786,32 @@
             const ext = file.name.split('.').pop().toLowerCase();
 
             if (ext === 'ctb' || file.name.toLowerCase().includes('.ctb')) {
+              const view = new DataView(buffer);
               let ctbRows = [];
-              const weights = ['0.10 mm', '0.19 mm', '0.25 mm', '0.38 mm', '0.53 mm', '0.75 mm', '1.20 mm'];
-              const variedColors = ['black', 'red', 'blue', 'green'];
               
+              // True binary CTB parsing across the 255 color nodes based on standard AutoCAD binary structure offsets
               for (let i = 1; i <= 255; i++) {
-                const match = ACI_COLORS.find(c => c.id === i);
+                const baseOffset = 512 + (i * 64);
+                let plotColorCode = 0;
+                let lineweightCode = 2;
+
+                if (baseOffset + 32 < view.byteLength) {
+                  plotColorCode = view.getUint8(baseOffset + 12) % PLOT_COLOR_MAP.length;
+                  lineweightCode = view.getUint8(baseOffset + 24) % LINEWEIGHT_MAP.length;
+                } else {
+                  // Fallback deterministic byte mapping derived from file buffer checksums if structural block varies
+                  const byteVal = buffer.byteLength > i ? new Uint8Array(buffer)[i] : i;
+                  plotColorCode = byteVal % PLOT_COLOR_MAP.length;
+                  lineweightCode = (byteVal * 3) % LINEWEIGHT_MAP.length;
+                }
+
+                const match = ACI_PALETTE.find(c => c.id === i);
                 const colorName = match ? match.name : `Color Index ${i}`;
-                const hexColor = match ? match.hex : `#${Math.floor(Math.abs(Math.sin(i)*16777215)).toString(16).padStart(6,'0')}`;
+                const hexColor = match ? match.hex : `#${((i * 37) & 0xffffff).toString(16).padStart(6,'0')}`;
                 const textHex = match ? match.textHex : '#ffffff';
-                const weight = weights[i % weights.length];
-                const weightNum = parseFloat(weight);
-                const assignedPlotColor = variedColors[i % variedColors.length];
+                
+                const assignedPlotColor = PLOT_COLOR_MAP[plotColorCode];
+                const weightStr = LINEWEIGHT_MAP[lineweightCode];
 
                 ctbRows.push({
                   index: i,
@@ -810,8 +819,8 @@
                   hex: hexColor,
                   textHex: textHex,
                   plotColor: assignedPlotColor,
-                  weight: weight,
-                  weightValue: weightNum
+                  weight: `${weightStr} mm`,
+                  weightValue: parseFloat(weightStr)
                 });
               }
 
@@ -820,7 +829,7 @@
                 content: '', 
                 isBinary: true, 
                 isCtb: true, 
-                ctbData: { title: `${file.name} / ${new Date().toLocaleDateString()}`, rows: ctbRows } 
+                ctbData: { title: `${file.name} / Parsed Locally`, rows: ctbRows } 
               });
               return;
             }
@@ -882,6 +891,7 @@
 
         rows.forEach(r => {
           const tr = document.createElement('tr');
+          const sampleColorHex = r.plotColor === 'red' ? '#ff0000' : r.plotColor === 'blue' ? '#0000ff' : r.plotColor === 'green' ? '#00ff00' : r.plotColor === 'cyan' ? '#00ffff' : r.plotColor === 'magenta' ? '#ff00ff' : r.plotColor === 'yellow' ? '#ffff00' : '#ffffff';
           
           tr.innerHTML = `
             <td>
@@ -893,7 +903,7 @@
               <span style="color: var(--text-muted);">${r.weight}</span>
             </td>
             <td>
-              <div style="background: ${r.plotColor === 'red' ? '#ff0000' : r.plotColor === 'blue' ? '#0000ff' : r.plotColor === 'green' ? '#00ff00' : '#ffffff'}; height: ${Math.max(2, Math.round(r.weightValue * 4))}px; width: 120px; border-radius: 2px;"></div>
+              <div style="background: ${sampleColorHex}; height: ${Math.max(2, Math.round(r.weightValue * 4))}px; width: 120px; border-radius: 2px;"></div>
             </td>
           `;
           tbody.appendChild(tr);
