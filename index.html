@@ -7,52 +7,68 @@
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <style>
       :root {
-        --bg-color: #f4f4f5;
-        --card-bg: #ffffff;
-        --primary: #2563eb;
-        --primary-hover: #1d4ed8;
-        --text-main: #1f2937;
-        --text-muted: #6b7280;
-        --border: #e5e7eb;
+        --bg-color: #0f172a; /* Deep slate background */
+        --card-bg: #1e293b; /* Rich card surface */
+        --text-main: #f8fafc; /* Crisp white-ish text */
+        --text-muted: #94a3b8; /* Muted gray for labels */
+        --border: #334155; /* Subtle dark border */
+        --primary: #3b82f6; /* Modern electric blue */
+        --primary-hover: #2563eb;
+        --accent-glow: rgba(59, 130, 246, 0.15);
+        --error-bg: rgba(239, 68, 68, 0.1);
+        --error-text: #f87171;
+        --table-hover: #273548;
       }
 
       body {
-        font-family: system-ui, -apple-system, sans-serif;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         background-color: var(--bg-color);
         color: var(--text-main);
         margin: 0;
-        padding: 2rem;
+        padding: 2.5rem 1rem;
       }
 
       .container {
-        max-width: 1000px;
+        max-width: 1100px;
         margin: 0 auto;
         background: var(--card-bg);
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border);
       }
 
       header {
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
       }
 
       header h1 {
         margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: #ffffff;
       }
 
       header p {
         color: var(--text-muted);
         margin: 0;
+        font-size: 1rem;
       }
 
       .upload-section {
         text-align: center;
-        padding: 3rem;
+        padding: 3rem 2rem;
         border: 2px dashed var(--border);
         border-radius: 8px;
         margin-bottom: 2rem;
+        background-color: rgba(15, 23, 42, 0.4);
+        transition: border-color 0.2s;
+      }
+
+      .upload-section:hover {
+        border-color: var(--primary);
       }
 
       input[type="file"] {
@@ -62,15 +78,18 @@
       .upload-btn {
         background-color: var(--primary);
         color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 6px;
+        padding: 0.85rem 1.75rem;
+        border-radius: 8px;
         cursor: pointer;
         font-weight: 600;
-        transition: background 0.2s;
+        display: inline-block;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
       }
 
       .upload-btn:hover {
         background-color: var(--primary-hover);
+        transform: translateY(-1px);
       }
 
       .progress-wrapper {
@@ -80,13 +99,13 @@
       }
 
       .progress-track {
-        background-color: #e5e7eb;
+        background-color: #0f172a;
         border-radius: 999px;
-        height: 24px;
+        height: 10px;
         width: 100%;
         overflow: hidden;
         margin-bottom: 0.75rem;
-        box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        border: 1px solid var(--border);
       }
 
       .progress-fill {
@@ -105,7 +124,7 @@
         height: 100%;
         width: 0%;
         border-radius: 999px;
-        transition: width 0.2s ease-out;
+        transition: width 0.15s ease-out;
         animation: progress-stripes 1s linear infinite;
       }
 
@@ -115,20 +134,21 @@
       }
 
       .progress-text {
-        font-size: 0.95rem;
-        color: var(--text-main);
+        font-size: 0.9rem;
+        color: var(--text-muted);
         font-weight: 500;
       }
 
       .controls {
         display: flex;
         flex-wrap: wrap;
-        gap: 1.2rem;
-        padding: 1rem;
-        background: var(--bg-color);
-        border-radius: 6px;
-        margin-bottom: 1rem;
+        gap: 1rem;
+        padding: 1.25rem;
+        background: #0f172a;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
         align-items: center;
+        border: 1px solid var(--border);
       }
 
       .filter-group {
@@ -137,57 +157,92 @@
         gap: 0.5rem;
       }
 
+      .filter-group label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+
       select, input[type="text"] {
-        padding: 0.5rem;
+        background-color: #1e293b;
+        color: var(--text-main);
+        padding: 0.5rem 0.75rem;
         border: 1px solid var(--border);
-        border-radius: 4px;
+        border-radius: 6px;
         font-family: inherit;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      select:focus, input[type="text"]-focus {
+        border-color: var(--primary);
       }
 
       .summary {
         margin-left: auto;
         font-weight: 500;
+        color: var(--text-muted);
+        font-size: 0.9rem;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 1rem;
+        font-size: 0.95rem;
       }
 
       th, td {
-        padding: 0.75rem;
+        padding: 0.85rem 1rem;
         text-align: left;
         border-bottom: 1px solid var(--border);
       }
 
       th {
-        background-color: var(--bg-color);
+        background-color: #0f172a;
+        color: var(--text-muted);
         font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      tbody tr {
+        transition: background-color 0.15s;
+      }
+
+      tbody tr:hover {
+        background-color: var(--table-hover);
       }
 
       th[data-sort] {
         cursor: pointer;
         user-select: none;
-        transition: background-color 0.2s;
       }
 
       th[data-sort]:hover {
-        background-color: #e5e7eb;
+        color: var(--text-main);
+        background-color: #162032;
       }
 
       .sort-icon {
         margin-left: 0.25rem;
-        font-size: 0.8rem;
-        color: var(--text-muted);
+        font-size: 0.75rem;
+        color: var(--primary);
       }
 
       .hidden {
         display: none !important;
       }
 
+      .error-row {
+        background-color: var(--error-bg);
+      }
+
       .error-text {
-        color: #dc2626;
+        color: var(--error-text);
+        font-weight: 500;
       }
     </style>
   </head>
@@ -229,7 +284,7 @@
           <select id="filter-page-size">
             <option value="ALL">All Sizes</option>
             
-            <optgroup label="ISO A-Series & Extended Rolls">
+            <optgroup label="ISO A-Series & Extended">
               <option value="2A0">2A0 (1189 x 1682)</option>
               <option value="A0">A0 (841 x 1189)</option>
               <option value="A0 Extended">A0 Extended / Long Plot</option>
@@ -274,7 +329,7 @@
         </div>
 
         <div class="filter-group">
-          <label for="filter-file-size">Max File Size:</label>
+          <label for="filter-file-size">Max Size:</label>
           <select id="filter-file-size">
             <option value="ALL">Any Size</option>
             <option value="1">Under 1 MB</option>
@@ -286,8 +341,8 @@
         <div class="filter-group">
           <label for="filter-page-count">Pages:</label>
           <select id="filter-page-count">
-            <option value="ALL">All Counts</option>
-            <option value="1">1 Page Only</option>
+            <option value="ALL">All</option>
+            <option value="1">1 Page</option>
             <option value="MULTI">Multi-Page (&gt;1)</option>
           </select>
         </div>
@@ -295,7 +350,7 @@
         <div class="filter-group">
           <label for="filter-orientation">Orientation:</label>
           <select id="filter-orientation">
-            <option value="ALL">All Orientations</option>
+            <option value="ALL">All</option>
             <option value="LANDSCAPE">Landscape</option>
             <option value="PORTRAIT">Portrait</option>
           </select>
@@ -304,9 +359,9 @@
         <div class="filter-group">
           <label for="filter-status">Status:</label>
           <select id="filter-status">
-            <option value="ALL">All Files</option>
-            <option value="SUCCESS">Valid Only</option>
-            <option value="ERROR">Errors Only</option>
+            <option value="ALL">All</option>
+            <option value="SUCCESS">Valid</option>
+            <option value="ERROR">Errors</option>
           </select>
         </div>
 
@@ -534,11 +589,10 @@
         const statusFilter = filterStatus.value;
 
         let filteredData = allFilesData.filter(file => {
-          // Status filter
           if (statusFilter === 'SUCCESS' && file.error) return false;
           if (statusFilter === 'ERROR' && !file.error) return false;
 
-          if (file.error) return true; // Keep errors visible if 'All' or 'Errors Only' selected
+          if (file.error) return true;
 
           if (pageSizeFilter !== 'ALL' && file.drawingSize !== pageSizeFilter) return false;
           
@@ -602,12 +656,14 @@
           const tr = document.createElement('tr');
           
           if (file.error) {
+            tr.classList.add('error-row');
             tr.innerHTML = `
               <td>${file.name}</td>
               <td>${file.sizeString}</td>
               <td colspan="3" class="error-text">Error: ${file.error}</td>
             `;
           } else {
+            tr.classList.remove('error-row');
             const dims = currentUnit === 'MM' 
               ? `${file.widthMm} x ${file.heightMm}`
               : `${file.widthIn} x ${file.heightIn}`;
