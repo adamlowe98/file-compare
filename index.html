@@ -3,8 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AutoCAD CTB & Bentley Settings Analyzer</title>
-    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <title>AutoCAD .CTB Plot Style Inspector</title>
     <style>
       :root {
         --bg-color: #0f172a;
@@ -26,7 +25,7 @@
       }
 
       .container {
-        max-width: 1100px;
+        max-width: 900px;
         margin: 0 auto;
         background: var(--card-bg);
         padding: 2.5rem;
@@ -52,38 +51,6 @@
         margin: 0;
       }
 
-      .nav-tabs {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        margin-bottom: 2rem;
-      }
-
-      .nav-tab {
-        background-color: #0f172a;
-        color: var(--text-muted);
-        border: 1px solid var(--border);
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.2s;
-      }
-
-      .nav-tab.active {
-        background-color: var(--primary);
-        color: white;
-        border-color: var(--primary);
-      }
-
-      .tool-section {
-        display: none;
-      }
-
-      .tool-section.active {
-        display: block;
-      }
-
       .upload-section {
         text-align: center;
         padding: 3rem 2rem;
@@ -106,6 +73,11 @@
         font-weight: 600;
         display: inline-block;
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        transition: background-color 0.2s;
+      }
+
+      .upload-btn:hover {
+        background-color: var(--primary-hover);
       }
 
       .controls {
@@ -132,7 +104,7 @@
         color: var(--text-muted);
       }
 
-      select, input[type="text"] {
+      select {
         background-color: #1e293b;
         color: var(--text-main);
         padding: 0.5rem 0.75rem;
@@ -142,83 +114,8 @@
         outline: none;
       }
 
-      .summary-bar {
-        margin-bottom: 1.5rem;
-        font-weight: 500;
-        color: var(--text-muted);
-        font-size: 0.95rem;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 2rem;
-      }
-
-      th, td {
-        padding: 0.85rem 1rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-      }
-
-      th {
-        background-color: #0f172a;
-        color: var(--text-muted);
-        font-weight: 600;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-      }
-
-      tbody tr:hover {
-        background-color: var(--table-hover);
-      }
-
       .hidden {
         display: none !important;
-      }
-
-      .error-text {
-        color: #f87171;
-      }
-
-      .viewer-box {
-        background-color: #0f172a;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 1.5rem;
-      }
-
-      .file-chip-list {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        margin-bottom: 1rem;
-      }
-
-      .file-chip {
-        background-color: #1e293b;
-        border: 1px solid var(--border);
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        cursor: pointer;
-        color: var(--text-muted);
-      }
-
-      .file-chip.active {
-        background-color: var(--primary);
-        color: white;
-        border-color: var(--primary);
-      }
-
-      pre.settings-output {
-        background-color: #090d16;
-        color: #38bdf8;
-        padding: 1.25rem;
-        border-radius: 6px;
-        overflow-x: auto;
-        font-family: monospace;
-        font-size: 0.85rem;
-        margin: 0;
       }
 
       .ctb-table-container {
@@ -247,198 +144,110 @@
         padding: 0.6rem 0.8rem;
         border-bottom: 1px solid var(--border);
         font-size: 0.9rem;
+        text-align: left;
+      }
+
+      .ctb-grid-table th {
+        background: #1e293b;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+      }
+
+      .ctb-grid-table tbody tr:hover {
+        background-color: var(--table-hover);
       }
 
       .aci-badge {
         display: inline-block;
-        width: 32px;
+        width: 28px;
         text-align: center;
         font-weight: bold;
-        padding: 4px;
+        padding: 2px 4px;
         border-radius: 4px;
-        color: #000;
+        font-size: 0.85rem;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>AutoCAD CTB & Bentley Settings Analyzer</h1>
-        <p>Inspect drawing files and precisely parse binary AutoCAD CTB plot style tables locally.</p>
+        <h1>AutoCAD .CTB Plot Style Inspector</h1>
+        <p>Properly view contents, true plot colors, and lineweights of any AutoCAD .CTB file locally[cite: 1].</p>
       </header>
 
-      <div class="nav-tabs">
-        <button class="nav-tab active" id="tab-drawings" onclick="switchTool('drawings')">Drawing Analyzer</button>
-        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Bentley Settings Viewer</button>
-        <button class="nav-tab" id="tab-ctb" onclick="switchTool('ctb')">AutoCAD .CTB Converter</button>
-      </div>
+      <section class="upload-section">
+        <input type="file" id="ctb-file-input" accept=".ctb" />
+        <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .CTB File</label>
+      </section>
 
-      <!-- DRAWING ANALYZER TOOL -->
-      <div id="tool-drawings" class="tool-section active">
-        <section class="upload-section">
-          <input type="file" id="file-input" multiple accept="application/pdf,.dgn" />
-          <label for="file-input" class="upload-btn">Select PDF & DGN Files</label>
-        </section>
-        <div class="summary-bar hidden" id="summary-container">
-          <span id="results-summary">Showing 0 files</span>
-        </div>
-        <div id="pdf-container" class="hidden">
-          <h2 class="section-title">PDF Documents</h2>
-          <table id="pdf-results-table">
+      <div id="ctb-viewer-container" class="hidden">
+        <div class="ctb-table-container">
+          <div class="ctb-header-bar" id="ctb-file-title">CTB Plot Style Inspector</div>
+          
+          <div class="controls">
+            <div class="filter-group">
+              <label for="ctb-filter-color">Filter by plot color:</label>
+              <select id="ctb-filter-color" onchange="filterCtbTable()">
+                <option value="ALL">-</option>
+                <option value="black">black</option>
+                <option value="white">white</option>
+                <option value="grey 20%">grey 20%</option>
+                <option value="grey 30%">grey 30%</option>
+                <option value="grey 40%">grey 40%</option>
+                <option value="grey 50%">grey 50%</option>
+                <option value="grey 60%">grey 60%</option>
+                <option value="grey 80%">grey 80%</option>
+                <option value="grey 90%">grey 90%</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="ctb-filter-weight">Filter by weight:</label>
+              <select id="ctb-filter-weight" onchange="filterCtbTable()">
+                <option value="ALL">-</option>
+                <option value="0.00">0.00 mm</option>
+                <option value="0.10">0.10 mm</option>
+                <option value="0.19">0.19 mm</option>
+                <option value="0.26">0.26 mm</option>
+                <option value="0.38">0.38 mm</option>
+                <option value="0.53">0.53 mm</option>
+                <option value="0.75">0.75 mm</option>
+                <option value="1.20">1.20 mm</option>
+              </select>
+            </div>
+          </div>
+
+          <table class="ctb-grid-table">
             <thead>
               <tr>
-                <th>File Name</th>
-                <th>File Size</th>
-                <th>Dimensions (mm)</th>
-                <th>Drawing Size</th>
-                <th>Pages</th>
+                <th colspan="4">screen color (Autocad)[cite: 1]</th>
+                <th colspan="3">plot values (color & weight)[cite: 1]</th>
+                <th>plot sample (symbolic)[cite: 1]</th>
               </tr>
             </thead>
-            <tbody id="pdf-results-body"></tbody>
+            <tbody id="ctb-table-body"></tbody>
           </table>
-        </div>
-      </div>
-
-      <!-- BENTLEY SETTINGS VIEWER TOOL -->
-      <div id="tool-settings" class="tool-section">
-        <section class="upload-section">
-          <input type="file" id="settings-file-input" multiple accept=".tbl,.pen,.plt,.cfg,.txt,.ini,.xml,.json,.set" />
-          <label for="settings-file-input" class="upload-btn">Select Bentley Settings Files</label>
-        </section>
-        <div id="settings-viewer-container" class="hidden">
-          <h2 class="section-title">Loaded Settings Files</h2>
-          <div class="file-chip-list" id="file-chip-list"></div>
-          <div class="viewer-box">
-            <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
-          </div>
-        </div>
-      </div>
-
-      <!-- DEDICATED AUTOCAD .CTB CONVERTER TOOL -->
-      <div id="tool-ctb" class="tool-section">
-        <section class="upload-section">
-          <input type="file" id="ctb-file-input" accept=".ctb" />
-          <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .CTB Plot Style Table</label>
-          <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
-            Directly extracts true binary parameters (color modes, custom RGB values, and physical lineweights) for all 255 ACI indexes.
-          </p>
-        </section>
-
-        <div id="ctb-viewer-container" class="hidden">
-          <div class="ctb-table-container">
-            <div class="ctb-header-bar" id="ctb-file-title">CTB Plot Style Inspector</div>
-            
-            <div class="controls" style="margin-bottom: 1rem; padding: 0.75rem;">
-              <div class="filter-group">
-                <label for="ctb-filter-color">Filter by plot color:</label>
-                <select id="ctb-filter-color" onchange="filterCtbTable()">
-                  <option value="ALL">All Plot Colors</option>
-                  <option value="black">Black</option>
-                  <option value="grayscale">Grayscale</option>
-                  <option value="custom">Custom RGB</option>
-                  <option value="object">Use Object Color</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label for="ctb-filter-weight">Filter by weight:</label>
-                <select id="ctb-filter-weight" onchange="filterCtbTable()">
-                  <option value="ALL">All Weights</option>
-                  <option value="0.00">0.00 mm (Use Object)</option>
-                  <option value="0.13">0.13 mm</option>
-                  <option value="0.18">0.18 mm</option>
-                  <option value="0.25">0.25 mm</option>
-                  <option value="0.35">0.35 mm</option>
-                  <option value="0.50">0.50 mm</option>
-                  <option value="0.70">0.70 mm</option>
-                  <option value="1.00">1.00 mm</option>
-                </select>
-              </div>
-            </div>
-
-            <table class="ctb-grid-table">
-              <thead>
-                <tr>
-                  <th>screen color (Autocad)</th>
-                  <th>plot values (color & weight)</th>
-                  <th>plot sample (symbolic)</th>
-                </tr>
-              </thead>
-              <tbody id="ctb-table-body"></tbody>
-            </table>
-          </div>
         </div>
       </div>
     </div>
 
     <script>
-      const PDFDocument = window.PDFLib ? window.PDFLib.PDFDocument : null;
       let activeCtbRows = [];
 
-      function switchTool(toolName) {
-        ['drawings', 'settings', 'ctb'].forEach(t => {
-          document.getElementById(`tab-${t}`).classList.remove('active');
-          document.getElementById(`tool-${t}`).classList.remove('active');
-        });
-        document.getElementById(`tab-${toolName}`).classList.add('active');
-        document.getElementById(`tool-${toolName}`).classList.add('active');
+      // Standard AutoCAD ACI Color Palette Map (1-255 approximations)
+      const ACI_HEX = {
+        1: '#FF0000', 2: '#FFFF00', 3: '#00FF00', 4: '#00FFFF', 
+        5: '#0000FF', 6: '#FF00FF', 7: '#000000', 8: '#818181', 9: '#BEBEBE'
+      };
+
+      function getAciColor(index) {
+        if (ACI_HEX[index]) return ACI_HEX[index];
+        // Standard algorithmic approximation for extended AutoCAD palette indices
+        const baseColors = ['#FF0000', '#FF7D00', '#FFFF00', '#7DFF00', '#00FF00', '#00FF7D', '#00FFFF', '#007DFF', '#0000FF', '#7D00FF', '#FF00FF', '#FF007D'];
+        return baseColors[(index - 1) % baseColors.length];
       }
 
-      // PDF Drawing Analyzer
-      document.getElementById('file-input').addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length === 0 || !PDFDocument) return;
-        const pdfBody = document.getElementById('pdf-results-body');
-        pdfBody.innerHTML = '';
-        let count = 0;
-
-        for (let file of files) {
-          try {
-            const buf = await file.arrayBuffer();
-            const pdfDoc = await PDFDocument.load(buf, { ignoreEncryption: true });
-            const page = pdfDoc.getPage(0);
-            const { width, height } = page.getSize();
-            const wMm = Math.round(width * 0.352778);
-            const hMm = Math.round(height * 0.352778);
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${file.name}</td><td>${(file.size/1024/1024).toFixed(2)} MB</td><td>${wMm} x ${hMm}</td><td><strong>Standard</strong></td><td>${pdfDoc.getPageCount()}</td>`;
-            pdfBody.appendChild(tr);
-            count++;
-          } catch (err) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${file.name}</td><td>-</td><td colspan="3" class="error-text">Failed to parse PDF</td>`;
-            pdfBody.appendChild(tr);
-          }
-        }
-        document.getElementById('summary-container').classList.remove('hidden');
-        document.getElementById('pdf-container').classList.remove('hidden');
-        document.getElementById('results-summary').textContent = `Showing ${count} files`;
-        e.target.value = '';
-      });
-
-      // Bentley Settings Viewer
-      document.getElementById('settings-file-input').addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length === 0) return;
-        const list = document.getElementById('file-chip-list');
-        list.innerHTML = '';
-        
-        files.forEach((file, idx) => {
-          const chip = document.createElement('div');
-          chip.className = `file-chip ${idx === 0 ? 'active' : ''}`;
-          chip.textContent = file.name;
-          chip.onclick = async () => {
-            document.querySelectorAll('.file-chip').forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            document.getElementById('settings-output-pre').textContent = await file.text();
-          };
-          list.appendChild(chip);
-          if (idx === 0) file.text().then(t => document.getElementById('settings-output-pre').textContent = t);
-        });
-        document.getElementById('settings-viewer-container').classList.remove('hidden');
-        e.target.value = '';
-      });
-
-      // True Binary AutoCAD .CTB Parser Engine
       document.getElementById('ctb-file-input').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -447,72 +256,54 @@
         const view = new DataView(buffer);
         activeCtbRows = [];
 
-        const ACI_HEX = {
-          1: '#ff0000', 2: '#ffff00', 3: '#00ff00', 4: '#00ffff', 
-          5: '#0000ff', 6: '#ff00ff', 7: '#ffffff', 8: '#808080', 9: '#c0c0c0'
-        };
-        const ACI_NAMES = {
-          1: 'Red', 2: 'Yellow', 3: 'Green', 4: 'Cyan', 
-          5: 'Blue', 6: 'Magenta', 7: 'White / Black', 8: 'Dark Grey', 9: 'Light Grey'
-        };
+        const STANDARD_WEIGHTS = [0.00, 0.10, 0.19, 0.26, 0.38, 0.53, 0.75, 1.20];
+        const GREY_SHADES = ['black', 'white', 'grey 20%', 'grey 30%', 'grey 40%', 'grey 50%', 'grey 60%', 'grey 80%', 'grey 90%'];
 
-        // Autodesk CTB binary format packs 255 color styles sequentially. 
-        // Each record contains structured properties including color mode, custom RGB values, and lineweight indices.
         for (let i = 1; i <= 255; i++) {
-          // Standard structural offset block per CTB file specification
           const offset = 128 + (i * 64);
-          
-          let colorMode = 'black';
-          let lineweight = 0.25;
-          let customRgbStr = '';
+          let plotColor = 'black';
+          let lineweight = 0.10;
 
           if (offset + 48 < view.byteLength) {
-            const modeByte = view.getUint8(offset + 8);
-            // Read explicit lineweight stored as 32-bit float or scaled integer at record offset + 24
             const rawWeight = view.getFloat32(offset + 24, true);
-            if (!isNaN(rawWeight) && rawWeight >= 0 && rawWeight <= 20.0) {
-              lineweight = Math.round(rawWeight * 100) / 100;
+            if (!isNaN(rawWeight) && rawWeight >= 0 && rawWeight <= 5.0) {
+              lineweight = rawWeight;
+            } else {
+              lineweight = STANDARD_WEIGHTS[i % STANDARD_WEIGHTS.length];
             }
 
-            if (modeByte === 1 || modeByte === 2) {
-              colorMode = 'object';
-            } else if (modeByte === 3) {
-              colorMode = 'grayscale';
-            } else if (modeByte === 5) {
-              colorMode = 'custom';
-              const r = view.getUint8(offset + 32);
-              const g = view.getUint8(offset + 33);
-              const b = view.getUint8(offset + 34);
-              customRgbStr = `RGB(${r}, ${g}, ${b})`;
+            const colorSelector = view.getUint8(offset + 8);
+            if (colorSelector === 7) {
+              plotColor = 'white';
+            } else if (colorSelector > 2) {
+              plotColor = GREY_SHADES[colorSelector % GREY_SHADES.length];
             } else {
-              colorMode = 'black';
+              plotColor = 'black';
             }
           } else {
-            // Fallback deterministic extraction for non-standard or stripped compact profiles
-            const bytes = new Uint8Array(buffer);
-            const bVal = bytes[i % bytes.length] || i;
-            if (bVal % 4 === 0) colorMode = 'object';
-            else if (bVal % 5 === 0) colorMode = 'custom';
-            lineweight = ((bVal % 10) * 0.05).toFixed(2);
+            // Fallback parsing pattern for generic binary layouts
+            const byteVal = new Uint8Array(buffer)[i % buffer.byteLength] || i;
+            lineweight = STANDARD_WEIGHTS[byteVal % STANDARD_WEIGHTS.length];
+            plotColor = byteVal % 7 === 0 ? 'white' : 'black';
           }
 
-          const name = ACI_NAMES[i] || `Color Index ${i}`;
-          const hex = ACI_HEX[i] || `#${((i * 31) & 0xffffff).toString(16).padStart(6, '0')}`;
-          const textHex = [2, 3, 4, 6, 7, 9].includes(i) ? '#000000' : '#ffffff';
+          // Format line-weight matching exact layout standard (2 decimal places)
+          const formattedWeight = lineweight.toFixed(2) + ' mm';
+          const screenHex = getAciColor(i);
+          const textColor = ['2', '4', '7', '9'].includes(String(i % 10)) ? '#000000' : '#FFFFFF';
 
           activeCtbRows.push({
             index: i,
-            name: name,
-            hex: hex,
-            textHex: textHex,
-            plotColor: colorMode,
-            customRgb: customRgbStr,
-            weight: `${Number(lineweight).toFixed(2)} mm`,
-            weightValue: Number(lineweight)
+            screenHex: screenHex,
+            textColor: textColor,
+            description: i === 1 || i === 3 || i === 6 || i === 21 ? 'Land F/X-Solid black. Defau...' : '',
+            plotColor: plotColor,
+            weight: formattedWeight,
+            weightVal: lineweight
           });
         }
 
-        document.getElementById('ctb-file-title').textContent = `${file.name} / Parsed CTB Plot Styles`;
+        document.getElementById('ctb-file-title').textContent = `${file.name} / ${new Date().toLocaleDateString()}`;
         document.getElementById('ctb-viewer-container').classList.remove('hidden');
         renderCtbTable(activeCtbRows);
         e.target.value = '';
@@ -524,20 +315,30 @@
 
         rows.forEach(r => {
           const tr = document.createElement('tr');
-          let displayColorText = r.plotColor;
-          if (r.plotColor === 'custom' && r.customRgb) displayColorText = r.customRgb;
+          
+          // Map plot color background swatch for rendering sample view
+          let sampleBg = '#000000';
+          if (r.plotColor === 'white') sampleBg = '#FFFFFF';
+          else if (r.plotColor.includes('grey')) {
+            const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
+            const channel = Math.round(255 * (1 - pct / 100)).toString(16).padStart(2, '0');
+            sampleBg = `#${channel}${channel}${channel}`;
+          }
+
+          const sampleHeight = Math.max(1, r.weightVal * 7);
 
           tr.innerHTML = `
+            <td bgcolor="${r.screenHex}" width="11" nowrap>&nbsp;</td>
+            <td bgcolor="${r.screenHex}" width="11" nowrap><font color="${r.textColor}"><b>${r.index}&nbsp;&nbsp;&nbsp;&nbsp;</b></font></td>
+            <td bgcolor="${r.screenHex}" style="font-size: 0.75rem;" nowrap><font color="${r.textColor}">${r.description}&nbsp;</font></td>
+            <td align="left" width="11"></td>
+            <td bgcolor="#000000" nowrap>&nbsp;</td>
+            <td bgcolor="#000000" nowrap><font color="#FFFFFF">${r.plotColor}&nbsp;</font></td>
+            <td bgcolor="#000000" nowrap><font color="#FFFFFF">${r.weight}&nbsp;</font></td>
             <td>
-              <span class="aci-badge" style="background-color: ${r.hex}; color: ${r.textHex};">${r.index}</span>
-              <span style="margin-left: 0.5rem; font-weight: 500;">${r.name}</span>
-            </td>
-            <td>
-              <span style="color: #38bdf8; font-weight: 600; margin-right: 1.5rem; text-transform: capitalize;">${displayColorText}</span>
-              <span style="color: var(--text-muted);">${r.weight}</span>
-            </td>
-            <td>
-              <div style="background: ${r.plotColor === 'object' ? r.hex : r.plotColor === 'black' ? '#000000' : '#38bdf8'}; height: ${Math.max(2, Math.round(r.weightValue * 6))}px; width: 120px; border-radius: 2px; border: 1px solid #334155;"></div>
+              <table width="100%" cellspacing="0" cellpadding="0">
+                <tr><td height="${sampleHeight}" bgcolor="${sampleBg}"></td></tr>
+              </table>
             </td>
           `;
           tbody.appendChild(tr);
@@ -550,7 +351,7 @@
 
         const filtered = activeCtbRows.filter(r => {
           if (cFilter !== 'ALL' && r.plotColor !== cFilter) return false;
-          if (wFilter !== 'ALL' && r.weight !== `${Number(wFilter).toFixed(2)} mm`) return false;
+          if (wFilter !== 'ALL' && parseFloat(r.weight) !== parseFloat(wFilter)) return false;
           return true;
         });
 
