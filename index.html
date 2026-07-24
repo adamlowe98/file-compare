@@ -355,6 +355,7 @@
                 <select id="pdf-filter-page-size" onchange="filterDrawingTables()">
                   <option value="ALL">All Sizes (Comprehensive)</option>
                   <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm)</option>
+                  <!-- ISO A Series -->
                   <option value="A0">A0 (841 x 1189 mm)</option>
                   <option value="A1">A1 (594 x 841 mm)</option>
                   <option value="A2">A2 (420 x 594 mm)</option>
@@ -366,6 +367,10 @@
                   <option value="A8">A8 (52 x 74 mm)</option>
                   <option value="A9">A9 (37 x 52 mm)</option>
                   <option value="A10">A10 (26 x 37 mm)</option>
+                  <!-- Extended ISO A Series -->
+                  <option value="2A0">2A0 (1189 x 1682 mm)</option>
+                  <option value="4A0">4A0 (1682 x 2378 mm)</option>
+                  <!-- ISO B Series -->
                   <option value="B0">B0 (1000 x 1414 mm)</option>
                   <option value="B1">B1 (707 x 1000 mm)</option>
                   <option value="B2">B2 (500 x 707 mm)</option>
@@ -377,6 +382,7 @@
                   <option value="B8">B8 (62 x 88 mm)</option>
                   <option value="B9">B9 (44 x 62 mm)</option>
                   <option value="B10">B10 (31 x 44 mm)</option>
+                  <!-- ISO C Series -->
                   <option value="C0">C0 (917 x 1297 mm)</option>
                   <option value="C1">C1 (648 x 917 mm)</option>
                   <option value="C2">C2 (458 x 648 mm)</option>
@@ -386,11 +392,14 @@
                   <option value="C6">C6 (114 x 162 mm)</option>
                   <option value="C7">C7 (81 x 114 mm)</option>
                   <option value="C8">C8 (57 x 81 mm)</option>
+                  <!-- ANSI / US Engineering Series -->
                   <option value="ANSI A">ANSI A (216 x 279 mm)</option>
                   <option value="ANSI B">ANSI B (279 x 432 mm)</option>
                   <option value="ANSI C">ANSI C (432 x 559 mm)</option>
                   <option value="ANSI D">ANSI D (559 x 864 mm)</option>
                   <option value="ANSI E">ANSI E (864 x 1118 mm)</option>
+                  <option value="ANSI F">ANSI F (711 x 1016 mm)</option>
+                  <!-- Architectural Series -->
                   <option value="Arch A">Arch A (229 x 305 mm)</option>
                   <option value="Arch B">Arch B (305 x 457 mm)</option>
                   <option value="Arch C">Arch C (457 x 610 mm)</option>
@@ -399,6 +408,7 @@
                   <option value="Arch E1">Arch E1 (762 x 1067 mm)</option>
                   <option value="Arch E2">Arch E2 (660 x 965 mm)</option>
                   <option value="Arch E3">Arch E3 (686 x 991 mm)</option>
+                  <!-- Specialized Standards -->
                   <option value="Foolscap">Foolscap (203 x 330 mm)</option>
                   <option value="Legal">Legal (216 x 356 mm)</option>
                   <option value="Executive">Executive (184 x 267 mm)</option>
@@ -638,6 +648,8 @@
       function classifySize(w, h) {
         const s = Math.min(w, h), l = Math.max(w, h);
         if (Math.abs(s - 1200) <= 10 && Math.abs(l - 1200) <= 10) return 'Bentley 1200x1200';
+        if (Math.abs(s - 1189) <= 10 && Math.abs(l - 1682) <= 10) return '2A0';
+        if (Math.abs(s - 1682) <= 10 && Math.abs(l - 2378) <= 10) return '4A0';
         if (Math.abs(s - 841) <= 6 && Math.abs(l - 1189) <= 6) return 'A0';
         if (Math.abs(s - 594) <= 6 && Math.abs(l - 841) <= 6) return 'A1';
         if (Math.abs(s - 420) <= 6 && Math.abs(l - 594) <= 6) return 'A2';
@@ -674,6 +686,7 @@
         if (Math.abs(s - 432) <= 8 && Math.abs(l - 559) <= 8) return 'ANSI C';
         if (Math.abs(s - 559) <= 8 && Math.abs(l - 864) <= 8) return 'ANSI D';
         if (Math.abs(s - 864) <= 8 && Math.abs(l - 1118) <= 8) return 'ANSI E';
+        if (Math.abs(s - 711) <= 8 && Math.abs(l - 1016) <= 8) return 'ANSI F';
         if (Math.abs(s - 229) <= 8 && Math.abs(l - 305) <= 8) return 'Arch A';
         if (Math.abs(s - 305) <= 8 && Math.abs(l - 457) <= 8) return 'Arch B';
         if (Math.abs(s - 457) <= 8 && Math.abs(l - 610) <= 8) return 'Arch C';
@@ -715,10 +728,11 @@
       function getDimensionsForSize(name, unit) {
         const mappingMm = {
           'Bentley 1200x1200': '1200 x 1200',
+          '2A0': '1189 x 1682', '4A0': '1682 x 2378',
           'A0': '841 x 1189', 'A1': '594 x 841', 'A2': '420 x 594', 'A3': '297 x 420', 'A4': '210 x 297', 'A5': '148 x 210', 'A6': '105 x 148', 'A7': '74 x 105', 'A8': '52 x 74', 'A9': '37 x 52', 'A10': '26 x 37',
           'B0': '1000 x 1414', 'B1': '707 x 1000', 'B2': '500 x 707', 'B3': '353 x 500', 'B4': '250 x 353', 'B5': '176 x 250', 'B6': '125 x 176', 'B7': '88 x 125', 'B8': '62 x 88', 'B9': '44 x 62', 'B10': '31 x 44',
           'C0': '917 x 1297', 'C1': '648 x 917', 'C2': '458 x 648', 'C3': '324 x 458', 'C4': '229 x 324', 'C5': '162 x 229', 'C6': '114 x 162', 'C7': '81 x 114', 'C8': '57 x 81',
-          'ANSI A': '216 x 279', 'ANSI B': '279 x 432', 'ANSI C': '432 x 559', 'ANSI D': '559 x 864', 'ANSI E': '864 x 1118',
+          'ANSI A': '216 x 279', 'ANSI B': '279 x 432', 'ANSI C': '432 x 559', 'ANSI D': '559 x 864', 'ANSI E': '864 x 1118', 'ANSI F': '711 x 1016',
           'Arch A': '229 x 305', 'Arch B': '305 x 457', 'Arch C': '457 x 610', 'Arch D': '610 x 914', 'Arch E': '914 x 1219', 'Arch E1': '762 x 1067', 'Arch E2': '660 x 965', 'Arch E3': '686 x 991',
           'Foolscap': '203 x 330', 'Legal': '216 x 356', 'Executive': '184 x 267', 'Ledger': '432 x 279', 'Statement': '140 x 216', 'Quarto': '215 x 275'
         };
@@ -1017,7 +1031,6 @@
 
         const blob = new Blob([tblContent], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        const a = document.exports ? null : URL.createObjectURL(blob);
         const aEl = document.createElement('a');
         aEl.href = url;
         aEl.download = `${currentLoadedFileName}.tbl`;
