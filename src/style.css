@@ -1,0 +1,127 @@
+:root {
+  --bg-color: #f4f4f5;
+  --card-bg: #ffffff;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  margin: 0;
+  padding: 2rem;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  margin: 0 0 0.5rem 0;
+}
+
+header p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.upload-section {
+  text-align: center;
+  padding: 3rem;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.upload-btn {
+  background-color: var(--primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.upload-btn:hover {
+  background-color: var(--primary-hover);
+}
+
+#progress-container {
+  margin-top: 1.5rem;
+}
+
+#progress-bar {
+  height: 8px;
+  background-color: var(--primary);
+  width: 0%;
+  border-radius: 4px;
+  transition: width 0.2s;
+  margin: 0 auto 0.5rem auto;
+  max-width: 300px;
+}
+
+.controls {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-color);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+select {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background-color: var(--bg-color);
+  font-weight: 600;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.error-text {
+  color: #dc2626;
+}
