@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local PDF Drawing Analyzer</title>
+    <link rel="stylesheet" href="./src/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>PDF Drawing Analyzer</h1>
+        <p>Process hundreds of drawings locally. No files are uploaded to any server.</p>
+      </header>
+
+      <section class="upload-section">
+        <input type="file" id="file-input" multiple accept="application/pdf" />
+        <label for="file-input" class="upload-btn">Select PDF Files</label>
+        <div id="progress-container" class="hidden">
+          <div id="progress-bar"></div>
+          <span id="progress-text">Processing 0/0 files...</span>
+        </div>
+      </section>
+
+      <section class="controls hidden" id="controls-section">
+        <div class="filter-group">
+          <label for="filter-page-size">Page Size Group:</label>
+          <select id="filter-page-size">
+            <option value="ALL">All Sizes</option>
+            <option value="A0">A0</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="A3">A3</option>
+            <option value="A4">A4</option>
+            <option value="NON-STANDARD">Non-Standard / Custom</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filter-file-size">Max File Size:</label>
+          <select id="filter-file-size">
+            <option value="ALL">Any Size</option>
+            <option value="1">Under 1 MB</option>
+            <option value="5">Under 5 MB</option>
+            <option value="10">Under 10 MB</option>
+          </select>
+        </div>
+        <div class="summary" id="results-summary">Showing 0 files</div>
+      </section>
+
+      <section class="results">
+        <table id="results-table" class="hidden">
+          <thead>
+            <tr>
+              <th>File Name</th>
+              <th>File Size</th>
+              <th>Dimensions (mm)</th>
+              <th>Drawing Size</th>
+            </tr>
+          </thead>
+          <tbody id="results-body">
+            <!-- Results populated via TS -->
+          </tbody>
+        </table>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
