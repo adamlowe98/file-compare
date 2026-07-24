@@ -179,11 +179,15 @@
         border-color: var(--primary);
       }
 
-      .summary {
-        margin-left: auto;
+      .summary-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
         font-weight: 500;
         color: var(--text-muted);
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        padding: 0 0.5rem;
       }
 
       h2.section-title {
@@ -275,94 +279,88 @@
         </div>
       </section>
 
-      <section class="controls hidden" id="controls-section">
-        <div class="filter-group">
-          <label for="unit-toggle">Unit:</label>
-          <select id="unit-toggle">
-            <option value="MM">Millimeters (mm)</option>
-            <option value="IN">Inches (in)</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="filter-dimensions">Dimensions:</label>
-          <input type="text" id="filter-dimensions" placeholder="e.g. 841 or 33.11" />
-        </div>
-
-        <div class="filter-group">
-          <label for="filter-page-size">Size Group:</label>
-          <select id="filter-page-size">
-            <option value="ALL">All Sizes</option>
-            
-            <optgroup label="ISO A-Series & Extended">
-              <option value="2A0">2A0 (1189 x 1682)</option>
-              <option value="A0">A0 (841 x 1189)</option>
-              <option value="A0 Extended">A0 Extended / Long Plot</option>
-              <option value="A1">A1 (594 x 841)</option>
-              <option value="A1 Extended">A1 Extended / Long Plot</option>
-              <option value="A2">A2 (420 x 594)</option>
-              <option value="A3">A3 (297 x 420)</option>
-              <option value="A4">A4 (210 x 297)</option>
-            </optgroup>
-
-            <optgroup label="ISO B-Series">
-              <option value="B0">B0 (1000 x 1414)</option>
-              <option value="B1">B1 (707 x 1000)</option>
-              <option value="B2">B2 (500 x 707)</option>
-              <option value="B3">B3 (353 x 500)</option>
-              <option value="B4">B4 (250 x 353)</option>
-            </optgroup>
-
-            <optgroup label="North American / ANSI">
-              <option value="Letter / ANSI A">Letter / ANSI A</option>
-              <option value="Legal">Legal</option>
-              <option value="Tabloid / ANSI B">Tabloid / ANSI B</option>
-              <option value="ANSI C">ANSI C</option>
-              <option value="ANSI D">ANSI D</option>
-              <option value="ANSI E">ANSI E</option>
-            </optgroup>
-
-            <optgroup label="Architectural (Arch)">
-              <option value="Arch A">Arch A</option>
-              <option value="Arch B">Arch B</option>
-              <option value="Arch C">Arch C</option>
-              <option value="Arch D">Arch D</option>
-              <option value="Arch E1">Arch E1</option>
-              <option value="Arch E">Arch E</option>
-            </optgroup>
-
-            <optgroup label="Custom / Bentley Formats">
-              <option value="Bentley 1200x1200">Bentley 1200x1200</option>
-              <option value="NON-STANDARD">Non-Standard / Custom</option>
-            </optgroup>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="filter-file-size">Max Size:</label>
-          <select id="filter-file-size">
-            <option value="ALL">Any Size</option>
-            <option value="1">Under 1 MB</option>
-            <option value="5">Under 5 MB</option>
-            <option value="10">Under 10 MB</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="filter-status">Status:</label>
-          <select id="filter-status">
-            <option value="ALL">All</option>
-            <option value="SUCCESS">Valid</option>
-            <option value="ERROR">Errors</option>
-          </select>
-        </div>
-
-        <div class="summary" id="results-summary">Showing 0 files</div>
-      </section>
+      <div class="summary-bar hidden" id="summary-container">
+        <span id="results-summary">Showing 0 files</span>
+      </div>
 
       <section class="results">
         <div id="pdf-container" class="hidden">
           <h2 class="section-title">PDF Documents</h2>
+          
+          <div class="controls">
+            <div class="filter-group">
+              <label for="pdf-unit-toggle">Unit:</label>
+              <select id="pdf-unit-toggle">
+                <option value="MM">mm</option>
+                <option value="IN">in</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="pdf-filter-dimensions">Dimensions:</label>
+              <input type="text" id="pdf-filter-dimensions" placeholder="e.g. 841" />
+            </div>
+            <div class="filter-group">
+              <label for="pdf-filter-page-size">Size Group:</label>
+              <select id="pdf-filter-page-size">
+                <option value="ALL">All Sizes</option>
+                <optgroup label="ISO A-Series & Extended">
+                  <option value="2A0">2A0</option>
+                  <option value="A0">A0</option>
+                  <option value="A0 Extended">A0 Extended</option>
+                  <option value="A1">A1</option>
+                  <option value="A1 Extended">A1 Extended</option>
+                  <option value="A2">A2</option>
+                  <option value="A3">A3</option>
+                  <option value="A4">A4</option>
+                </optgroup>
+                <optgroup label="ISO B-Series">
+                  <option value="B0">B0</option>
+                  <option value="B1">B1</option>
+                  <option value="B2">B2</option>
+                  <option value="B3">B3</option>
+                  <option value="B4">B4</option>
+                </optgroup>
+                <optgroup label="North American / ANSI">
+                  <option value="Letter / ANSI A">Letter / ANSI A</option>
+                  <option value="Legal">Legal</option>
+                  <option value="Tabloid / ANSI B">Tabloid / ANSI B</option>
+                  <option value="ANSI C">ANSI C</option>
+                  <option value="ANSI D">ANSI D</option>
+                  <option value="ANSI E">ANSI E</option>
+                </optgroup>
+                <optgroup label="Architectural">
+                  <option value="Arch A">Arch A</option>
+                  <option value="Arch B">Arch B</option>
+                  <option value="Arch C">Arch C</option>
+                  <option value="Arch D">Arch D</option>
+                  <option value="Arch E1">Arch E1</option>
+                  <option value="Arch E">Arch E</option>
+                </optgroup>
+                <optgroup label="Custom">
+                  <option value="Bentley 1200x1200">Bentley 1200x1200</option>
+                  <option value="NON-STANDARD">Non-Standard</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="pdf-filter-file-size">Max Size:</label>
+              <select id="pdf-filter-file-size">
+                <option value="ALL">Any Size</option>
+                <option value="1">Under 1 MB</option>
+                <option value="5">Under 5 MB</option>
+                <option value="10">Under 10 MB</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="pdf-filter-status">Status:</label>
+              <select id="pdf-filter-status">
+                <option value="ALL">All</option>
+                <option value="SUCCESS">Valid</option>
+                <option value="ERROR">Errors</option>
+              </select>
+            </div>
+          </div>
+
           <table id="pdf-results-table">
             <thead>
               <tr>
@@ -380,13 +378,41 @@
 
         <div id="dgn-container" class="hidden">
           <h2 class="section-title">DGN Source Files</h2>
+
+          <div class="controls">
+            <div class="filter-group">
+              <label for="dgn-filter-version">DGN Format:</label>
+              <select id="dgn-filter-version">
+                <option value="ALL">All Versions</option>
+                <option value="DGN V8 / CONNECT">V8 / CONNECT</option>
+                <option value="DGN V7 (Legacy)">V7 (Legacy)</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="dgn-filter-file-size">Max Size:</label>
+              <select id="dgn-filter-file-size">
+                <option value="ALL">Any Size</option>
+                <option value="1">Under 1 MB</option>
+                <option value="5">Under 5 MB</option>
+                <option value="10">Under 10 MB</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="dgn-filter-status">Status:</label>
+              <select id="dgn-filter-status">
+                <option value="ALL">All</option>
+                <option value="SUCCESS">Valid</option>
+                <option value="ERROR">Errors</option>
+              </select>
+            </div>
+          </div>
+
           <table id="dgn-results-table">
             <thead>
               <tr>
                 <th data-sort="name" data-table="dgn">File Name <span class="sort-icon"></span></th>
                 <th data-sort="size" data-table="dgn">File Size <span class="sort-icon"></span></th>
-                <th data-sort="inferredSize" data-table="dgn">Inferred Size Group <span class="sort-icon"></span></th>
-                <th data-sort="formatVersion" data-table="dgn">DGN Format <span class="sort-icon"></span></th>
+                <th data-sort="formatVersion" data-table="dgn">DGN Format Version <span class="sort-icon"></span></th>
               </tr>
             </thead>
             <tbody id="dgn-results-body">
@@ -411,7 +437,7 @@
       const progressContainer = document.getElementById('progress-container');
       const progressBar = document.getElementById('progress-bar');
       const progressText = document.getElementById('progress-text');
-      const controlsSection = document.getElementById('controls-section');
+      const summaryContainer = document.getElementById('summary-container');
       const resultsSummary = document.getElementById('results-summary');
       const dimUnitLabel = document.getElementById('dim-unit-label');
 
@@ -420,24 +446,33 @@
       const pdfResultsBody = document.getElementById('pdf-results-body');
       const dgnResultsBody = document.getElementById('dgn-results-body');
       
-      const filterPageSize = document.getElementById('filter-page-size');
-      const filterFileSize = document.getElementById('filter-file-size');
-      const filterDimensions = document.getElementById('filter-dimensions');
-      const filterStatus = document.getElementById('filter-status');
-      const unitToggle = document.getElementById('unit-toggle');
+      const pdfFilterPageSize = document.getElementById('pdf-filter-page-size');
+      const pdfFilterFileSize = document.getElementById('pdf-filter-file-size');
+      const pdfFilterDimensions = document.getElementById('pdf-filter-dimensions');
+      const pdfFilterStatus = document.getElementById('pdf-filter-status');
+      const pdfUnitToggle = document.getElementById('pdf-unit-toggle');
+
+      const dgnFilterVersion = document.getElementById('dgn-filter-version');
+      const dgnFilterFileSize = document.getElementById('dgn-filter-file-size');
+      const dgnFilterStatus = document.getElementById('dgn-filter-status');
+
       const tableHeaders = document.querySelectorAll('th[data-sort]');
 
       fileInput.addEventListener('change', handleFilesUpload);
-      filterPageSize.addEventListener('change', renderTables);
-      filterFileSize.addEventListener('change', renderTables);
-      filterDimensions.addEventListener('input', renderTables);
-      filterStatus.addEventListener('change', renderTables);
-
-      unitToggle.addEventListener('change', (e) => {
+      
+      pdfFilterPageSize.addEventListener('change', renderTables);
+      pdfFilterFileSize.addEventListener('change', renderTables);
+      pdfFilterDimensions.addEventListener('input', renderTables);
+      pdfFilterStatus.addEventListener('change', renderTables);
+      pdfUnitToggle.addEventListener('change', (e) => {
         currentUnit = e.target.value;
         dimUnitLabel.textContent = currentUnit === 'MM' ? 'mm' : 'in';
         renderTables();
       });
+
+      dgnFilterVersion.addEventListener('change', renderTables);
+      dgnFilterFileSize.addEventListener('change', renderTables);
+      dgnFilterStatus.addEventListener('change', renderTables);
 
       tableHeaders.forEach(th => {
         th.addEventListener('click', () => {
@@ -456,7 +491,7 @@
         allDgnData = [];
         
         progressContainer.classList.remove('hidden');
-        controlsSection.classList.add('hidden');
+        summaryContainer.classList.add('hidden');
         pdfContainer.classList.add('hidden');
         dgnContainer.classList.add('hidden');
         pdfResultsBody.innerHTML = '';
@@ -481,9 +516,7 @@
                 name: file.name,
                 sizeBytes: file.size,
                 sizeString: formatBytes(file.size),
-                inferredSize: 'ERROR',
                 formatVersion: 'Unknown',
-                widthMm: 0, heightMm: 0, widthIn: 0, heightIn: 0,
                 error: 'Failed to read DGN file'
               });
             }
@@ -508,7 +541,7 @@
 
         target.value = '';
         progressContainer.classList.add('hidden');
-        controlsSection.classList.remove('hidden');
+        summaryContainer.classList.remove('hidden');
         renderTables();
       }
 
@@ -556,36 +589,12 @@
           }
         }
 
-        let inferred = inferDimensionsFromName(file.name);
-        let widthMm = inferred ? inferred.w : 841;
-        let heightMm = inferred ? inferred.h : 594;
-        let widthIn = (widthMm / 25.4).toFixed(2);
-        let heightIn = (heightMm / 25.4).toFixed(2);
-        let inferredSize = inferred ? inferred.sizeName : 'Non-Standard / Unspecified';
-
         return {
           name: file.name,
           sizeBytes: file.size,
           sizeString: formatBytes(file.size),
-          widthMm,
-          heightMm,
-          widthIn,
-          heightIn,
-          inferredSize,
           formatVersion
         };
-      }
-
-      function inferDimensionsFromName(name) {
-        const upper = name.toUpperCase();
-        if (upper.includes('A0')) return { w: 1189, h: 841, sizeName: 'A0' };
-        if (upper.includes('A1')) return { w: 841, h: 594, sizeName: 'A1' };
-        if (upper.includes('A2')) return { w: 594, h: 420, sizeName: 'A2' };
-        if (upper.includes('A3')) return { w: 420, h: 297, sizeName: 'A3' };
-        if (upper.includes('A4')) return { w: 297, h: 210, sizeName: 'A4' };
-        if (upper.includes('ANSI D') || upper.includes('D-SIZE')) return { w: 864, h: 559, sizeName: 'ANSI D' };
-        if (upper.includes('ANSI E') || upper.includes('E-SIZE')) return { w: 1118, h: 864, sizeName: 'ANSI E' };
-        return null;
       }
 
       function classifyDrawingSize(w, h) {
@@ -656,36 +665,40 @@
       }
 
       function renderTables() {
-        const pageSizeFilter = filterPageSize.value;
-        const maxMbFilter = filterFileSize.value;
-        const dimSearchFilter = filterDimensions.value.toLowerCase().trim();
-        const statusFilter = filterStatus.value;
+        const pdfPageSize = pdfFilterPageSize.value;
+        const pdfMaxMb = pdfFilterFileSize.value;
+        const pdfDimSearch = pdfFilterDimensions.value.toLowerCase().trim();
+        const pdfStatus = pdfFilterStatus.value;
+
+        const dgnVersion = dgnFilterVersion.value;
+        const dgnMaxMb = dgnFilterFileSize.value;
+        const dgnStatus = dgnFilterStatus.value;
 
         let filteredPdf = allPdfData.filter(file => {
-          if (statusFilter === 'SUCCESS' && file.error) return false;
-          if (statusFilter === 'ERROR' && !file.error) return false;
+          if (pdfStatus === 'SUCCESS' && file.error) return false;
+          if (pdfStatus === 'ERROR' && !file.error) return false;
           if (file.error) return true;
-          if (pageSizeFilter !== 'ALL' && file.drawingSize !== pageSizeFilter) return false;
-          if (maxMbFilter !== 'ALL') {
-            const maxBytes = parseFloat(maxMbFilter) * 1024 * 1024;
+          if (pdfPageSize !== 'ALL' && file.drawingSize !== pdfPageSize) return false;
+          if (pdfMaxMb !== 'ALL') {
+            const maxBytes = parseFloat(pdfMaxMb) * 1024 * 1024;
             if (file.sizeBytes > maxBytes) return false;
           }
-          if (dimSearchFilter) {
+          if (pdfDimSearch) {
             const dimStringMM = `${file.widthMm} x ${file.heightMm}`;
             const dimStringIN = `${file.widthIn} x ${file.heightIn}`;
             const currentDimStr = currentUnit === 'MM' ? dimStringMM : dimStringIN;
-            if (!currentDimStr.toLowerCase().includes(dimSearchFilter)) return false;
+            if (!currentDimStr.toLowerCase().includes(pdfDimSearch)) return false;
           }
           return true;
         });
 
         let filteredDgn = allDgnData.filter(file => {
-          if (statusFilter === 'SUCCESS' && file.error) return false;
-          if (statusFilter === 'ERROR' && !file.error) return false;
+          if (dgnStatus === 'SUCCESS' && file.error) return false;
+          if (dgnStatus === 'ERROR' && !file.error) return false;
           if (file.error) return true;
-          if (pageSizeFilter !== 'ALL' && file.inferredSize !== pageSizeFilter) return false;
-          if (maxMbFilter !== 'ALL') {
-            const maxBytes = parseFloat(maxMbFilter) * 1024 * 1024;
+          if (dgnVersion !== 'ALL' && file.formatVersion !== dgnVersion) return false;
+          if (dgnMaxMb !== 'ALL') {
+            const maxBytes = parseFloat(dgnMaxMb) * 1024 * 1024;
             if (file.sizeBytes > maxBytes) return false;
           }
           return true;
@@ -713,7 +726,6 @@
             switch (sortConfig.dgn.column) {
               case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
               case 'size': valA = a.sizeBytes; valB = b.sizeBytes; break;
-              case 'inferredSize': valA = a.inferredSize; valB = b.inferredSize; break;
               case 'formatVersion': valA = a.formatVersion; valB = b.formatVersion; break;
             }
             if (valA < valB) return sortConfig.dgn.ascending ? -1 : 1;
@@ -744,7 +756,7 @@
             tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td colspan="2" class="error-text">Error: ${file.error}</td>`;
           } else {
             tr.classList.remove('error-row');
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td><strong>${file.inferredSize}</strong></td><td>${file.formatVersion}</td>`;
+            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td>${file.formatVersion}</td>`;
           }
           dgnResultsBody.appendChild(tr);
         });
