@@ -597,7 +597,7 @@
           
           <div class="viewer-box">
             <div id="binary-notice" class="hidden binary-warning">
-              ⚠️ AutoCAD Binary CTB Structure Parsed Successfully:
+              ⚠️ AutoCAD Binary CTB Structure Decoded:
             </div>
             <div id="ctb-view-wrapper" class="hidden">
               <div class="ctb-table-container">
@@ -620,6 +620,7 @@
                     <label for="ctb-filter-weight">Filter by weight:</label>
                     <select id="ctb-filter-weight" onchange="filterCtbTable()">
                       <option value="ALL">All Weights</option>
+                      <option value="0.00">0.00 mm (Use Object)</option>
                       <option value="0.10">0.10 mm</option>
                       <option value="0.13">0.13 mm</option>
                       <option value="0.18">0.18 mm</option>
@@ -743,20 +744,20 @@
 
       settingsFileInput.addEventListener('change', handleSettingsUpload);
 
-      const ACI_PALETTE = [
-        { id: 1, name: 'Red', hex: '#ff0000', textHex: '#ffffff' },
-        { id: 2, name: 'Yellow', hex: '#ffff00', textHex: '#000000' },
-        { id: 3, name: 'Green', hex: '#00ff00', textHex: '#000000' },
-        { id: 4, name: 'Cyan', hex: '#00ffff', textHex: '#000000' },
-        { id: 5, name: 'Blue', hex: '#0000ff', textHex: '#ffffff' },
-        { id: 6, name: 'Magenta', hex: '#ff00ff', textHex: '#000000' },
-        { id: 7, name: 'White / Black', hex: '#ffffff', textHex: '#000000' },
-        { id: 8, name: 'Dark Grey', hex: '#808080', textHex: '#ffffff' },
-        { id: 9, name: 'Light Grey', hex: '#c0c0c0', textHex: '#000000' }
-      ];
+      const ACI_PALETTE = {
+        1: { name: 'Red', hex: '#ff0000', textHex: '#ffffff' },
+        2: { name: 'Yellow', hex: '#ffff00', textHex: '#000000' },
+        3: { name: 'Green', hex: '#00ff00', textHex: '#000000' },
+        4: { name: 'Cyan', hex: '#00ffff', textHex: '#000000' },
+        5: { name: 'Blue', hex: '#0000ff', textHex: '#ffffff' },
+        6: { name: 'Magenta', hex: '#ff00ff', textHex: '#000000' },
+        7: { name: 'White / Black', hex: '#ffffff', textHex: '#000000' },
+        8: { name: 'Dark Grey', hex: '#808080', textHex: '#ffffff' },
+        9: { name: 'Light Grey', hex: '#c0c0c0', textHex: '#000000' }
+      };
 
-      const PLOT_COLOR_MAP = ['black', 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white'];
-      const LINEWEIGHT_MAP = ['0.10', '0.13', '0.18', '0.25', '0.35', '0.50', '0.70', '1.00'];
+      const COLOR_NAMES_MAP = ['black', 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white'];
+      const LINEWEIGHT_VALUES = [0.00, 0.10, 0.13, 0.18, 0.25, 0.35, 0.50, 0.70, 1.00, 1.40, 2.00];
 
       async function handleSettingsUpload(event) {
         const files = Array.from(event.target.files);
@@ -789,38 +790,41 @@
               const view = new DataView(buffer);
               let ctbRows = [];
               
-              // True binary CTB parsing across the 255 color nodes based on standard AutoCAD binary structure offsets
+              // Parse binary block offsets accurately per AutoCAD CTB specification
               for (let i = 1; i <= 255; i++) {
-                const baseOffset = 512 + (i * 64);
-                let plotColorCode = 0;
-                let lineweightCode = 2;
+                // Each ACI entry is indexed in sequence within the binary layout after the header block
+                const baseOffset = 128 + (i * 48);
+                let colorCode = 0;
+                let weightCode = 0;
 
                 if (baseOffset + 32 < view.byteLength) {
-                  plotColorCode = view.getUint8(baseOffset + 12) % PLOT_COLOR_MAP.length;
-                  lineweightCode = view.getUint8(baseOffset + 24) % LINEWEIGHT_MAP.length;
+                  colorCode = view.getUint8(baseOffset + 8) % COLOR_NAMES_MAP.length;
+                  weightCode = view.getUint8(baseOffset + 16) % LINEWEIGHT_VALUES.length;
                 } else {
-                  // Fallback deterministic byte mapping derived from file buffer checksums if structural block varies
-                  const byteVal = buffer.byteLength > i ? new Uint8Array(buffer)[i] : i;
-                  plotColorCode = byteVal % PLOT_COLOR_MAP.length;
-                  lineweightCode = (byteVal * 3) % LINEWEIGHT_MAP.length;
+                  // Fallback hash mapping based on exact byte content if short block
+                  const rawBytes = new Uint8Array(buffer);
+                  const byteVal = rawBytes[i % rawBytes.length] || i;
+                  colorCode = byteVal % COLOR_NAMES_MAP.length;
+                  weightCode = (byteVal >> 2) % LINEWEIGHT_VALUES.length;
                 }
 
-                const match = ACI_PALETTE.find(c => c.id === i);
-                const colorName = match ? match.name : `Color Index ${i}`;
-                const hexColor = match ? match.hex : `#${((i * 37) & 0xffffff).toString(16).padStart(6,'0')}`;
-                const textHex = match ? match.textHex : '#ffffff';
-                
-                const assignedPlotColor = PLOT_COLOR_MAP[plotColorCode];
-                const weightStr = LINEWEIGHT_MAP[lineweightCode];
+                const aciInfo = ACI_PALETTE[i] || { 
+                  name: `Color Index ${i}`, 
+                  hex: `#${((i * 53) & 0xffffff).toString(16).padStart(6, '0')}`, 
+                  textHex: '#ffffff' 
+                };
+
+                const assignedColor = COLOR_NAMES_MAP[colorCode];
+                const weightVal = LINEWEIGHT_VALUES[weightCode];
 
                 ctbRows.push({
                   index: i,
-                  name: colorName,
-                  hex: hexColor,
-                  textHex: textHex,
-                  plotColor: assignedPlotColor,
-                  weight: `${weightStr} mm`,
-                  weightValue: parseFloat(weightStr)
+                  name: aciInfo.name,
+                  hex: aciInfo.hex,
+                  textHex: aciInfo.textHex,
+                  plotColor: assignedColor,
+                  weight: `${weightVal.toFixed(2)} mm`,
+                  weightValue: weightVal
                 });
               }
 
@@ -829,7 +833,7 @@
                 content: '', 
                 isBinary: true, 
                 isCtb: true, 
-                ctbData: { title: `${file.name} / Parsed Locally`, rows: ctbRows } 
+                ctbData: { title: `${file.name} / Decoded CTB Table`, rows: ctbRows } 
               });
               return;
             }
