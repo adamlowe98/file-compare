@@ -338,40 +338,64 @@
               <label for="pdf-filter-page-size">Drawing Size:</label>
               <select id="pdf-filter-page-size" onchange="filterPdfTable()">
                 <option value="ALL">All Sizes (Comprehensive)</option>
+                <!-- Common Bentley Specific -->
+                <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm / 47.24 x 47.24 in)</option>
                 <!-- ISO A Series -->
-                <option value="A0">A0 (841 x 1189 mm)</option>
-                <option value="A1">A1 (594 x 841 mm)</option>
-                <option value="A2">A2 (420 x 594 mm)</option>
-                <option value="A3">A3 (297 x 420 mm)</option>
-                <option value="A4">A4 (210 x 297 mm)</option>
-                <option value="A5">A5 (148 x 210 mm)</option>
-                <option value="A6">A6 (105 x 148 mm)</option>
+                <option value="A0">A0 (841 x 1189 mm / 33.11 x 46.81 in)</option>
+                <option value="A1">A1 (594 x 841 mm / 23.39 x 33.11 in)</option>
+                <option value="A2">A2 (420 x 594 mm / 16.54 x 23.39 in)</option>
+                <option value="A3">A3 (297 x 420 mm / 11.69 x 16.54 in)</option>
+                <option value="A4">A4 (210 x 297 mm / 8.27 x 11.69 in)</option>
+                <option value="A5">A5 (148 x 210 mm / 5.83 x 8.27 in)</option>
+                <option value="A6">A6 (105 x 148 mm / 4.13 x 5.83 in)</option>
+                <option value="A7">A7 (74 x 105 mm / 2.91 x 4.13 in)</option>
+                <option value="A8">A8 (52 x 74 mm / 2.05 x 2.91 in)</option>
+                <option value="A9">A9 (37 x 52 mm / 1.46 x 2.05 in)</option>
+                <option value="A10">A10 (26 x 37 mm / 1.02 x 1.46 in)</option>
                 <!-- ISO B Series -->
-                <option value="B0">B0 (1000 x 1414 mm)</option>
-                <option value="B1">B1 (707 x 1000 mm)</option>
-                <option value="B2">B2 (500 x 707 mm)</option>
-                <option value="B3">B3 (353 x 500 mm)</option>
-                <option value="B4">B4 (250 x 353 mm)</option>
-                <option value="B5">B5 (176 x 250 mm)</option>
-                <!-- ANSI / US Architectural & Engineering Series -->
-                <option value="ANSI A">ANSI A / Letter (216 x 279 mm)</option>
-                <option value="ANSI B">ANSI B / Tabloid (279 x 432 mm)</option>
-                <option value="ANSI C">ANSI C (432 x 559 mm)</option>
-                <option value="ANSI D">ANSI D (559 x 864 mm)</option>
-                <option value="ANSI E">ANSI E (864 x 1118 mm)</option>
-                <option value="Arch A">Arch A (229 x 305 mm)</option>
-                <option value="Arch B">Arch B (305 x 457 mm)</option>
-                <option value="Arch C">Arch C (457 x 610 mm)</option>
-                <option value="Arch D">Arch D (610 x 914 mm)</option>
-                <option value="Arch E">Arch E (914 x 1219 mm)</option>
-                <option value="Arch E1">Arch E1 (762 x 1067 mm)</option>
-                <!-- Extended / Specialized Series -->
-                <option value="Foolscap">Foolscap (203 x 330 mm)</option>
-                <option value="Legal">Legal (216 x 356 mm)</option>
-                <option value="Executive">Executive (184 x 267 mm)</option>
-                <option value="Ledger">Ledger (432 x 279 mm)</option>
-                <option value="Statement">Statement (140 x 216 mm)</option>
-                <option value="Quarto">Quarto (215 x 275 mm)</option>
+                <option value="B0">B0 (1000 x 1414 mm / 39.37 x 55.67 in)</option>
+                <option value="B1">B1 (707 x 1000 mm / 27.83 x 39.37 in)</option>
+                <option value="B2">B2 (500 x 707 mm / 19.69 x 27.83 in)</option>
+                <option value="B3">B3 (353 x 500 mm / 13.90 x 19.69 in)</option>
+                <option value="B4">B4 (250 x 353 mm / 9.84 x 13.90 in)</option>
+                <option value="B5">B5 (176 x 250 mm / 6.93 x 9.84 in)</option>
+                <option value="B6">B6 (125 x 176 mm / 4.92 x 6.93 in)</option>
+                <option value="B7">B7 (88 x 125 mm / 3.46 x 4.92 in)</option>
+                <option value="B8">B8 (62 x 88 mm / 2.44 x 3.46 in)</option>
+                <option value="B9">B9 (44 x 62 mm / 1.73 x 2.44 in)</option>
+                <option value="B10">B10 (31 x 44 mm / 1.22 x 1.73 in)</option>
+                <!-- ISO C Series -->
+                <option value="C0">C0 (917 x 1297 mm / 36.10 x 51.06 in)</option>
+                <option value="C1">C1 (648 x 917 mm / 25.51 x 36.10 in)</option>
+                <option value="C2">C2 (458 x 648 mm / 18.03 x 25.51 in)</option>
+                <option value="C3">C3 (324 x 458 mm / 12.76 x 18.03 in)</option>
+                <option value="C4">C4 (229 x 324 mm / 9.02 x 12.76 in)</option>
+                <option value="C5">C5 (162 x 229 mm / 6.38 x 9.02 in)</option>
+                <option value="C6">C6 (114 x 162 mm / 4.49 x 6.38 in)</option>
+                <option value="C7">C7 (81 x 114 mm / 3.19 x 4.49 in)</option>
+                <option value="C8">C8 (57 x 81 mm / 2.24 x 3.19 in)</option>
+                <!-- ANSI / US Engineering Series -->
+                <option value="ANSI A">ANSI A (216 x 279 mm / 8.5 x 11 in)</option>
+                <option value="ANSI B">ANSI B (279 x 432 mm / 11 x 17 in)</option>
+                <option value="ANSI C">ANSI C (432 x 559 mm / 17 x 22 in)</option>
+                <option value="ANSI D">ANSI D (559 x 864 mm / 22 x 34 in)</option>
+                <option value="ANSI E">ANSI E (864 x 1118 mm / 34 x 44 in)</option>
+                <!-- Architectural Series -->
+                <option value="Arch A">Arch A (229 x 305 mm / 9 x 12 in)</option>
+                <option value="Arch B">Arch B (305 x 457 mm / 12 x 18 in)</option>
+                <option value="Arch C">Arch C (457 x 610 mm / 18 x 24 in)</option>
+                <option value="Arch D">Arch D (610 x 914 mm / 24 x 36 in)</option>
+                <option value="Arch E">Arch E (914 x 1219 mm / 36 x 48 in)</option>
+                <option value="Arch E1">Arch E1 (762 x 1067 mm / 30 x 42 in)</option>
+                <option value="Arch E2">Arch E2 (660 x 965 mm / 26 x 38 in)</option>
+                <option value="Arch E3">Arch E3 (686 x 991 mm / 27 x 39 in)</option>
+                <!-- Specialized Standards -->
+                <option value="Foolscap">Foolscap (203 x 330 mm / 7.99 x 12.99 in)</option>
+                <option value="Legal">Legal (216 x 356 mm / 8.5 x 14 in)</option>
+                <option value="Executive">Executive (184 x 267 mm / 7.25 x 10.5 in)</option>
+                <option value="Ledger">Ledger (432 x 279 mm / 17 x 8.5 in)</option>
+                <option value="Statement">Statement (140 x 216 mm / 5.5 x 8.5 in)</option>
+                <option value="Quarto">Quarto (215 x 275 mm / 8.46 x 10.83 in)</option>
               </select>
             </div>
           </div>
@@ -502,7 +526,7 @@
         document.getElementById(`tool-${toolName}`).classList.add('active');
       }
 
-      // PDF and DGN Viewer Handler with Exhaustive Size Classification Support
+      // PDF and DGN Viewer Handler
       document.getElementById('file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0 || !PDFDocument) return;
@@ -542,7 +566,7 @@
           }
         }
         document.getElementById('summary-container').classList.remove('hidden');
-        renderDrawingTables();
+        filterPdfTable();
         e.target.value = '';
       });
 
@@ -555,6 +579,7 @@
 
       function classifySize(w, h) {
         const s = Math.min(w, h), l = Math.max(w, h);
+        if (Math.abs(s - 1200) <= 10 && Math.abs(l - 1200) <= 10) return 'Bentley 1200x1200';
         // ISO A Series
         if (Math.abs(s - 841) <= 6 && Math.abs(l - 1189) <= 6) return 'A0';
         if (Math.abs(s - 594) <= 6 && Math.abs(l - 841) <= 6) return 'A1';
@@ -563,6 +588,10 @@
         if (Math.abs(s - 210) <= 6 && Math.abs(l - 297) <= 6) return 'A4';
         if (Math.abs(s - 148) <= 6 && Math.abs(l - 210) <= 6) return 'A5';
         if (Math.abs(s - 105) <= 6 && Math.abs(l - 148) <= 6) return 'A6';
+        if (Math.abs(s - 74) <= 6 && Math.abs(l - 105) <= 6) return 'A7';
+        if (Math.abs(s - 52) <= 6 && Math.abs(l - 74) <= 6) return 'A8';
+        if (Math.abs(s - 37) <= 6 && Math.abs(l - 52) <= 6) return 'A9';
+        if (Math.abs(s - 26) <= 6 && Math.abs(l - 37) <= 6) return 'A10';
         // ISO B Series
         if (Math.abs(s - 1000) <= 6 && Math.abs(l - 1414) <= 6) return 'B0';
         if (Math.abs(s - 707) <= 6 && Math.abs(l - 1000) <= 6) return 'B1';
@@ -570,6 +599,21 @@
         if (Math.abs(s - 353) <= 6 && Math.abs(l - 500) <= 6) return 'B3';
         if (Math.abs(s - 250) <= 6 && Math.abs(l - 353) <= 6) return 'B4';
         if (Math.abs(s - 176) <= 6 && Math.abs(l - 250) <= 6) return 'B5';
+        if (Math.abs(s - 125) <= 6 && Math.abs(l - 176) <= 6) return 'B6';
+        if (Math.abs(s - 88) <= 6 && Math.abs(l - 125) <= 6) return 'B7';
+        if (Math.abs(s - 62) <= 6 && Math.abs(l - 88) <= 6) return 'B8';
+        if (Math.abs(s - 44) <= 6 && Math.abs(l - 62) <= 6) return 'B9';
+        if (Math.abs(s - 31) <= 6 && Math.abs(l - 44) <= 6) return 'B10';
+        // ISO C Series
+        if (Math.abs(s - 917) <= 6 && Math.abs(l - 1297) <= 6) return 'C0';
+        if (Math.abs(s - 648) <= 6 && Math.abs(l - 917) <= 6) return 'C1';
+        if (Math.abs(s - 458) <= 6 && Math.abs(l - 648) <= 6) return 'C2';
+        if (Math.abs(s - 324) <= 6 && Math.abs(l - 458) <= 6) return 'C3';
+        if (Math.abs(s - 229) <= 6 && Math.abs(l - 324) <= 6) return 'C4';
+        if (Math.abs(s - 162) <= 6 && Math.abs(l - 229) <= 6) return 'C5';
+        if (Math.abs(s - 114) <= 6 && Math.abs(l - 162) <= 6) return 'C6';
+        if (Math.abs(s - 81) <= 6 && Math.abs(l - 114) <= 6) return 'C7';
+        if (Math.abs(s - 57) <= 6 && Math.abs(l - 81) <= 6) return 'C8';
         // ANSI / US Engineering Series
         if (Math.abs(s - 216) <= 8 && Math.abs(l - 279) <= 8) return 'ANSI A';
         if (Math.abs(s - 279) <= 8 && Math.abs(l - 432) <= 8) return 'ANSI B';
@@ -583,6 +627,8 @@
         if (Math.abs(s - 610) <= 8 && Math.abs(l - 914) <= 8) return 'Arch D';
         if (Math.abs(s - 914) <= 8 && Math.abs(l - 1219) <= 8) return 'Arch E';
         if (Math.abs(s - 762) <= 8 && Math.abs(l - 1067) <= 8) return 'Arch E1';
+        if (Math.abs(s - 660) <= 8 && Math.abs(l - 965) <= 8) return 'Arch E2';
+        if (Math.abs(s - 686) <= 8 && Math.abs(l - 991) <= 8) return 'Arch E3';
         // Specialized Standards
         if (Math.abs(s - 203) <= 8 && Math.abs(l - 330) <= 8) return 'Foolscap';
         if (Math.abs(s - 216) <= 8 && Math.abs(l - 356) <= 8) return 'Legal';
@@ -596,7 +642,41 @@
       function updatePdfUnit(unit) {
         currentUnit = unit;
         document.getElementById('dim-unit-label').textContent = unit.toLowerCase();
-        renderDrawingTables();
+        
+        // Dynamically update dropdown text options to match MM or Inches seamlessly
+        const select = document.getElementById('pdf-filter-page-size');
+        const opts = select.options;
+        for (let i = 0; i < opts.length; i++) {
+          let val = opts[i].value;
+          if (val === 'ALL') {
+            opts[i].text = 'All Sizes (Comprehensive)';
+            continue;
+          }
+          let dims = getDimensionsForSize(val, unit);
+          if (dims) {
+            opts[i].text = `${val} (${dims})`;
+          }
+        }
+        filterPdfTable();
+      }
+
+      function getDimensionsForSize(name, unit) {
+        const mappingMm = {
+          'Bentley 1200x1200': '1200 x 1200',
+          'A0': '841 x 1189', 'A1': '594 x 841', 'A2': '420 x 594', 'A3': '297 x 420', 'A4': '210 x 297', 'A5': '148 x 210', 'A6': '105 x 148', 'A7': '74 x 105', 'A8': '52 x 74', 'A9': '37 x 52', 'A10': '26 x 37',
+          'B0': '1000 x 1414', 'B1': '707 x 1000', 'B2': '500 x 707', 'B3': '353 x 500', 'B4': '250 x 353', 'B5': '176 x 250', 'B6': '125 x 176', 'B7': '88 x 125', 'B8': '62 x 88', 'B9': '44 x 62', 'B10': '31 x 44',
+          'C0': '917 x 1297', 'C1': '648 x 917', 'C2': '458 x 648', 'C3': '324 x 458', 'C4': '229 x 324', 'C5': '162 x 229', 'C6': '114 x 162', 'C7': '81 x 114', 'C8': '57 x 81',
+          'ANSI A': '216 x 279', 'ANSI B': '279 x 432', 'ANSI C': '432 x 559', 'ANSI D': '559 x 864', 'ANSI E': '864 x 1118',
+          'Arch A': '229 x 305', 'Arch B': '305 x 457', 'Arch C': '457 x 610', 'Arch D': '610 x 914', 'Arch E': '914 x 1219', 'Arch E1': '762 x 1067', 'Arch E2': '660 x 965', 'Arch E3': '686 x 991',
+          'Foolscap': '203 x 330', 'Legal': '216 x 356', 'Executive': '184 x 267', 'Ledger': '432 x 279', 'Statement': '140 x 216', 'Quarto': '215 x 275'
+        };
+        const mmStr = mappingMm[name];
+        if (!mmStr) return '';
+        if (unit === 'MM') return `${mmStr} mm`;
+        const parts = mmStr.split(' x ');
+        const inW = (parseFloat(parts[0]) / 25.4).toFixed(2);
+        const inH = (parseFloat(parts[1]) / 25.4).toFixed(2);
+        return `${inW} x ${inH} in`;
       }
 
       function renderDrawingTables(filteredPdf = allPdfData) {
@@ -623,7 +703,7 @@
           dgnBody.appendChild(tr);
         });
         if (allDgnData.length > 0) document.getElementById('dgn-container').classList.remove('hidden');
-        document.getElementById('results-summary').textContent = `Showing ${allPdfData.length + allDgnData.length} files`;
+        document.getElementById('results-summary').textContent = `Showing ${filteredPdf.length + allDgnData.length} files`;
       }
 
       function filterPdfTable() {
@@ -795,6 +875,7 @@
         penContent = penContent + `# Compatible with Print Organizer / Print Style Remapping\n\n`;
         penContent = penContent + `pen_table_description = "Converted from ${currentLoadedFileName}.ctb"\n\n`;
 
+        activeCtbRows.label = activeCtbRows.label || '';
         activeCtbRows.forEach(r => {
           penContent = penContent + `color(${r.index}) {\n`;
           
