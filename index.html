@@ -131,6 +131,19 @@
         background-color: #059669;
       }
 
+      .action-btn-secondary {
+        background-color: #6366f1;
+      }
+
+      .action-btn-secondary:hover {
+        background-color: #4f46e5;
+      }
+
+      .action-group {
+        display: flex;
+        gap: 0.5rem;
+      }
+
       .controls {
         display: flex;
         flex-wrap: wrap;
@@ -272,6 +285,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
       }
 
       .ctb-grid-table {
@@ -299,7 +314,7 @@
     <div class="container">
       <header>
         <h1>All in one Plotting Tool</h1>
-        <p>Inspect drawing dimensions, configuration files, and securely compile MicroStation .pen configuration files locally.</p>
+        <p>Inspect drawing dimensions, configuration files, and securely compile MicroStation .pen and .tbl configuration files locally.</p>
       </header>
 
       <div class="nav-tabs">
@@ -452,7 +467,10 @@
           <div class="ctb-table-container">
             <div class="ctb-header-bar">
               <span id="ctb-file-title">CTB Plot Style Inspector</span>
-              <button class="action-btn" onclick="exportToPenFile()">Download MicroStation .pen File</button>
+              <div class="action-group">
+                <button class="action-btn" onclick="exportToPenFile()">Download .pen File</button>
+                <button class="action-btn action-btn-secondary" onclick="exportToTblFile()">Download .tbl File</button>
+              </div>
             </div>
             
             <div class="controls">
@@ -528,7 +546,6 @@
         for (let file of files) {
           const ext = file.name.split('.').pop().toLowerCase();
           if (ext === 'dgn') {
-            // Avoid exact duplicate filenames in the session list
             if (!allDgnData.some(d => d.name === file.name)) {
               allDgnData.push({
                 name: file.name,
@@ -564,7 +581,7 @@
         }
         document.getElementById('summary-container').classList.remove('hidden');
         filterPdfTable();
-        e.target.value = ''; // Reset input so identical file additions trigger change event again
+        e.target.value = '';
       });
 
       function formatBytes(bytes) {
@@ -733,7 +750,6 @@
         
         loadedSettingsFiles.forEach((fileObj, idx) => {
           const chip = document.createElement('div');
-          // Keep the currently selected active chip if possible, else default to the first
           const activeFileName = document.querySelector('.file-chip.active')?.textContent;
           const isActive = activeFileName ? activeFileName === fileObj.name : idx === 0;
 
@@ -883,25 +899,25 @@
         }
 
         let penContent = `# MicroStation Pen Table Configuration File (.pen)\n`;
-        penContent = penContent + `# Converted from AutoCAD CTB: ${currentLoadedFileName}.ctb\n`;
-        penContent = penContent + `# Compatible with Print Organizer / Print Style Remapping\n\n`;
-        penContent = penContent + `pen_table_description = "Converted from ${currentLoadedFileName}.ctb"\n\n`;
+        penContent += `# Converted from AutoCAD CTB: ${currentLoadedFileName}.ctb\n`;
+        penContent += `# Compatible with Print Organizer / Print Style Remapping\n\n`;
+        penContent += `pen_table_description = "Converted from ${currentLoadedFileName}.ctb"\n\n`;
 
         activeCtbRows.forEach(r => {
-          penContent = penContent + `color(${r.index}) {\n`;
+          penContent += `color(${r.index}) {\n`;
           
           if (r.plotColor === 'white') {
-            penContent = penContent + `  output_color = rgb(255, 255, 255)\n`;
+            penContent += `  output_color = rgb(255, 255, 255)\n`;
           } else if (r.plotColor.includes('grey')) {
             const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
             const val = Math.round(255 * (1 - pct / 100));
-            penContent = penContent + `  output_color = rgb(${val}, ${val}, ${val})\n`;
+            penContent += `  output_color = rgb(${val}, ${val}, ${val})\n`;
           } else {
-            penContent = penContent + `  output_color = rgb(0, 0, 0)\n`;
+            penContent += `  output_color = rgb(0, 0, 0)\n`;
           }
 
-          penContent = penContent + `  output_weight = ${r.weightVal}\n`;
-          penContent = penContent + `}\n\n`;
+          penContent += `  output_weight = ${r.weightVal}\n`;
+          penContent += `}\n\n`;
         });
 
         const blob = new Blob([penContent], { type: 'text/plain;charset=utf-8' });
@@ -909,6 +925,41 @@
         const a = document.createElement('a');
         a.href = url;
         a.download = `${currentLoadedFileName}.pen`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function exportToTblFile() {
+        if (!activeCtbRows || activeCtbRows.length === 0) {
+          alert("Please upload and parse a .ctb file first.");
+          return;
+        }
+
+        let tblContent = `# Bentley Printer Table Configuration File (.tbl)\n`;
+        tblContent += `# Converted from AutoCAD CTB: ${currentLoadedFileName}.ctb\n`;
+        tblContent += `# Legacy IPLOT / Printer Configuration Mapping\n\n`;
+
+        activeCtbRows.forEach(r => {
+          tblContent += `color(${r.index}) = { `;
+          if (r.plotColor === 'white') {
+            tblContent += `rgb(255,255,255), `;
+          } else if (r.plotColor.includes('grey')) {
+            const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
+            const val = Math.round(255 * (1 - pct / 100));
+            tblContent += `rgb(${val},${val},${val}), `;
+          } else {
+            tblContent += `rgb(0,0,0), `;
+          }
+          tblContent += `weight(${r.weightVal}) }\n`;
+        });
+
+        const blob = new Blob([tblContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${currentLoadedFileName}.tbl`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
