@@ -377,7 +377,7 @@
               <th data-sort="size">File Size <span class="sort-icon"></span></th>
               <th data-sort="dimensions">Dimensions (<span id="dim-unit-label">mm</span>) <span class="sort-icon"></span></th>
               <th data-sort="drawingSize">Drawing Size <span class="sort-icon"></span></th>
-              <th data-sort="pages">Pages <span class="sort-icon"></span></th>
+              <th data-sort="pages">Pages / Type <span class="sort-icon"></span></th>
             </tr>
           </thead>
           <tbody id="results-body">
@@ -485,17 +485,30 @@
         const arrayBuffer = await file.arrayBuffer();
 
         if (extension === 'dgn') {
+          // Attempt parsing standard sheet codes from filename if present (e.g., A1, A0, or explicit dimensions like 841x1189)
+          let inferredDim = inferDimensionsFromName(file.name);
+          
+          let widthMm = inferredDim ? inferredDim.w : 841; // default fallback assumption for design models if unstated
+          let heightMm = inferredDim ? inferredDim.h : 594;
+          
+          const ptToMm = 0.352778;
+          let widthIn = (widthMm / 25.4).toFixed(2);
+          let heightIn = (heightMm / 25.4).toFixed(2);
+
+          const orientation = widthMm >= heightMm ? 'LANDSCAPE' : 'PORTRAIT';
+          const drawingSize = inferredDim ? inferredDim.sizeName : 'DGN Source File';
+
           return {
             name: file.name,
             sizeBytes: file.size,
             sizeString: formatBytes(file.size),
-            widthMm: 0,
-            heightMm: 0,
-            widthIn: 0,
-            heightIn: 0,
-            drawingSize: 'DGN Source File',
+            widthMm,
+            heightMm,
+            widthIn,
+            heightIn,
+            drawingSize,
             pageCount: 1,
-            orientation: 'LANDSCAPE'
+            orientation
           };
         }
 
@@ -527,6 +540,18 @@
           pageCount,
           orientation
         };
+      }
+
+      function inferDimensionsFromName(name) {
+        const upper = name.toUpperCase();
+        if (upper.includes('A0')) return { w: 1189, h: 841, sizeName: 'A0' };
+        if (upper.includes('A1')) return { w: 841, h: 594, sizeName: 'A1' };
+        if (upper.includes('A2')) return { w: 594, h: 420, sizeName: 'A2' };
+        if (upper.includes('A3')) return { w: 420, h: 297, sizeName: 'A3' };
+        if (upper.includes('A4')) return { w: 297, h: 210, sizeName: 'A4' };
+        if (upper.includes('ANSI D') || upper.includes('D-SIZE')) return { w: 864, h: 559, sizeName: 'ANSI D' };
+        if (upper.includes('ANSI E') || upper.includes('E-SIZE')) return { w: 1118, h: 864, sizeName: 'ANSI E' };
+        return null;
       }
 
       function classifyDrawingSize(w, h) {
@@ -682,16 +707,16 @@
             `;
           } else {
             tr.classList.remove('error-row');
-            const dims = file.drawingSize === 'DGN Source File' 
-              ? 'N/A (.dgn)' 
-              : (currentUnit === 'MM' ? `${file.widthMm} x ${file.heightMm}` : `${file.widthIn} x ${file.heightIn}`);
+            const dims = currentUnit === 'MM' 
+              ? `${file.widthMm} x ${file.heightMm}`
+              : `${file.widthIn} x ${file.heightIn}`;
 
             tr.innerHTML = `
               <td>${file.name}</td>
               <td>${file.sizeString}</td>
               <td>${dims}</td>
               <td><strong>${file.drawingSize}</strong></td>
-              <td>${file.drawingSize === 'DGN Source File' ? 'N/A' : file.pageCount}</td>
+              <td>${file.pageCount}</td>
             `;
           }
           resultsBody.appendChild(tr);
