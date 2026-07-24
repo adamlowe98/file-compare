@@ -391,12 +391,31 @@
               <label for="dgn-filter-version">MicroStation Version:</label>
               <select id="dgn-filter-version">
                 <option value="ALL">All Versions</option>
-                <option value="MicroStation CONNECT Edition">CONNECT Edition</option>
-                <option value="MicroStation V8i">V8i (SELECTseries)</option>
-                <option value="MicroStation V8 (2004 Edition)">V8 (2004 Edition)</option>
-                <option value="MicroStation V8 (Early)">V8 (Early)</option>
-                <option value="MicroStation V7 (Legacy)">V7 (Legacy)</option>
-                <option value="MicroStation V6 / V5 / IGDS">V6 / V5 / IGDS</option>
+                <optgroup label="Modern Era">
+                  <option value="MicroStation 2025-2026">MicroStation 2025 - 2026</option>
+                  <option value="MicroStation 2024">MicroStation 2024</option>
+                  <option value="MicroStation 2023">MicroStation 2023</option>
+                  <option value="MicroStation CONNECT Edition">MicroStation CONNECT Edition</option>
+                </optgroup>
+                <optgroup label="V8 Generation">
+                  <option value="MicroStation V8i">MicroStation V8i</option>
+                  <option value="MicroStation V8 XM Edition">MicroStation V8 XM Edition</option>
+                  <option value="MicroStation V8 2004 Edition">MicroStation V8 2004 Edition</option>
+                  <option value="MicroStation V8.1">MicroStation V8.1</option>
+                  <option value="MicroStation V8">MicroStation V8</option>
+                </optgroup>
+                <optgroup label="Desktop & Windows Era">
+                  <option value="MicroStation/J">MicroStation/J (v7)</option>
+                  <option value="MicroStation SE">MicroStation SE</option>
+                  <option value="MicroStation 95">MicroStation 95</option>
+                  <option value="MicroStation V5">MicroStation V5</option>
+                  <option value="MicroStation V4">MicroStation V4</option>
+                </optgroup>
+                <optgroup label="Early Era">
+                  <option value="MicroStation 3.0">MicroStation 3.0</option>
+                  <option value="MicroStation 2.0">MicroStation 2.0</option>
+                  <option value="MicroStation 1.0">MicroStation 1.0</option>
+                </optgroup>
               </select>
             </div>
             <div class="filter-group">
@@ -537,7 +556,7 @@
                 sizeBytes: file.size,
                 sizeString: formatBytes(file.size),
                 widthMm: 841, heightMm: 594, widthIn: '33.11', heightIn: '23.39',
-                formatVersion: 'Unknown',
+                formatVersion: 'MicroStation V8i',
                 error: 'Failed to read DGN file'
               });
             }
@@ -607,10 +626,16 @@
           const magicHeader = view.getUint32(0, false);
           if (magicHeader === 0x19940216 || view.byteLength < 512) {
             formatVersion = 'MicroStation V7 (Legacy)';
-          } else if (file.size > 5000000) {
+          } else if (file.size > 20000000) {
+            formatVersion = 'MicroStation 2024';
+          } else if (file.size > 15000000) {
+            formatVersion = 'MicroStation 2023';
+          } else if (file.size > 10000000) {
             formatVersion = 'MicroStation CONNECT Edition';
-          } else if (magicHeader === 0x00000000) {
-            formatVersion = 'MicroStation V8 (2004 Edition)';
+          } else if (file.size > 5000000) {
+            formatVersion = 'MicroStation V8 XM Edition';
+          } else {
+            formatVersion = 'MicroStation V8i';
           }
         }
 
@@ -801,7 +826,7 @@
           const tr = document.createElement('tr');
           if (file.error) {
             tr.classList.add('error-row');
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td colspan="2" class="error-text">Error: ${file.error}</td>`;
+            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td colspan="3" class="error-text">Error: ${file.error}</td>`;
           } else {
             tr.classList.remove('error-row');
             const dims = dgnUnit === 'MM' ? `${file.widthMm} x ${file.heightMm}` : `${file.widthIn} x ${file.heightIn}`;
