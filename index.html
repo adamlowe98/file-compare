@@ -114,6 +114,23 @@
         background-color: var(--primary-hover);
       }
 
+      .action-btn {
+        background-color: #10b981;
+        color: white;
+        padding: 0.6rem 1.25rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+      }
+
+      .action-btn:hover {
+        background-color: #059669;
+      }
+
       .controls {
         display: flex;
         flex-wrap: wrap;
@@ -124,6 +141,7 @@
         margin-bottom: 1.5rem;
         align-items: center;
         border: 1px solid var(--border);
+        justify-content: space-between;
       }
 
       .filter-group {
@@ -242,6 +260,9 @@
         color: #fff;
         border-bottom: 1px solid var(--border);
         padding-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
       .ctb-grid-table {
@@ -269,7 +290,7 @@
     <div class="container">
       <header>
         <h1>All in one Plotting Tool</h1>
-        <p>Inspect drawing dimensions, configuration files, and correctly parse AutoCAD CTB plot tables locally.</p>
+        <p>Inspect drawing dimensions, configuration files, and securely compile Bentley .pen files from AutoCAD CTB tables locally.</p>
       </header>
 
       <div class="nav-tabs">
@@ -325,13 +346,16 @@
           <input type="file" id="ctb-file-input" accept=".ctb" />
           <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .ctb File</label>
           <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
-            Properly view true plot values, mapped screen colors, and lineweights[cite: 1].
+            Inspect plotting attributes and instantly generate a MicroStation i-Plot compatible .pen configuration file locally[cite: 1].
           </p>
         </section>
 
         <div id="ctb-viewer-container" class="hidden">
           <div class="ctb-table-container">
-            <div class="ctb-header-bar" id="ctb-file-title">CTB Plot Style Inspector</div>
+            <div class="ctb-header-bar">
+              <span id="ctb-file-title">CTB Plot Style Inspector</span>
+              <button class="action-btn" onclick="exportToPenFile()">Download Bentley .pen File</button>
+            </div>
             
             <div class="controls">
               <div class="filter-group">
@@ -383,6 +407,7 @@
     <script>
       const PDFDocument = window.PDFLib ? window.PDFLib.PDFDocument : null;
       let activeCtbRows = [];
+      let currentLoadedFileName = "converted_styles";
 
       function switchTool(toolName) {
         ['drawings', 'settings', 'ctb'].forEach(t => {
@@ -442,7 +467,7 @@
             document.getElementById('settings-output-pre').textContent = await file.text();
           };
           list.appendChild(chip);
-          if (idx === 0) file.text().then(t => document.getElementById('settings-output-pre').textContent = t);
+          if (idx === 0) file.text().text ? file.text().then(t => document.getElementById('settings-output-pre').textContent = t) : null;
         });
         document.getElementById('settings-viewer-container').classList.remove('hidden');
         e.target.value = '';
@@ -464,6 +489,7 @@
         const file = e.target.files[0];
         if (!file) return;
 
+        currentLoadedFileName = file.name.replace(/\.[^/.]+$/, "");
         const buffer = await file.arrayBuffer();
         const view = new DataView(buffer);
         activeCtbRows = [];
@@ -513,7 +539,7 @@
           });
         }
 
-        document.getElementById('ctb-file-title').textContent = `${file.name} / ${new Date().toLocaleDateString()}`;
+        document.getElementById('ctb-file-title').textContent = `${file.name} / Loaded`;
         document.getElementById('ctb-viewer-container').classList.remove('hidden');
         renderCtbTable(activeCtbRows);
         e.target.value = '';
@@ -564,6 +590,42 @@
         });
 
         renderCtbTable(filtered);
+      }
+
+      // Secure Client-Side Bentley .pen Exporter Function
+      function exportToPenFile() {
+        if (!activeCtbRows || activeCtbRows.length === 0) {
+          alert("Please upload and parse a .ctb file first.");
+          return;
+        }
+
+        let penContent = `# Bentley i-Plot Pen Configuration File\n`;
+        penContent += `# Generated from AutoCAD CTB: ${currentLoadedFileName}.ctb\n`;
+        penContent += `# Standard MicroStation Rendition Mapping\n\n`;
+
+        activeCtbRows.forEach(r => {
+          penContent += `color(${r.index}) = { ";
+          if (r.plotColor === 'white') {
+            penContent += `rgb(255,255,255), ";
+          } else if (r.plotColor.includes('grey')) {
+            const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
+            const val = Math.round(255 * (1 - pct / 100));
+            penContent += `rgb(${val},${val},${val}), ";
+          } else {
+            penContent += `rgb(0,0,0), ";
+          }
+          penContent += `weight(${r.weightVal}) }\n`;
+        });
+
+        const blob = new Blob([penContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${currentLoadedFileName}.pen`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
     </script>
   </body>
