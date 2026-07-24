@@ -227,7 +227,27 @@
         <div class="filter-group">
           <label for="filter-page-size">Size Group:</label>
           <select id="filter-page-size">
-            <option value="ALL">All</option>
+            <option value="ALL">All Sizes</option>
+            
+            <optgroup label="ISO A-Series & Extended Rolls">
+              <option value="2A0">2A0 (1189 x 1682)</option>
+              <option value="A0">A0 (841 x 1189)</option>
+              <option value="A0 Extended">A0 Extended / Long Plot</option>
+              <option value="A1">A1 (594 x 841)</option>
+              <option value="A1 Extended">A1 Extended / Long Plot</option>
+              <option value="A2">A2 (420 x 594)</option>
+              <option value="A3">A3 (297 x 420)</option>
+              <option value="A4">A4 (210 x 297)</option>
+            </optgroup>
+
+            <optgroup label="ISO B-Series">
+              <option value="B0">B0 (1000 x 1414)</option>
+              <option value="B1">B1 (707 x 1000)</option>
+              <option value="B2">B2 (500 x 707)</option>
+              <option value="B3">B3 (353 x 500)</option>
+              <option value="B4">B4 (250 x 353)</option>
+            </optgroup>
+
             <optgroup label="North American / ANSI">
               <option value="Letter / ANSI A">Letter / ANSI A</option>
               <option value="Legal">Legal</option>
@@ -236,6 +256,7 @@
               <option value="ANSI D">ANSI D</option>
               <option value="ANSI E">ANSI E</option>
             </optgroup>
+
             <optgroup label="Architectural (Arch)">
               <option value="Arch A">Arch A</option>
               <option value="Arch B">Arch B</option>
@@ -244,14 +265,8 @@
               <option value="Arch E1">Arch E1</option>
               <option value="Arch E">Arch E</option>
             </optgroup>
-            <optgroup label="ISO A-Series">
-              <option value="A0">A0</option>
-              <option value="A1">A1</option>
-              <option value="A2">A2</option>
-              <option value="A3">A3</option>
-              <option value="A4">A4</option>
-            </optgroup>
-            <optgroup label="Custom / Other">
+
+            <optgroup label="Custom / Bentley Formats">
               <option value="Bentley 1200x1200">Bentley 1200x1200</option>
               <option value="NON-STANDARD">Non-Standard / Custom</option>
             </optgroup>
@@ -408,12 +423,24 @@
         // Custom Bentley Square Size
         if (isApprox(w, 1200) && isApprox(h, 1200)) return 'Bentley 1200x1200';
 
-        // ISO A-Series
+        // ISO A-Series (Exact)
+        if (isApprox(shortEdge, 1189) && isApprox(longEdge, 1682)) return '2A0';
         if (isApprox(shortEdge, 841) && isApprox(longEdge, 1189)) return 'A0';
         if (isApprox(shortEdge, 594) && isApprox(longEdge, 841)) return 'A1';
         if (isApprox(shortEdge, 420) && isApprox(longEdge, 594)) return 'A2';
         if (isApprox(shortEdge, 297) && isApprox(longEdge, 420)) return 'A3';
         if (isApprox(shortEdge, 210) && isApprox(longEdge, 297)) return 'A4';
+
+        // ISO A-Series Extended / Roll Plots (e.g., your 841 x 1399 case matches A0 width with extended length)
+        if (isApprox(shortEdge, 841) && longEdge > 1189) return 'A0 Extended';
+        if (isApprox(shortEdge, 594) && longEdge > 841) return 'A1 Extended';
+
+        // ISO B-Series
+        if (isApprox(shortEdge, 1000) && isApprox(longEdge, 1414)) return 'B0';
+        if (isApprox(shortEdge, 707) && isApprox(longEdge, 1000)) return 'B1';
+        if (isApprox(shortEdge, 500) && isApprox(longEdge, 707)) return 'B2';
+        if (isApprox(shortEdge, 353) && isApprox(longEdge, 500)) return 'B3';
+        if (isApprox(shortEdge, 250) && isApprox(longEdge, 353)) return 'B4';
 
         // North American / ANSI Sizes (Converted to mm)
         if (isApprox(shortEdge, 216) && isApprox(longEdge, 279)) return 'Letter / ANSI A';
