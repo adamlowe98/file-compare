@@ -334,24 +334,22 @@
           <span id="results-summary">Showing 0 files</span>
         </div>
 
-        <div id="pdf-container" class="hidden">
-          <h2 class="section-title">PDF Documents</h2>
-          
+        <div id="drawings-viewers-container" class="hidden">
           <div class="controls" style="justify-content: flex-start;">
             <div class="filter-group">
               <label for="pdf-unit-toggle">Unit:</label>
-              <select id="pdf-unit-toggle" onchange="updatePdfUnit(this.value)">
+              <select id="pdf-unit-toggle" onchange="updateDrawingUnit(this.value)">
                 <option value="MM">mm</option>
                 <option value="IN">in</option>
               </select>
             </div>
             <div class="filter-group">
-              <label for="pdf-filter-dimensions">Dimensions:</label>
-              <input type="text" id="pdf-filter-dimensions" placeholder="e.g. 841" oninput="filterPdfTable()" />
+              <label for="pdf-filter-dimensions">Dimensions / Name:</label>
+              <input type="text" id="pdf-filter-dimensions" placeholder="Search filename or dimension..." oninput="filterDrawingTables()" />
             </div>
             <div class="filter-group">
               <label for="pdf-filter-page-size">Drawing Size:</label>
-              <select id="pdf-filter-page-size" onchange="filterPdfTable()">
+              <select id="pdf-filter-page-size" onchange="filterDrawingTables()">
                 <option value="ALL">All Sizes (Comprehensive)</option>
                 <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm)</option>
                 <option value="A0">A0 (841 x 1189 mm)</option>
@@ -406,35 +404,56 @@
                 <option value="Quarto">Quarto (215 x 275 mm)</option>
               </select>
             </div>
+            <div class="filter-group">
+              <label for="pdf-filter-multipage">Pagination:</label>
+              <select id="pdf-filter-multipage" onchange="filterDrawingTables()">
+                <option value="ALL">All Documents</option>
+                <option value="single">Single Page</option>
+                <option value="multi">Multi-Page</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="dgn-filter-version">DGN Version:</label>
+              <select id="dgn-filter-version" onchange="filterDrawingTables()">
+                <option value="ALL">All Versions</option>
+                <option value="MicroStation V8i">MicroStation V8i</option>
+                <option value="MicroStation CONNECT">MicroStation CONNECT Edition</option>
+                <option value="MicroStation V7">MicroStation V7</option>
+              </select>
+            </div>
           </div>
 
-          <table id="pdf-results-table">
-            <thead>
-              <tr>
-                <th>File Name</th>
-                <th>File Size</th>
-                <th>Dimensions (<span id="dim-unit-label">mm</span>)</th>
-                <th>Drawing Size</th>
-                <th>Pages</th>
-              </tr>
-            </thead>
-            <tbody id="pdf-results-body"></tbody>
-          </table>
-        </div>
+          <div id="pdf-container">
+            <h2 class="section-title">PDF Documents</h2>
+            <table id="pdf-results-table">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>File Size</th>
+                  <th>Dimensions (<span id="dim-unit-label">mm</span>)</th>
+                  <th>Drawing Size</th>
+                  <th>Pages</th>
+                </tr>
+              </thead>
+              <tbody id="pdf-results-body"></tbody>
+            </table>
+          </div>
 
-        <div id="dgn-container" class="hidden">
-          <h2 class="section-title">DGN Source Files</h2>
-          <table id="dgn-results-table">
-            <thead>
-              <tr>
-                <th>File Name</th>
-                <th>File Size</th>
-                <th>Dimensions</th>
-                <th>MicroStation Version</th>
-              </tr>
-            </thead>
-            <tbody id="dgn-results-body"></tbody>
-          </table>
+          <div id="dgn-container">
+            <h2 class="section-title">DGN Source Files</h2>
+            <table id="dgn-results-table">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>File Size</th>
+                  <th>Dimensions (<span id="dgn-dim-unit-label">mm</span>)</th>
+                  <th>Drawing Size</th>
+                  <th>MicroStation Version</th>
+                </tr>
+              </thead>
+              <tbody id="dgn-results-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -552,6 +571,8 @@
                 sizeBytes: file.size,
                 sizeString: formatBytes(file.size),
                 widthMm: 841, heightMm: 594,
+                widthIn: (841 / 25.4).toFixed(2), heightIn: (594 / 25.4).toFixed(2),
+                drawingSize: classifySize(841, 594),
                 formatVersion: 'MicroStation V8i'
               });
             }
@@ -580,7 +601,8 @@
           }
         }
         document.getElementById('summary-container').classList.remove('hidden');
-        filterPdfTable();
+        document.getElementById('drawings-viewers-container').classList.remove('hidden');
+        filterDrawingTables();
         e.target.value = '';
       });
 
@@ -647,9 +669,10 @@
         return 'Standard';
       }
 
-      function updatePdfUnit(unit) {
+      function updateDrawingUnit(unit) {
         currentUnit = unit;
         document.getElementById('dim-unit-label').textContent = unit.toLowerCase();
+        document.getElementById('dgn-dim-unit-label').textContent = unit.toLowerCase();
         
         const select = document.getElementById('pdf-filter-page-size');
         const opts = select.options;
@@ -664,7 +687,7 @@
             opts[i].text = `${val} (${dims})`;
           }
         }
-        filterPdfTable();
+        filterDrawingTables();
       }
 
       function getDimensionsForSize(name, unit) {
@@ -686,7 +709,7 @@
         return `${inW} x ${inH} in`;
       }
 
-      function renderDrawingTables(filteredPdf = allPdfData) {
+      function renderDrawingTables(filteredPdf = allPdfData, filteredDgn = allDgnData) {
         const pdfBody = document.getElementById('pdf-results-body');
         pdfBody.innerHTML = '';
         
@@ -700,32 +723,47 @@
           }
           pdfBody.appendChild(tr);
         });
-        document.getElementById('pdf-container').classList.remove('hidden');
+        document.getElementById('pdf-container').style.display = allPdfData.length > 0 ? 'block' : 'none';
 
         const dgnBody = document.getElementById('dgn-results-body');
         dgnBody.innerHTML = '';
-        allDgnData.forEach(f => {
+        filteredDgn.forEach(f => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td>${f.widthMm} x ${f.heightMm} mm</td><td>${f.formatVersion}</td>`;
+          const dims = currentUnit === 'MM' ? `${f.widthMm} x ${f.heightMm}` : `${f.widthIn} x ${f.heightIn}`;
+          tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td>${dims}</td><td><strong>${f.drawingSize}</strong></td><td>${f.formatVersion}</td>`;
           dgnBody.appendChild(tr);
         });
-        if (allDgnData.length > 0) document.getElementById('dgn-container').classList.remove('hidden');
-        document.getElementById('results-summary').textContent = `Showing ${filteredPdf.length + allDgnData.length} files`;
+        document.getElementById('dgn-container').style.display = allDgnData.length > 0 ? 'block' : 'none';
+
+        document.getElementById('results-summary').textContent = `Showing ${filteredPdf.length + filteredDgn.length} files`;
       }
 
-      function filterPdfTable() {
+      function filterDrawingTables() {
         const dimQuery = document.getElementById('pdf-filter-dimensions').value.toLowerCase();
         const sizeFilter = document.getElementById('pdf-filter-page-size').value;
+        const multipageFilter = document.getElementById('pdf-filter-multipage').value;
+        const dgnVerFilter = document.getElementById('dgn-filter-version').value;
 
-        const filtered = allPdfData.filter(f => {
+        const filteredPdf = allPdfData.filter(f => {
           if (f.error) return true;
-          const dimsText = currentUnit === 'MM' ? `${f.widthMm} ${f.heightMm}` : `${f.widthIn} ${f.heightIn}`;
+          const dimsText = (currentUnit === 'MM' ? `${f.widthMm} ${f.heightMm}` : `${f.widthIn} ${f.heightIn}`) + ' ' + f.name.toLowerCase();
           if (dimQuery && !dimsText.includes(dimQuery)) return false;
           if (sizeFilter !== 'ALL' && f.drawingSize !== sizeFilter) return false;
+          if (multipageFilter === 'single' && f.pageCount > 1) return false;
+          if (multipageFilter === 'multi' && f.pageCount <= 1) return false;
           return true;
         });
 
-        renderDrawingTables(filtered);
+        const filteredDgn = allDgnData.filter(f => {
+          const dimsText = (currentUnit === 'MM' ? `${f.widthMm} ${f.heightMm}` : `${f.widthIn} ${f.heightIn}`) + ' ' + f.name.toLowerCase();
+          if (dimQuery && !dimsText.includes(dimQuery)) return false;
+          if (sizeFilter !== 'ALL' && f.drawingSize !== sizeFilter) return false;
+          if (dgnVerFilter !== 'ALL' && f.formatVersion !== dgnVerFilter) return false;
+          if (multipageFilter === 'multi') return false; // DGNs treated as single sheet designs in viewer context
+          return true;
+        });
+
+        renderDrawingTables(filteredPdf, filteredDgn);
       }
 
       // Settings File Viewer Handler with cumulative appending
