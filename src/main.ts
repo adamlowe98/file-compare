@@ -38,6 +38,8 @@ async function handleFilesUpload(event: Event) {
   if (!target.files || target.files.length === 0) return;
 
   const files = Array.from(target.files);
+  console.log(`Starting process for ${files.length} files...`);
+  
   allFilesData = []; // reset state
   
   // UI Updates
@@ -55,10 +57,14 @@ async function handleFilesUpload(event: Event) {
     progressBar.style.width = `${percent}%`;
     progressText.textContent = `Processing ${i + 1} / ${files.length} files...`;
 
+    // Force the browser to render the UI updates before doing heavy PDF math
+    await new Promise(resolve => setTimeout(resolve, 15));
+
     try {
       const data = await processSinglePdf(file);
       allFilesData.push(data);
     } catch (error) {
+      console.error(`Error reading ${file.name}:`, error);
       allFilesData.push({
         name: file.name,
         sizeBytes: file.size,
@@ -70,6 +76,9 @@ async function handleFilesUpload(event: Event) {
       });
     }
   }
+
+  // Clear the input so you can upload the exact same batch again if needed
+  target.value = '';
 
   // Finalize UI
   progressContainer.classList.add('hidden');
