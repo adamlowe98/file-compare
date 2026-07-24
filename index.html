@@ -335,96 +335,87 @@
         </div>
 
         <div id="drawings-viewers-container" class="hidden">
-          <div class="controls" style="justify-content: flex-start;">
-            <div class="filter-group">
-              <label for="pdf-unit-toggle">Unit:</label>
-              <select id="pdf-unit-toggle" onchange="updateDrawingUnit(this.value)">
-                <option value="MM">mm</option>
-                <option value="IN">in</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label for="pdf-filter-dimensions">Dimensions / Name:</label>
-              <input type="text" id="pdf-filter-dimensions" placeholder="Search filename or dimension..." oninput="filterDrawingTables()" />
-            </div>
-            <div class="filter-group">
-              <label for="pdf-filter-page-size">Drawing Size:</label>
-              <select id="pdf-filter-page-size" onchange="filterDrawingTables()">
-                <option value="ALL">All Sizes (Comprehensive)</option>
-                <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm)</option>
-                <option value="A0">A0 (841 x 1189 mm)</option>
-                <option value="A1">A1 (594 x 841 mm)</option>
-                <option value="A2">A2 (420 x 594 mm)</option>
-                <option value="A3">A3 (297 x 420 mm)</option>
-                <option value="A4">A4 (210 x 297 mm)</option>
-                <option value="A5">A5 (148 x 210 mm)</option>
-                <option value="A6">A6 (105 x 148 mm)</option>
-                <option value="A7">A7 (74 x 105 mm)</option>
-                <option value="A8">A8 (52 x 74 mm)</option>
-                <option value="A9">A9 (37 x 52 mm)</option>
-                <option value="A10">A10 (26 x 37 mm)</option>
-                <option value="B0">B0 (1000 x 1414 mm)</option>
-                <option value="B1">B1 (707 x 1000 mm)</option>
-                <option value="B2">B2 (500 x 707 mm)</option>
-                <option value="B3">B3 (353 x 500 mm)</option>
-                <option value="B4">B4 (250 x 353 mm)</option>
-                <option value="B5">B5 (176 x 250 mm)</option>
-                <option value="B6">B6 (125 x 176 mm)</option>
-                <option value="B7">B7 (88 x 125 mm)</option>
-                <option value="B8">B8 (62 x 88 mm)</option>
-                <option value="B9">B9 (44 x 62 mm)</option>
-                <option value="B10">B10 (31 x 44 mm)</option>
-                <option value="C0">C0 (917 x 1297 mm)</option>
-                <option value="C1">C1 (648 x 917 mm)</option>
-                <option value="C2">C2 (458 x 648 mm)</option>
-                <option value="C3">C3 (324 x 458 mm)</option>
-                <option value="C4">C4 (229 x 324 mm)</option>
-                <option value="C5">C5 (162 x 229 mm)</option>
-                <option value="C6">C6 (114 x 162 mm)</option>
-                <option value="C7">C7 (81 x 114 mm)</option>
-                <option value="C8">C8 (57 x 81 mm)</option>
-                <option value="ANSI A">ANSI A (216 x 279 mm)</option>
-                <option value="ANSI B">ANSI B (279 x 432 mm)</option>
-                <option value="ANSI C">ANSI C (432 x 559 mm)</option>
-                <option value="ANSI D">ANSI D (559 x 864 mm)</option>
-                <option value="ANSI E">ANSI E (864 x 1118 mm)</option>
-                <option value="Arch A">Arch A (229 x 305 mm)</option>
-                <option value="Arch B">Arch B (305 x 457 mm)</option>
-                <option value="Arch C">Arch C (457 x 610 mm)</option>
-                <option value="Arch D">Arch D (610 x 914 mm)</option>
-                <option value="Arch E">Arch E (914 x 1219 mm)</option>
-                <option value="Arch E1">Arch E1 (762 x 1067 mm)</option>
-                <option value="Arch E2">Arch E2 (660 x 965 mm)</option>
-                <option value="Arch E3">Arch E3 (686 x 991 mm)</option>
-                <option value="Foolscap">Foolscap (203 x 330 mm)</option>
-                <option value="Legal">Legal (216 x 356 mm)</option>
-                <option value="Executive">Executive (184 x 267 mm)</option>
-                <option value="Ledger">Ledger (432 x 279 mm)</option>
-                <option value="Statement">Statement (140 x 216 mm)</option>
-                <option value="Quarto">Quarto (215 x 275 mm)</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label for="pdf-filter-multipage">Pagination:</label>
-              <select id="pdf-filter-multipage" onchange="filterDrawingTables()">
-                <option value="ALL">All Documents</option>
-                <option value="single">Single Page</option>
-                <option value="multi">Multi-Page</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label for="dgn-filter-version">DGN Version:</label>
-              <select id="dgn-filter-version" onchange="filterDrawingTables()">
-                <option value="ALL">All Versions</option>
-                <option value="MicroStation V8i">MicroStation V8i</option>
-                <option value="MicroStation CONNECT">MicroStation CONNECT Edition</option>
-                <option value="MicroStation V7">MicroStation V7</option>
-              </select>
-            </div>
-          </div>
-
+          <!-- PDF SECTION -->
           <div id="pdf-container">
             <h2 class="section-title">PDF Documents</h2>
+            <div class="controls" style="justify-content: flex-start;">
+              <div class="filter-group">
+                <label for="pdf-unit-toggle">Unit:</label>
+                <select id="pdf-unit-toggle" onchange="updateDrawingUnit(this.value)">
+                  <option value="MM">mm</option>
+                  <option value="IN">in</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="pdf-filter-dimensions">Dimensions / Name:</label>
+                <input type="text" id="pdf-filter-dimensions" placeholder="Search filename or dimension..." oninput="filterDrawingTables()" />
+              </div>
+              <div class="filter-group">
+                <label for="pdf-filter-page-size">Drawing Size:</label>
+                <select id="pdf-filter-page-size" onchange="filterDrawingTables()">
+                  <option value="ALL">All Sizes (Comprehensive)</option>
+                  <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm)</option>
+                  <option value="A0">A0 (841 x 1189 mm)</option>
+                  <option value="A1">A1 (594 x 841 mm)</option>
+                  <option value="A2">A2 (420 x 594 mm)</option>
+                  <option value="A3">A3 (297 x 420 mm)</option>
+                  <option value="A4">A4 (210 x 297 mm)</option>
+                  <option value="A5">A5 (148 x 210 mm)</option>
+                  <option value="A6">A6 (105 x 148 mm)</option>
+                  <option value="A7">A7 (74 x 105 mm)</option>
+                  <option value="A8">A8 (52 x 74 mm)</option>
+                  <option value="A9">A9 (37 x 52 mm)</option>
+                  <option value="A10">A10 (26 x 37 mm)</option>
+                  <option value="B0">B0 (1000 x 1414 mm)</option>
+                  <option value="B1">B1 (707 x 1000 mm)</option>
+                  <option value="B2">B2 (500 x 707 mm)</option>
+                  <option value="B3">B3 (353 x 500 mm)</option>
+                  <option value="B4">B4 (250 x 353 mm)</option>
+                  <option value="B5">B5 (176 x 250 mm)</option>
+                  <option value="B6">B6 (125 x 176 mm)</option>
+                  <option value="B7">B7 (88 x 125 mm)</option>
+                  <option value="B8">B8 (62 x 88 mm)</option>
+                  <option value="B9">B9 (44 x 62 mm)</option>
+                  <option value="B10">B10 (31 x 44 mm)</option>
+                  <option value="C0">C0 (917 x 1297 mm)</option>
+                  <option value="C1">C1 (648 x 917 mm)</option>
+                  <option value="C2">C2 (458 x 648 mm)</option>
+                  <option value="C3">C3 (324 x 458 mm)</option>
+                  <option value="C4">C4 (229 x 324 mm)</option>
+                  <option value="C5">C5 (162 x 229 mm)</option>
+                  <option value="C6">C6 (114 x 162 mm)</option>
+                  <option value="C7">C7 (81 x 114 mm)</option>
+                  <option value="C8">C8 (57 x 81 mm)</option>
+                  <option value="ANSI A">ANSI A (216 x 279 mm)</option>
+                  <option value="ANSI B">ANSI B (279 x 432 mm)</option>
+                  <option value="ANSI C">ANSI C (432 x 559 mm)</option>
+                  <option value="ANSI D">ANSI D (559 x 864 mm)</option>
+                  <option value="ANSI E">ANSI E (864 x 1118 mm)</option>
+                  <option value="Arch A">Arch A (229 x 305 mm)</option>
+                  <option value="Arch B">Arch B (305 x 457 mm)</option>
+                  <option value="Arch C">Arch C (457 x 610 mm)</option>
+                  <option value="Arch D">Arch D (610 x 914 mm)</option>
+                  <option value="Arch E">Arch E (914 x 1219 mm)</option>
+                  <option value="Arch E1">Arch E1 (762 x 1067 mm)</option>
+                  <option value="Arch E2">Arch E2 (660 x 965 mm)</option>
+                  <option value="Arch E3">Arch E3 (686 x 991 mm)</option>
+                  <option value="Foolscap">Foolscap (203 x 330 mm)</option>
+                  <option value="Legal">Legal (216 x 356 mm)</option>
+                  <option value="Executive">Executive (184 x 267 mm)</option>
+                  <option value="Ledger">Ledger (432 x 279 mm)</option>
+                  <option value="Statement">Statement (140 x 216 mm)</option>
+                  <option value="Quarto">Quarto (215 x 275 mm)</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="pdf-filter-multipage">Pagination:</label>
+                <select id="pdf-filter-multipage" onchange="filterDrawingTables()">
+                  <option value="ALL">All Documents</option>
+                  <option value="single">Single Page</option>
+                  <option value="multi">Multi-Page</option>
+                </select>
+              </div>
+            </div>
             <table id="pdf-results-table">
               <thead>
                 <tr>
@@ -439,8 +430,39 @@
             </table>
           </div>
 
+          <!-- DGN SECTION -->
           <div id="dgn-container">
             <h2 class="section-title">DGN Source Files</h2>
+            <div class="controls" style="justify-content: flex-start;">
+              <div class="filter-group">
+                <label for="dgn-filter-name">Search DGN:</label>
+                <input type="text" id="dgn-filter-name" placeholder="Search filename..." oninput="filterDrawingTables()" />
+              </div>
+              <div class="filter-group">
+                <label for="dgn-filter-version">MicroStation Version:</label>
+                <select id="dgn-filter-version" onchange="filterDrawingTables()">
+                  <option value="ALL">All Versions</option>
+                  <option value="MicroStation 2026">MicroStation 2026</option>
+                  <option value="MicroStation 2025">MicroStation 2025</option>
+                  <option value="MicroStation 2024">MicroStation 2024</option>
+                  <option value="MicroStation 2023">MicroStation 2023</option>
+                  <option value="MicroStation CONNECT Edition">MicroStation CONNECT Edition</option>
+                  <option value="MicroStation V8i">MicroStation V8i</option>
+                  <option value="MicroStation V8 XM Edition">MicroStation V8 XM Edition</option>
+                  <option value="MicroStation V8 2004 Edition">MicroStation V8 2004 Edition</option>
+                  <option value="MicroStation V8.1">MicroStation V8.1</option>
+                  <option value="MicroStation V8">MicroStation V8</option>
+                  <option value="MicroStation/J">MicroStation/J</option>
+                  <option value="MicroStation SE">MicroStation SE</option>
+                  <option value="MicroStation 95">MicroStation 95</option>
+                  <option value="MicroStation V5">MicroStation V5</option>
+                  <option value="MicroStation V4">MicroStation V4</option>
+                  <option value="MicroStation 3.0">MicroStation 3.0</option>
+                  <option value="MicroStation 2.0">MicroStation 2.0</option>
+                  <option value="MicroStation 1.0">MicroStation 1.0</option>
+                </select>
+              </div>
+            </div>
             <table id="dgn-results-table">
               <thead>
                 <tr>
@@ -739,15 +761,17 @@
       }
 
       function filterDrawingTables() {
-        const dimQuery = document.getElementById('pdf-filter-dimensions').value.toLowerCase();
+        const pdfDimQuery = document.getElementById('pdf-filter-dimensions').value.toLowerCase();
         const sizeFilter = document.getElementById('pdf-filter-page-size').value;
         const multipageFilter = document.getElementById('pdf-filter-multipage').value;
+
+        const dgnNameQuery = document.getElementById('dgn-filter-name').value.toLowerCase();
         const dgnVerFilter = document.getElementById('dgn-filter-version').value;
 
         const filteredPdf = allPdfData.filter(f => {
           if (f.error) return true;
           const dimsText = (currentUnit === 'MM' ? `${f.widthMm} ${f.heightMm}` : `${f.widthIn} ${f.heightIn}`) + ' ' + f.name.toLowerCase();
-          if (dimQuery && !dimsText.includes(dimQuery)) return false;
+          if (pdfDimQuery && !dimsText.includes(pdfDimQuery)) return false;
           if (sizeFilter !== 'ALL' && f.drawingSize !== sizeFilter) return false;
           if (multipageFilter === 'single' && f.pageCount > 1) return false;
           if (multipageFilter === 'multi' && f.pageCount <= 1) return false;
@@ -755,11 +779,9 @@
         });
 
         const filteredDgn = allDgnData.filter(f => {
-          const dimsText = (currentUnit === 'MM' ? `${f.widthMm} ${f.heightMm}` : `${f.widthIn} ${f.heightIn}`) + ' ' + f.name.toLowerCase();
-          if (dimQuery && !dimsText.includes(dimQuery)) return false;
-          if (sizeFilter !== 'ALL' && f.drawingSize !== sizeFilter) return false;
+          const nameText = f.name.toLowerCase();
+          if (dgnNameQuery && !nameText.includes(dgnNameQuery)) return false;
           if (dgnVerFilter !== 'ALL' && f.formatVersion !== dgnVerFilter) return false;
-          if (multipageFilter === 'multi') return false; // DGNs treated as single sheet designs in viewer context
           return true;
         });
 
