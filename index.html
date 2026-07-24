@@ -343,6 +343,12 @@
                 <option value="A2">A2</option>
                 <option value="A3">A3</option>
                 <option value="A4">A4</option>
+                <option value="A5">A5</option>
+                <option value="Letter">Letter (ANSI A)</option>
+                <option value="Tabloid">Tabloid (ANSI B)</option>
+                <option value="ANSI C">ANSI C</option>
+                <option value="ANSI D">ANSI D</option>
+                <option value="ANSI E">ANSI E</option>
               </select>
             </div>
           </div>
@@ -473,7 +479,7 @@
         document.getElementById(`tool-${toolName}`).classList.add('active');
       }
 
-      // PDF and DGN Viewer Handler with Filtering Support
+      // PDF and DGN Viewer Handler with Full Size Classification Support
       document.getElementById('file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0 || !PDFDocument) return;
@@ -526,11 +532,19 @@
 
       function classifySize(w, h) {
         const s = Math.min(w, h), l = Math.max(w, h);
+        // ISO A Series
         if (Math.abs(s - 841) <= 5 && Math.abs(l - 1189) <= 5) return 'A0';
         if (Math.abs(s - 594) <= 5 && Math.abs(l - 841) <= 5) return 'A1';
         if (Math.abs(s - 420) <= 5 && Math.abs(l - 594) <= 5) return 'A2';
         if (Math.abs(s - 297) <= 5 && Math.abs(l - 420) <= 5) return 'A3';
         if (Math.abs(s - 210) <= 5 && Math.abs(l - 297) <= 5) return 'A4';
+        if (Math.abs(s - 148) <= 5 && Math.abs(l - 210) <= 5) return 'A5';
+        // ANSI / US Architectural Series (Approx in mm)
+        if (Math.abs(s - 216) <= 6 && Math.abs(l - 279) <= 6) return 'Letter';
+        if (Math.abs(s - 279) <= 6 && Math.abs(l - 432) <= 6) return 'Tabloid';
+        if (Math.abs(s - 432) <= 6 && Math.abs(l - 559) <= 6) return 'ANSI C';
+        if (Math.abs(s - 559) <= 6 && Math.abs(l - 864) <= 6) return 'ANSI D';
+        if (Math.abs(s - 864) <= 6 && Math.abs(l - 1118) <= 6) return 'ANSI E';
         return 'Standard';
       }
 
@@ -558,7 +572,6 @@
 
         const dgnBody = document.getElementById('dgn-results-body');
         dgnBody.innerHTML = '';
-        allDgnData.files = allDgnData.files || [];
         allDgnData.forEach(f => {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td>${f.widthMm} x ${f.heightMm} mm</td><td>${f.formatVersion}</td>`;
@@ -726,7 +739,6 @@
         renderCtbTable(filtered);
       }
 
-      // Corrected MicroStation Pen Table (.pen) Format Generator
       function exportToPenFile() {
         if (!activeCtbRows || activeCtbRows.length === 0) {
           alert("Please upload and parse a .ctb file first.");
