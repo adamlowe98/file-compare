@@ -73,7 +73,6 @@
         background-color: var(--primary-hover);
       }
 
-      /* --- NEW PROGRESS BAR STYLES --- */
       .progress-wrapper {
         margin: 2rem auto 0 auto;
         max-width: 400px;
@@ -92,7 +91,6 @@
 
       .progress-fill {
         background-color: var(--primary);
-        /* Creates animated stripes */
         background-image: linear-gradient(
           45deg,
           rgba(255, 255, 255, 0.15) 25%,
@@ -121,10 +119,11 @@
         color: var(--text-main);
         font-weight: 500;
       }
-      /* -------------------------------- */
 
+      /* Make controls wrap nicely since we added more */
       .controls {
         display: flex;
+        flex-wrap: wrap;
         gap: 1.5rem;
         padding: 1rem;
         background: var(--bg-color);
@@ -139,10 +138,16 @@
         gap: 0.5rem;
       }
 
-      select {
+      select, input[type="text"] {
         padding: 0.5rem;
         border: 1px solid var(--border);
         border-radius: 4px;
+        font-family: inherit;
+      }
+
+      .summary {
+        margin-left: auto;
+        font-weight: 500;
       }
 
       table {
@@ -160,6 +165,23 @@
       th {
         background-color: var(--bg-color);
         font-weight: 600;
+      }
+
+      /* Sortable Header Styles */
+      th[data-sort] {
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s;
+      }
+
+      th[data-sort]:hover {
+        background-color: #e5e7eb;
+      }
+
+      .sort-icon {
+        margin-left: 0.25rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
       }
 
       .hidden {
@@ -182,7 +204,6 @@
         <input type="file" id="file-input" multiple accept="application/pdf" />
         <label for="file-input" class="upload-btn">Select PDF Files</label>
         
-        <!-- Updated Progress HTML -->
         <div id="progress-container" class="hidden progress-wrapper">
           <div class="progress-track">
             <div id="progress-bar" class="progress-fill"></div>
@@ -193,17 +214,31 @@
 
       <section class="controls hidden" id="controls-section">
         <div class="filter-group">
-          <label for="filter-page-size">Page Size Group:</label>
+          <label for="unit-toggle">Unit:</label>
+          <select id="unit-toggle">
+            <option value="MM">Millimeters (mm)</option>
+            <option value="IN">Inches (in)</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-dimensions">Dimensions:</label>
+          <input type="text" id="filter-dimensions" placeholder="e.g. 841 or 33.11" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-page-size">Size Group:</label>
           <select id="filter-page-size">
-            <option value="ALL">All Sizes</option>
+            <option value="ALL">All</option>
             <option value="A0">A0</option>
             <option value="A1">A1</option>
             <option value="A2">A2</option>
             <option value="A3">A3</option>
             <option value="A4">A4</option>
-            <option value="NON-STANDARD">Non-Standard / Custom</option>
+            <option value="NON-STANDARD">Custom</option>
           </select>
         </div>
+
         <div class="filter-group">
           <label for="filter-file-size">Max File Size:</label>
           <select id="filter-file-size">
@@ -213,6 +248,7 @@
             <option value="10">Under 10 MB</option>
           </select>
         </div>
+
         <div class="summary" id="results-summary">Showing 0 files</div>
       </section>
 
@@ -220,10 +256,11 @@
         <table id="results-table" class="hidden">
           <thead>
             <tr>
-              <th>File Name</th>
-              <th>File Size</th>
-              <th>Dimensions (mm)</th>
-              <th>Drawing Size</th>
+              <!-- Clickable sort headers -->
+              <th data-sort="name">File Name <span class="sort-icon"></span></th>
+              <th data-sort="size">File Size <span class="sort-icon"></span></th>
+              <th data-sort="dimensions">Dimensions (<span id="dim-unit-label">mm</span>) <span class="sort-icon"></span></th>
+              <th data-sort="drawingSize">Drawing Size <span class="sort-icon"></span></th>
             </tr>
           </thead>
           <tbody id="results-body">
@@ -233,14 +270,16 @@
     </div>
 
     <script>
-      // Make sure the global PDFLib object loaded
       if (!window.PDFLib) {
         alert("CRITICAL ERROR: PDF library failed to load from network. Check your adblocker or firewall.");
       }
 
       const PDFDocument = window.PDFLib.PDFDocument;
       let allFilesData = [];
+      let currentUnit = 'MM';
+      let sortConfig = { column: null, ascending: true }; // Holds sorting state
 
+      // DOM Elements
       const fileInput = document.getElementById('file-input');
       const progressContainer = document.getElementById('progress-container');
       const progressBar = document.getElementById('progress-bar');
@@ -249,12 +288,30 @@
       const resultsTable = document.getElementById('results-table');
       const resultsBody = document.getElementById('results-body');
       const resultsSummary = document.getElementById('results-summary');
+      const dimUnitLabel = document.getElementById('dim-unit-label');
+      
+      // Filters
       const filterPageSize = document.getElementById('filter-page-size');
       const filterFileSize = document.getElementById('filter-file-size');
+      const filterDimensions = document.getElementById('filter-dimensions');
+      const unitToggle = document.getElementById('unit-toggle');
+      const tableHeaders = document.querySelectorAll('th[data-sort]');
 
+      // Event Listeners
       fileInput.addEventListener('change', handleFilesUpload);
       filterPageSize.addEventListener('change', renderTable);
       filterFileSize.addEventListener('change', renderTable);
+      filterDimensions.addEventListener('input', renderTable); // triggers as you type
+      unitToggle.addEventListener('change', (e) => {
+        currentUnit = e.target.value;
+        dimUnitLabel.textContent = currentUnit === 'MM' ? 'mm' : 'in';
+        renderTable();
+      });
+
+      // Attach sorting listeners
+      tableHeaders.forEach(th => {
+        th.addEventListener('click', () => handleSort(th.getAttribute('data-sort')));
+      });
 
       async function handleFilesUpload(event) {
         const target = event.target;
@@ -275,7 +332,6 @@
           progressBar.style.width = `${percent}%`;
           progressText.textContent = `Processing ${i + 1} of ${files.length} files (${percent}%)`;
 
-          // Force UI update to keep the bar animating smoothly
           await new Promise(resolve => setTimeout(resolve, 15));
 
           try {
@@ -287,8 +343,8 @@
               name: file.name,
               sizeBytes: file.size,
               sizeString: formatBytes(file.size),
-              widthMm: 0,
-              heightMm: 0,
+              widthMm: 0, heightMm: 0,
+              widthIn: 0, heightIn: 0,
               drawingSize: 'ERROR',
               error: 'Failed to read PDF'
             });
@@ -296,7 +352,6 @@
         }
 
         target.value = '';
-
         progressContainer.classList.add('hidden');
         controlsSection.classList.remove('hidden');
         resultsTable.classList.remove('hidden');
@@ -310,9 +365,14 @@
         const page = pdfDoc.getPage(0);
         const { width, height } = page.getSize(); 
 
+        // PDF sizes are in Points (1/72 inch)
         const ptToMm = 0.352778;
         const widthMm = Math.round(width * ptToMm);
         const heightMm = Math.round(height * ptToMm);
+        
+        // Calculate inches
+        const widthIn = (width / 72).toFixed(2);
+        const heightIn = (height / 72).toFixed(2);
 
         const drawingSize = classifyDrawingSize(widthMm, heightMm);
 
@@ -322,6 +382,8 @@
           sizeString: formatBytes(file.size),
           widthMm,
           heightMm,
+          widthIn,
+          heightIn,
           drawingSize
         };
       }
@@ -349,27 +411,110 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
       }
 
+      function handleSort(column) {
+        if (sortConfig.column === column) {
+          sortConfig.ascending = !sortConfig.ascending; // Toggle direction
+        } else {
+          sortConfig.column = column;
+          sortConfig.ascending = true; // Default to ascending on new column
+        }
+        
+        // Update the visual arrows in headers
+        tableHeaders.forEach(th => {
+          const iconSpan = th.querySelector('.sort-icon');
+          if (th.getAttribute('data-sort') === column) {
+            iconSpan.textContent = sortConfig.ascending ? ' ▲' : ' ▼';
+          } else {
+            iconSpan.textContent = '';
+          }
+        });
+
+        renderTable();
+      }
+
       function renderTable() {
         const pageSizeFilter = filterPageSize.value;
         const maxMbFilter = filterFileSize.value;
+        const dimSearchFilter = filterDimensions.value.toLowerCase().trim();
 
-        const filteredData = allFilesData.filter(file => {
+        // 1. FILTERING
+        let filteredData = allFilesData.filter(file => {
+          // Page size filter
           if (pageSizeFilter !== 'ALL' && file.drawingSize !== pageSizeFilter) return false;
+          
+          // File size filter
           if (maxMbFilter !== 'ALL') {
             const maxBytes = parseFloat(maxMbFilter) * 1024 * 1024;
             if (file.sizeBytes > maxBytes) return false;
           }
+
+          // Dimensions text search
+          if (dimSearchFilter) {
+            const dimStringMM = `${file.widthMm} x ${file.heightMm}`;
+            const dimStringIN = `${file.widthIn} x ${file.heightIn}`;
+            const currentDimStr = currentUnit === 'MM' ? dimStringMM : dimStringIN;
+            
+            // Allow searching by exact strings like "841" or "33.11"
+            if (!currentDimStr.toLowerCase().includes(dimSearchFilter)) return false;
+          }
+
           return true;
         });
 
+        // 2. SORTING
+        if (sortConfig.column) {
+          filteredData.sort((a, b) => {
+            let valA, valB;
+
+            switch (sortConfig.column) {
+              case 'name':
+                valA = a.name.toLowerCase();
+                valB = b.name.toLowerCase();
+                break;
+              case 'size':
+                valA = a.sizeBytes;
+                valB = b.sizeBytes;
+                break;
+              case 'dimensions':
+                // Sort by total area to accurately size them up/down
+                valA = a.widthMm * a.heightMm; 
+                valB = b.widthMm * b.heightMm;
+                break;
+              case 'drawingSize':
+                valA = a.drawingSize;
+                valB = b.drawingSize;
+                break;
+            }
+
+            if (valA < valB) return sortConfig.ascending ? -1 : 1;
+            if (valA > valB) return sortConfig.ascending ? 1 : -1;
+            return 0;
+          });
+        }
+
+        // 3. RENDERING
         resultsBody.innerHTML = '';
 
         filteredData.forEach(file => {
           const tr = document.createElement('tr');
+          
           if (file.error) {
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td colspan="2" class="error-text">Error: ${file.error}</td>`;
+            tr.innerHTML = `
+              <td>${file.name}</td>
+              <td>${file.sizeString}</td>
+              <td colspan="2" class="error-text">Error: ${file.error}</td>
+            `;
           } else {
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td>${file.widthMm} x ${file.heightMm}</td><td><strong>${file.drawingSize}</strong></td>`;
+            const dims = currentUnit === 'MM' 
+              ? `${file.widthMm} x ${file.heightMm}`
+              : `${file.widthIn} x ${file.heightIn}`;
+
+            tr.innerHTML = `
+              <td>${file.name}</td>
+              <td>${file.sizeString}</td>
+              <td>${dims}</td>
+              <td><strong>${file.drawingSize}</strong></td>
+            `;
           }
           resultsBody.appendChild(tr);
         });
