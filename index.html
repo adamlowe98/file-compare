@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Local PDF Drawing Analyzer</title>
+    <!-- Load the library globally -->
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <style>
       :root {
         --bg-color: #f4f4f5;
@@ -186,16 +188,19 @@
             </tr>
           </thead>
           <tbody id="results-body">
-            <!-- Results populated via JS -->
           </tbody>
         </table>
       </section>
     </div>
 
-    <script type="module">
-      // Import the library directly from a CDN - no build step required
-      import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.5/+esm';
+    <!-- Note: Regular script tag, no module type -->
+    <script>
+      // Make sure the global PDFLib object loaded
+      if (!window.PDFLib) {
+        alert("CRITICAL ERROR: PDF library failed to load from network. Check your adblocker or firewall.");
+      }
 
+      const PDFDocument = window.PDFLib.PDFDocument;
       let allFilesData = [];
 
       const fileInput = document.getElementById('file-input');
@@ -206,7 +211,6 @@
       const resultsTable = document.getElementById('results-table');
       const resultsBody = document.getElementById('results-body');
       const resultsSummary = document.getElementById('results-summary');
-
       const filterPageSize = document.getElementById('filter-page-size');
       const filterFileSize = document.getElementById('filter-file-size');
 
@@ -217,10 +221,11 @@
       async function handleFilesUpload(event) {
         const target = event.target;
         if (!target.files || target.files.length === 0) return;
+        
+        // This MUST pop up. If it doesn't, the event listener isn't firing.
+        alert(`You selected ${target.files.length} files. Starting process now.`);
 
         const files = Array.from(target.files);
-        console.log(`Starting process for ${files.length} files...`);
-        
         allFilesData = [];
         
         progressContainer.classList.remove('hidden');
@@ -235,6 +240,7 @@
           progressBar.style.width = `${percent}%`;
           progressText.textContent = `Processing ${i + 1} / ${files.length} files...`;
 
+          // Force UI update
           await new Promise(resolve => setTimeout(resolve, 15));
 
           try {
@@ -264,7 +270,6 @@
 
       async function processSinglePdf(file) {
         const arrayBuffer = await file.arrayBuffer();
-        
         const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
         
         const page = pdfDoc.getPage(0);
@@ -289,7 +294,6 @@
       function classifyDrawingSize(w, h) {
         const shortEdge = Math.min(w, h);
         const longEdge = Math.max(w, h);
-
         const isApprox = (val, target) => Math.abs(val - target) <= 5;
 
         if (isApprox(shortEdge, 841) && isApprox(longEdge, 1189)) return 'A0';
@@ -315,9 +319,7 @@
         const maxMbFilter = filterFileSize.value;
 
         const filteredData = allFilesData.filter(file => {
-          if (pageSizeFilter !== 'ALL' && file.drawingSize !== pageSizeFilter) {
-            return false;
-          }
+          if (pageSizeFilter !== 'ALL' && file.drawingSize !== pageSizeFilter) return false;
           if (maxMbFilter !== 'ALL') {
             const maxBytes = parseFloat(maxMbFilter) * 1024 * 1024;
             if (file.sizeBytes > maxBytes) return false;
@@ -329,20 +331,10 @@
 
         filteredData.forEach(file => {
           const tr = document.createElement('tr');
-          
           if (file.error) {
-            tr.innerHTML = `
-              <td>${file.name}</td>
-              <td>${file.sizeString}</td>
-              <td colspan="2" class="error-text">Error: ${file.error}</td>
-            `;
+            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td colspan="2" class="error-text">Error: ${file.error}</td>`;
           } else {
-            tr.innerHTML = `
-              <td>${file.name}</td>
-              <td>${file.sizeString}</td>
-              <td>${file.widthMm} x ${file.heightMm}</td>
-              <td><strong>${file.drawingSize}</strong></td>
-            `;
+            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td>${file.widthMm} x ${file.heightMm}</td><td><strong>${file.drawingSize}</strong></td>`;
           }
           resultsBody.appendChild(tr);
         });
