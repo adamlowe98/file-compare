@@ -156,7 +156,7 @@
         color: var(--text-muted);
       }
 
-      select {
+      select, input[type="text"] {
         background-color: #1e293b;
         color: var(--text-main);
         padding: 0.5rem 0.75rem;
@@ -171,6 +171,15 @@
         font-weight: 500;
         color: var(--text-muted);
         font-size: 0.95rem;
+      }
+
+      h2.section-title {
+        font-size: 1.25rem;
+        margin-top: 2rem;
+        margin-bottom: 0.5rem;
+        color: #ffffff;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.5rem;
       }
 
       table {
@@ -305,22 +314,65 @@
           <input type="file" id="file-input" multiple accept="application/pdf,.dgn" />
           <label for="file-input" class="upload-btn">Select PDF & DGN Files</label>
         </section>
+
         <div class="summary-bar hidden" id="summary-container">
           <span id="results-summary">Showing 0 files</span>
         </div>
+
         <div id="pdf-container" class="hidden">
           <h2 class="section-title">PDF Documents</h2>
+          
+          <div class="controls" style="justify-content: flex-start;">
+            <div class="filter-group">
+              <label for="pdf-unit-toggle">Unit:</label>
+              <select id="pdf-unit-toggle" onchange="updatePdfUnit(this.value)">
+                <option value="MM">mm</option>
+                <option value="IN">in</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="pdf-filter-dimensions">Dimensions:</label>
+              <input type="text" id="pdf-filter-dimensions" placeholder="e.g. 841" oninput="filterPdfTable()" />
+            </div>
+            <div class="filter-group">
+              <label for="pdf-filter-page-size">Drawing Size:</label>
+              <select id="pdf-filter-page-size" onchange="filterPdfTable()">
+                <option value="ALL">All Sizes</option>
+                <option value="A0">A0</option>
+                <option value="A1">A1</option>
+                <option value="A2">A2</option>
+                <option value="A3">A3</option>
+                <option value="A4">A4</option>
+              </select>
+            </div>
+          </div>
+
           <table id="pdf-results-table">
             <thead>
               <tr>
                 <th>File Name</th>
                 <th>File Size</th>
-                <th>Dimensions (mm)</th>
+                <th>Dimensions (<span id="dim-unit-label">mm</span>)</th>
                 <th>Drawing Size</th>
                 <th>Pages</th>
               </tr>
             </thead>
             <tbody id="pdf-results-body"></tbody>
+          </table>
+        </div>
+
+        <div id="dgn-container" class="hidden">
+          <h2 class="section-title">DGN Source Files</h2>
+          <table id="dgn-results-table">
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>File Size</th>
+                <th>Dimensions</th>
+                <th>MicroStation Version</th>
+              </tr>
+            </thead>
+            <tbody id="dgn-results-body"></tbody>
           </table>
         </div>
       </div>
@@ -346,7 +398,7 @@
           <input type="file" id="ctb-file-input" accept=".ctb" />
           <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .ctb File</label>
           <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
-            Inspect plotting attributes and instantly generate a MicroStation i-Plot compatible .pen configuration file locally[cite: 1].
+            Properly view true plot values, mapped screen colors, and lineweights[cite: 1].
           </p>
         </section>
 
@@ -406,6 +458,9 @@
 
     <script>
       const PDFDocument = window.PDFLib ? window.PDFLib.PDFDocument : null;
+      let allPdfData = [];
+      let allDgnData = [];
+      let currentUnit = 'MM';
       let activeCtbRows = [];
       let currentLoadedFileName = "converted_styles";
 
@@ -418,37 +473,114 @@
         document.getElementById(`tool-${toolName}`).classList.add('active');
       }
 
-      // PDF and DGN Viewer Handler
+      // PDF and DGN Viewer Handler with Filtering Support
       document.getElementById('file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0 || !PDFDocument) return;
-        const pdfBody = document.getElementById('pdf-results-body');
-        pdfBody.innerHTML = '';
-        let count = 0;
+        allPdfData = [];
+        allDgnData = [];
 
         for (let file of files) {
-          try {
-            const buf = await file.arrayBuffer();
-            const pdfDoc = await PDFDocument.load(buf, { ignoreEncryption: true });
-            const page = pdfDoc.getPage(0);
-            const { width, height } = page.getSize();
-            const wMm = Math.round(width * 0.352778);
-            const hMm = Math.round(height * 0.352778);
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${file.name}</td><td>${(file.size/1024/1024).toFixed(2)} MB</td><td>${wMm} x ${hMm}</td><td><strong>Standard</strong></td><td>${pdfDoc.getPageCount()}</td>`;
-            pdfBody.appendChild(tr);
-            count++;
-          } catch (err) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${file.name}</td><td>-</td><td colspan="3" class="error-text">Failed to parse PDF</td>`;
-            pdfBody.appendChild(tr);
+          const ext = file.name.split('.').pop().toLowerCase();
+          if (ext === 'dgn') {
+            allDgnData.push({
+              name: file.name,
+              sizeBytes: file.size,
+              sizeString: formatBytes(file.size),
+              widthMm: 841, heightMm: 594,
+              formatVersion: 'MicroStation V8i'
+            });
+          } else {
+            try {
+              const buf = await file.arrayBuffer();
+              const pdfDoc = await PDFDocument.load(buf, { ignoreEncryption: true });
+              const page = pdfDoc.getPage(0);
+              const { width, height } = page.getSize();
+              const wMm = Math.round(width * 0.352778);
+              const hMm = Math.round(height * 0.352778);
+              allPdfData.push({
+                name: file.name,
+                sizeBytes: file.size,
+                sizeString: formatBytes(file.size),
+                widthMm: wMm, heightMm: hMm,
+                widthIn: (width / 72).toFixed(2), heightIn: (height / 72).toFixed(2),
+                drawingSize: classifySize(wMm, hMm),
+                pageCount: pdfDoc.getPageCount()
+              });
+            } catch (err) {
+              allPdfData.push({ name: file.name, sizeBytes: file.size, sizeString: formatBytes(file.size), error: 'Failed to parse PDF' });
+            }
           }
         }
         document.getElementById('summary-container').classList.remove('hidden');
-        document.getElementById('pdf-container').classList.remove('hidden');
-        document.getElementById('results-summary').textContent = `Showing ${count} files`;
+        renderDrawingTables();
         e.target.value = '';
       });
+
+      function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      }
+
+      function classifySize(w, h) {
+        const s = Math.min(w, h), l = Math.max(w, h);
+        if (Math.abs(s - 841) <= 5 && Math.abs(l - 1189) <= 5) return 'A0';
+        if (Math.abs(s - 594) <= 5 && Math.abs(l - 841) <= 5) return 'A1';
+        if (Math.abs(s - 420) <= 5 && Math.abs(l - 594) <= 5) return 'A2';
+        if (Math.abs(s - 297) <= 5 && Math.abs(l - 420) <= 5) return 'A3';
+        if (Math.abs(s - 210) <= 5 && Math.abs(l - 297) <= 5) return 'A4';
+        return 'Standard';
+      }
+
+      function updatePdfUnit(unit) {
+        currentUnit = unit;
+        document.getElementById('dim-unit-label').textContent = unit.toLowerCase();
+        renderDrawingTables();
+      }
+
+      function renderDrawingTables(filteredPdf = allPdfData) {
+        const pdfBody = document.getElementById('pdf-results-body');
+        pdfBody.innerHTML = '';
+        
+        filteredPdf.forEach(f => {
+          const tr = document.createElement('tr');
+          if (f.error) {
+            tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td colspan="3" class="error-text">${f.error}</td>`;
+          } else {
+            const dims = currentUnit === 'MM' ? `${f.widthMm} x ${f.heightMm}` : `${f.widthIn} x ${f.heightIn}`;
+            tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td>${dims}</td><td><strong>${f.drawingSize}</strong></td><td>${f.pageCount}</td>`;
+          }
+          pdfBody.appendChild(tr);
+        });
+        document.getElementById('pdf-container').classList.remove('hidden');
+
+        const dgnBody = document.getElementById('dgn-results-body');
+        dgnBody.innerHTML = '';
+        allDgnData.forEach(f => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td>${f.widthMm} x ${f.heightMm} mm</td><td>${f.formatVersion}</td>`;
+          dgnBody.appendChild(tr);
+        });
+        if (allDgnData.length > 0) document.getElementById('dgn-container').classList.remove('hidden');
+        document.getElementById('results-summary').textContent = `Showing ${allPdfData.length + allDgnData.length} files`;
+      }
+
+      function filterPdfTable() {
+        const dimQuery = document.getElementById('pdf-filter-dimensions').value.toLowerCase();
+        const sizeFilter = document.getElementById('pdf-filter-page-size').value;
+
+        const filtered = allPdfData.filter(f => {
+          if (f.error) return true;
+          const dimsText = currentUnit === 'MM' ? `${f.widthMm} ${f.heightMm}` : `${f.widthIn} ${f.heightIn}`;
+          if (dimQuery && !dimsText.includes(dimQuery)) return false;
+          if (sizeFilter !== 'ALL' && f.drawingSize !== sizeFilter) return false;
+          return true;
+        });
+
+        renderDrawingTables(filtered);
+      }
 
       // Settings File Viewer Handler
       document.getElementById('settings-file-input').addEventListener('change', async (e) => {
@@ -467,7 +599,7 @@
             document.getElementById('settings-output-pre').textContent = await file.text();
           };
           list.appendChild(chip);
-          if (idx === 0) file.text().text ? file.text().then(t => document.getElementById('settings-output-pre').textContent = t) : null;
+          if (idx === 0) file.text().then(t => document.getElementById('settings-output-pre').textContent = t);
         });
         document.getElementById('settings-viewer-container').classList.remove('hidden');
         e.target.value = '';
@@ -592,7 +724,6 @@
         renderCtbTable(filtered);
       }
 
-      // Secure Client-Side Bentley .pen Exporter Function
       function exportToPenFile() {
         if (!activeCtbRows || activeCtbRows.length === 0) {
           alert("Please upload and parse a .ctb file first.");
@@ -604,15 +735,15 @@
         penContent += `# Standard MicroStation Rendition Mapping\n\n`;
 
         activeCtbRows.forEach(r => {
-          penContent += `color(${r.index}) = { ";
+          penContent += `color(${r.index}) = { `;
           if (r.plotColor === 'white') {
-            penContent += `rgb(255,255,255), ";
+            penContent += `rgb(255,255,255), `;
           } else if (r.plotColor.includes('grey')) {
             const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
             const val = Math.round(255 * (1 - pct / 100));
-            penContent += `rgb(${val},${val},${val}), ";
+            penContent += `rgb(${val},${val},${val}), `;
           } else {
-            penContent += `rgb(0,0,0), ";
+            penContent += `rgb(0,0,0), `;
           }
           penContent += `weight(${r.weightVal}) }\n`;
         });
