@@ -500,7 +500,7 @@
           <input type="file" id="ctb-file-input" accept=".ctb" />
           <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .ctb File</label>
           <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
-            Properly view true plot values, mapped screen colors, and lineweights[cite: 1].
+            Properly view true plot values, mapped screen colors, and lineweights.
           </p>
         </section>
 
@@ -549,9 +549,9 @@
             <table class="ctb-grid-table">
               <thead>
                 <tr>
-                  <th colspan="4">screen color (Autocad)[cite: 1]</th>
-                  <th colspan="3">plot values (color & weight)[cite: 1]</th>
-                  <th>plot sample (symbolic)[cite: 1]</th>
+                  <th colspan="4">screen color (Autocad)</th>
+                  <th colspan="3">plot values (color & weight)</th>
+                  <th>plot sample (symbolic)</th>
                 </tr>
               </thead>
               <tbody id="ctb-table-body"></tbody>
@@ -1017,12 +1017,13 @@
 
         const blob = new Blob([tblContent], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${currentLoadedFileName}.tbl`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const a = document.exports ? null : URL.createObjectURL(blob);
+        const aEl = document.createElement('a');
+        aEl.href = url;
+        aEl.download = `${currentLoadedFileName}.tbl`;
+        document.body.appendChild(aEl);
+        aEl.click();
+        document.body.removeChild(aEl);
         URL.revokeObjectURL(url);
       }
     </script>
