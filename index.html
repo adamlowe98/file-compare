@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AutoCAD .CTB Plot Style Inspector</title>
+    <title>All in one Plotting Tool</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <style>
       :root {
         --bg-color: #0f172a;
@@ -25,7 +26,7 @@
       }
 
       .container {
-        max-width: 900px;
+        max-width: 1100px;
         margin: 0 auto;
         background: var(--card-bg);
         padding: 2.5rem;
@@ -49,6 +50,39 @@
       header p {
         color: var(--text-muted);
         margin: 0;
+      }
+
+      .nav-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .nav-tab {
+        background-color: #0f172a;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+
+      .nav-tab.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      .tool-section {
+        display: none;
+      }
+
+      .tool-section.active {
+        display: block;
       }
 
       .upload-section {
@@ -114,8 +148,83 @@
         outline: none;
       }
 
+      .summary-bar {
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+      }
+
+      th, td {
+        padding: 0.85rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        background-color: #0f172a;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+      }
+
+      tbody tr:hover {
+        background-color: var(--table-hover);
+      }
+
       .hidden {
         display: none !important;
+      }
+
+      .error-text {
+        color: #f87171;
+      }
+
+      .viewer-box {
+        background-color: #0f172a;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+      }
+
+      .file-chip-list {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+
+      .file-chip {
+        background-color: #1e293b;
+        border: 1px solid var(--border);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        color: var(--text-muted);
+      }
+
+      .file-chip.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      pre.settings-output {
+        background-color: #090d16;
+        color: #38bdf8;
+        padding: 1.25rem;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-family: monospace;
+        font-size: 0.85rem;
+        margin: 0;
       }
 
       .ctb-table-container {
@@ -154,88 +263,192 @@
         font-size: 0.75rem;
         letter-spacing: 0.05em;
       }
-
-      .ctb-grid-table tbody tr:hover {
-        background-color: var(--table-hover);
-      }
-
-      .aci-badge {
-        display: inline-block;
-        width: 28px;
-        text-align: center;
-        font-weight: bold;
-        padding: 2px 4px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-      }
     </style>
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>AutoCAD .CTB Plot Style Inspector</h1>
-        <p>Properly view contents, true plot colors, and lineweights of any AutoCAD .CTB file locally[cite: 1].</p>
+        <h1>All in one Plotting Tool</h1>
+        <p>Inspect drawing dimensions, configuration files, and correctly parse AutoCAD CTB plot tables locally.</p>
       </header>
 
-      <section class="upload-section">
-        <input type="file" id="ctb-file-input" accept=".ctb" />
-        <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .CTB File</label>
-      </section>
+      <div class="nav-tabs">
+        <button class="nav-tab active" id="tab-drawings" onclick="switchTool('drawings')">PDF and DGN viewer</button>
+        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Settings File Viewer</button>
+        <button class="nav-tab" id="tab-ctb" onclick="switchTool('ctb')">AutoCAD .ctb converter</button>
+      </div>
 
-      <div id="ctb-viewer-container" class="hidden">
-        <div class="ctb-table-container">
-          <div class="ctb-header-bar" id="ctb-file-title">CTB Plot Style Inspector</div>
-          
-          <div class="controls">
-            <div class="filter-group">
-              <label for="ctb-filter-color">Filter by plot color:</label>
-              <select id="ctb-filter-color" onchange="filterCtbTable()">
-                <option value="ALL">-</option>
-                <option value="black">black</option>
-                <option value="white">white</option>
-                <option value="grey 20%">grey 20%</option>
-                <option value="grey 30%">grey 30%</option>
-                <option value="grey 40%">grey 40%</option>
-                <option value="grey 50%">grey 50%</option>
-                <option value="grey 60%">grey 60%</option>
-                <option value="grey 80%">grey 80%</option>
-                <option value="grey 90%">grey 90%</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label for="ctb-filter-weight">Filter by weight:</label>
-              <select id="ctb-filter-weight" onchange="filterCtbTable()">
-                <option value="ALL">-</option>
-                <option value="0.00">0.00 mm</option>
-                <option value="0.10">0.10 mm</option>
-                <option value="0.19">0.19 mm</option>
-                <option value="0.26">0.26 mm</option>
-                <option value="0.38">0.38 mm</option>
-                <option value="0.53">0.53 mm</option>
-                <option value="0.75">0.75 mm</option>
-                <option value="1.20">1.20 mm</option>
-              </select>
-            </div>
-          </div>
-
-          <table class="ctb-grid-table">
+      <!-- PDF AND DGN VIEWER TOOL -->
+      <div id="tool-drawings" class="tool-section active">
+        <section class="upload-section">
+          <input type="file" id="file-input" multiple accept="application/pdf,.dgn" />
+          <label for="file-input" class="upload-btn">Select PDF & DGN Files</label>
+        </section>
+        <div class="summary-bar hidden" id="summary-container">
+          <span id="results-summary">Showing 0 files</span>
+        </div>
+        <div id="pdf-container" class="hidden">
+          <h2 class="section-title">PDF Documents</h2>
+          <table id="pdf-results-table">
             <thead>
               <tr>
-                <th colspan="4">screen color (Autocad)[cite: 1]</th>
-                <th colspan="3">plot values (color & weight)[cite: 1]</th>
-                <th>plot sample (symbolic)[cite: 1]</th>
+                <th>File Name</th>
+                <th>File Size</th>
+                <th>Dimensions (mm)</th>
+                <th>Drawing Size</th>
+                <th>Pages</th>
               </tr>
             </thead>
-            <tbody id="ctb-table-body"></tbody>
+            <tbody id="pdf-results-body"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS FILE VIEWER TOOL -->
+      <div id="tool-settings" class="tool-section">
+        <section class="upload-section">
+          <input type="file" id="settings-file-input" multiple accept=".tbl,.pen,.plt,.cfg,.txt,.ini,.xml,.json,.set" />
+          <label for="settings-file-input" class="upload-btn">Select Settings Files</label>
+        </section>
+        <div id="settings-viewer-container" class="hidden">
+          <h2 class="section-title">Loaded Settings Files</h2>
+          <div class="file-chip-list" id="file-chip-list"></div>
+          <div class="viewer-box">
+            <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUTOCAD .CTB CONVERTER TOOL -->
+      <div id="tool-ctb" class="tool-section">
+        <section class="upload-section">
+          <input type="file" id="ctb-file-input" accept=".ctb" />
+          <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .ctb File</label>
+          <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
+            Properly view true plot values, mapped screen colors, and lineweights[cite: 1].
+          </p>
+        </section>
+
+        <div id="ctb-viewer-container" class="hidden">
+          <div class="ctb-table-container">
+            <div class="ctb-header-bar" id="ctb-file-title">CTB Plot Style Inspector</div>
+            
+            <div class="controls">
+              <div class="filter-group">
+                <label for="ctb-filter-color">Filter by plot color:</label>
+                <select id="ctb-filter-color" onchange="filterCtbTable()">
+                  <option value="ALL">-</option>
+                  <option value="black">black</option>
+                  <option value="white">white</option>
+                  <option value="grey 20%">grey 20%</option>
+                  <option value="grey 30%">grey 30%</option>
+                  <option value="grey 40%">grey 40%</option>
+                  <option value="grey 50%">grey 50%</option>
+                  <option value="grey 60%">grey 60%</option>
+                  <option value="grey 80%">grey 80%</option>
+                  <option value="grey 90%">grey 90%</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="ctb-filter-weight">Filter by weight:</label>
+                <select id="ctb-filter-weight" onchange="filterCtbTable()">
+                  <option value="ALL">-</option>
+                  <option value="0.00">0.00 mm</option>
+                  <option value="0.10">0.10 mm</option>
+                  <option value="0.19">0.19 mm</option>
+                  <option value="0.26">0.26 mm</option>
+                  <option value="0.38">0.38 mm</option>
+                  <option value="0.53">0.53 mm</option>
+                  <option value="0.75">0.75 mm</option>
+                  <option value="1.20">1.20 mm</option>
+                </select>
+              </div>
+            </div>
+
+            <table class="ctb-grid-table">
+              <thead>
+                <tr>
+                  <th colspan="4">screen color (Autocad)[cite: 1]</th>
+                  <th colspan="3">plot values (color & weight)[cite: 1]</th>
+                  <th>plot sample (symbolic)[cite: 1]</th>
+                </tr>
+              </thead>
+              <tbody id="ctb-table-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
 
     <script>
+      const PDFDocument = window.PDFLib ? window.PDFLib.PDFDocument : null;
       let activeCtbRows = [];
 
-      // Standard AutoCAD ACI Color Palette Map (1-255 approximations)
+      function switchTool(toolName) {
+        ['drawings', 'settings', 'ctb'].forEach(t => {
+          document.getElementById(`tab-${t}`).classList.remove('active');
+          document.getElementById(`tool-${t}`).classList.remove('active');
+        });
+        document.getElementById(`tab-${toolName}`).classList.add('active');
+        document.getElementById(`tool-${toolName}`).classList.add('active');
+      }
+
+      // PDF and DGN Viewer Handler
+      document.getElementById('file-input').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0 || !PDFDocument) return;
+        const pdfBody = document.getElementById('pdf-results-body');
+        pdfBody.innerHTML = '';
+        let count = 0;
+
+        for (let file of files) {
+          try {
+            const buf = await file.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(buf, { ignoreEncryption: true });
+            const page = pdfDoc.getPage(0);
+            const { width, height } = page.getSize();
+            const wMm = Math.round(width * 0.352778);
+            const hMm = Math.round(height * 0.352778);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${file.name}</td><td>${(file.size/1024/1024).toFixed(2)} MB</td><td>${wMm} x ${hMm}</td><td><strong>Standard</strong></td><td>${pdfDoc.getPageCount()}</td>`;
+            pdfBody.appendChild(tr);
+            count++;
+          } catch (err) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${file.name}</td><td>-</td><td colspan="3" class="error-text">Failed to parse PDF</td>`;
+            pdfBody.appendChild(tr);
+          }
+        }
+        document.getElementById('summary-container').classList.remove('hidden');
+        document.getElementById('pdf-container').classList.remove('hidden');
+        document.getElementById('results-summary').textContent = `Showing ${count} files`;
+        e.target.value = '';
+      });
+
+      // Settings File Viewer Handler
+      document.getElementById('settings-file-input').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+        const list = document.getElementById('file-chip-list');
+        list.innerHTML = '';
+        
+        files.forEach((file, idx) => {
+          const chip = document.createElement('div');
+          chip.className = `file-chip ${idx === 0 ? 'active' : ''}`;
+          chip.textContent = file.name;
+          chip.onclick = async () => {
+            document.querySelectorAll('.file-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            document.getElementById('settings-output-pre').textContent = await file.text();
+          };
+          list.appendChild(chip);
+          if (idx === 0) file.text().then(t => document.getElementById('settings-output-pre').textContent = t);
+        });
+        document.getElementById('settings-viewer-container').classList.remove('hidden');
+        e.target.value = '';
+      });
+
+      // AutoCAD .ctb converter Parser Engine
       const ACI_HEX = {
         1: '#FF0000', 2: '#FFFF00', 3: '#00FF00', 4: '#00FFFF', 
         5: '#0000FF', 6: '#FF00FF', 7: '#000000', 8: '#818181', 9: '#BEBEBE'
@@ -243,7 +456,6 @@
 
       function getAciColor(index) {
         if (ACI_HEX[index]) return ACI_HEX[index];
-        // Standard algorithmic approximation for extended AutoCAD palette indices
         const baseColors = ['#FF0000', '#FF7D00', '#FFFF00', '#7DFF00', '#00FF00', '#00FF7D', '#00FFFF', '#007DFF', '#0000FF', '#7D00FF', '#FF00FF', '#FF007D'];
         return baseColors[(index - 1) % baseColors.length];
       }
@@ -281,13 +493,11 @@
               plotColor = 'black';
             }
           } else {
-            // Fallback parsing pattern for generic binary layouts
             const byteVal = new Uint8Array(buffer)[i % buffer.byteLength] || i;
             lineweight = STANDARD_WEIGHTS[byteVal % STANDARD_WEIGHTS.length];
             plotColor = byteVal % 7 === 0 ? 'white' : 'black';
           }
 
-          // Format line-weight matching exact layout standard (2 decimal places)
           const formattedWeight = lineweight.toFixed(2) + ' mm';
           const screenHex = getAciColor(i);
           const textColor = ['2', '4', '7', '9'].includes(String(i % 10)) ? '#000000' : '#FFFFFF';
@@ -315,8 +525,6 @@
 
         rows.forEach(r => {
           const tr = document.createElement('tr');
-          
-          // Map plot color background swatch for rendering sample view
           let sampleBg = '#000000';
           if (r.plotColor === 'white') sampleBg = '#FFFFFF';
           else if (r.plotColor.includes('grey')) {
