@@ -299,7 +299,7 @@
     <div class="container">
       <header>
         <h1>All in one Plotting Tool</h1>
-        <p>Inspect drawing dimensions, configuration files, and securely compile Bentley .pen files from AutoCAD CTB tables locally.</p>
+        <p>Inspect drawing dimensions, configuration files, and securely compile MicroStation .pen configuration files locally.</p>
       </header>
 
       <div class="nav-tabs">
@@ -406,7 +406,7 @@
           <div class="ctb-table-container">
             <div class="ctb-header-bar">
               <span id="ctb-file-title">CTB Plot Style Inspector</span>
-              <button class="action-btn" onclick="exportToPenFile()">Download Bentley .pen File</button>
+              <button class="action-btn" onclick="exportToPenFile()">Download MicroStation .pen File</button>
             </div>
             
             <div class="controls">
@@ -558,6 +558,7 @@
 
         const dgnBody = document.getElementById('dgn-results-body');
         dgnBody.innerHTML = '';
+        allDgnData.files = allDgnData.files || [];
         allDgnData.forEach(f => {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td>${f.widthMm} x ${f.heightMm} mm</td><td>${f.formatVersion}</td>`;
@@ -656,7 +657,8 @@
             plotColor = byteVal % 7 === 0 ? 'white' : 'black';
           }
 
-          const formattedWeight = lineweight.toFixed(2) + ' mm';
+          const cleanWeight = isNaN(lineweight) || lineweight < 0 ? 0.10 : Number(lineweight.toFixed(2));
+          const formattedWeight = cleanWeight.toFixed(2) + ' mm';
           const screenHex = getAciColor(i);
           const textColor = ['2', '4', '7', '9'].includes(String(i % 10)) ? '#000000' : '#FFFFFF';
 
@@ -667,7 +669,7 @@
             description: i === 1 || i === 3 || i === 6 || i === 21 ? 'Land F/X-Solid black. Defau...' : '',
             plotColor: plotColor,
             weight: formattedWeight,
-            weightVal: lineweight
+            weightVal: cleanWeight
           });
         }
 
@@ -724,28 +726,33 @@
         renderCtbTable(filtered);
       }
 
+      // Corrected MicroStation Pen Table (.pen) Format Generator
       function exportToPenFile() {
         if (!activeCtbRows || activeCtbRows.length === 0) {
           alert("Please upload and parse a .ctb file first.");
           return;
         }
 
-        let penContent = `# Bentley i-Plot Pen Configuration File\n`;
-        penContent += `# Generated from AutoCAD CTB: ${currentLoadedFileName}.ctb\n`;
-        penContent += `# Standard MicroStation Rendition Mapping\n\n`;
+        let penContent = `# MicroStation Pen Table Configuration File (.pen)\n`;
+        penContent = penContent + `# Converted from AutoCAD CTB: ${currentLoadedFileName}.ctb\n`;
+        penContent = penContent + `# Compatible with Print Organizer / Print Style Remapping\n\n`;
+        penContent = penContent + `pen_table_description = "Converted from ${currentLoadedFileName}.ctb"\n\n`;
 
         activeCtbRows.forEach(r => {
-          penContent += `color(${r.index}) = { `;
+          penContent = penContent + `color(${r.index}) {\n`;
+          
           if (r.plotColor === 'white') {
-            penContent += `rgb(255,255,255), `;
+            penContent = penContent + `  output_color = rgb(255, 255, 255)\n`;
           } else if (r.plotColor.includes('grey')) {
             const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
             const val = Math.round(255 * (1 - pct / 100));
-            penContent += `rgb(${val},${val},${val}), `;
+            penContent = penContent + `  output_color = rgb(${val}, ${val}, ${val})\n`;
           } else {
-            penContent += `rgb(0,0,0), `;
+            penContent = penContent + `  output_color = rgb(0, 0, 0)\n`;
           }
-          penContent += `weight(${r.weightVal}) }\n`;
+
+          penContent = penContent + `  output_weight = ${r.weightVal}\n`;
+          penContent = penContent + `}\n\n`;
         });
 
         const blob = new Blob([penContent], { type: 'text/plain;charset=utf-8' });
