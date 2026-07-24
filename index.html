@@ -123,7 +123,7 @@
       .controls {
         display: flex;
         flex-wrap: wrap;
-        gap: 1.5rem;
+        gap: 1.2rem;
         padding: 1rem;
         background: var(--bg-color);
         border-radius: 6px;
@@ -283,6 +283,33 @@
           </select>
         </div>
 
+        <div class="filter-group">
+          <label for="filter-page-count">Pages:</label>
+          <select id="filter-page-count">
+            <option value="ALL">All Counts</option>
+            <option value="1">1 Page Only</option>
+            <option value="MULTI">Multi-Page (&gt;1)</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-orientation">Orientation:</label>
+          <select id="filter-orientation">
+            <option value="ALL">All Orientations</option>
+            <option value="LANDSCAPE">Landscape</option>
+            <option value="PORTRAIT">Portrait</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-status">Status:</label>
+          <select id="filter-status">
+            <option value="ALL">All Files</option>
+            <option value="SUCCESS">Valid Only</option>
+            <option value="ERROR">Errors Only</option>
+          </select>
+        </div>
+
         <div class="summary" id="results-summary">Showing 0 files</div>
       </section>
 
@@ -294,6 +321,7 @@
               <th data-sort="size">File Size <span class="sort-icon"></span></th>
               <th data-sort="dimensions">Dimensions (<span id="dim-unit-label">mm</span>) <span class="sort-icon"></span></th>
               <th data-sort="drawingSize">Drawing Size <span class="sort-icon"></span></th>
+              <th data-sort="pages">Pages <span class="sort-icon"></span></th>
             </tr>
           </thead>
           <tbody id="results-body">
@@ -325,6 +353,9 @@
       const filterPageSize = document.getElementById('filter-page-size');
       const filterFileSize = document.getElementById('filter-file-size');
       const filterDimensions = document.getElementById('filter-dimensions');
+      const filterPageCount = document.getElementById('filter-page-count');
+      const filterOrientation = document.getElementById('filter-orientation');
+      const filterStatus = document.getElementById('filter-status');
       const unitToggle = document.getElementById('unit-toggle');
       const tableHeaders = document.querySelectorAll('th[data-sort]');
 
@@ -332,6 +363,10 @@
       filterPageSize.addEventListener('change', renderTable);
       filterFileSize.addEventListener('change', renderTable);
       filterDimensions.addEventListener('input', renderTable);
+      filterPageCount.addEventListener('change', renderTable);
+      filterOrientation.addEventListener('change', renderTable);
+      filterStatus.addEventListener('change', renderTable);
+
       unitToggle.addEventListener('change', (e) => {
         currentUnit = e.target.value;
         dimUnitLabel.textContent = currentUnit === 'MM' ? 'mm' : 'in';
@@ -375,6 +410,8 @@
               widthMm: 0, heightMm: 0,
               widthIn: 0, heightIn: 0,
               drawingSize: 'ERROR',
+              pageCount: 0,
+              orientation: 'UNKNOWN',
               error: 'Failed to read PDF'
             });
           }
@@ -391,6 +428,7 @@
         const arrayBuffer = await file.arrayBuffer();
         const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
         
+        const pageCount = pdfDoc.getPageCount();
         const page = pdfDoc.getPage(0);
         const { width, height } = page.getSize(); 
 
@@ -401,6 +439,7 @@
         const widthIn = (width / 72).toFixed(2);
         const heightIn = (height / 72).toFixed(2);
 
+        const orientation = width >= height ? 'LANDSCAPE' : 'PORTRAIT';
         const drawingSize = classifyDrawingSize(widthMm, heightMm);
 
         return {
@@ -411,19 +450,19 @@
           heightMm,
           widthIn,
           heightIn,
-          drawingSize
+          drawingSize,
+          pageCount,
+          orientation
         };
       }
 
       function classifyDrawingSize(w, h) {
         const shortEdge = Math.min(w, h);
         const longEdge = Math.max(w, h);
-        const isApprox = (val, target) => Math.abs(val - target) <= 5; // 5mm tolerance
+        const isApprox = (val, target) => Math.abs(val - target) <= 5;
 
-        // Custom Bentley Square Size
         if (isApprox(w, 1200) && isApprox(h, 1200)) return 'Bentley 1200x1200';
 
-        // ISO A-Series (Exact)
         if (isApprox(shortEdge, 1189) && isApprox(longEdge, 1682)) return '2A0';
         if (isApprox(shortEdge, 841) && isApprox(longEdge, 1189)) return 'A0';
         if (isApprox(shortEdge, 594) && isApprox(longEdge, 841)) return 'A1';
@@ -431,18 +470,15 @@
         if (isApprox(shortEdge, 297) && isApprox(longEdge, 420)) return 'A3';
         if (isApprox(shortEdge, 210) && isApprox(longEdge, 297)) return 'A4';
 
-        // ISO A-Series Extended / Roll Plots (e.g., your 841 x 1399 case matches A0 width with extended length)
         if (isApprox(shortEdge, 841) && longEdge > 1189) return 'A0 Extended';
         if (isApprox(shortEdge, 594) && longEdge > 841) return 'A1 Extended';
 
-        // ISO B-Series
         if (isApprox(shortEdge, 1000) && isApprox(longEdge, 1414)) return 'B0';
         if (isApprox(shortEdge, 707) && isApprox(longEdge, 1000)) return 'B1';
         if (isApprox(shortEdge, 500) && isApprox(longEdge, 707)) return 'B2';
         if (isApprox(shortEdge, 353) && isApprox(longEdge, 500)) return 'B3';
         if (isApprox(shortEdge, 250) && isApprox(longEdge, 353)) return 'B4';
 
-        // North American / ANSI Sizes (Converted to mm)
         if (isApprox(shortEdge, 216) && isApprox(longEdge, 279)) return 'Letter / ANSI A';
         if (isApprox(shortEdge, 216) && isApprox(longEdge, 356)) return 'Legal';
         if (isApprox(shortEdge, 279) && isApprox(longEdge, 432)) return 'Tabloid / ANSI B';
@@ -450,7 +486,6 @@
         if (isApprox(shortEdge, 559) && isApprox(longEdge, 864)) return 'ANSI D';
         if (isApprox(shortEdge, 864) && isApprox(longEdge, 1118)) return 'ANSI E';
 
-        // Architectural (Arch) Sizes
         if (isApprox(shortEdge, 229) && isApprox(longEdge, 305)) return 'Arch A';
         if (isApprox(shortEdge, 305) && isApprox(longEdge, 457)) return 'Arch B';
         if (isApprox(shortEdge, 457) && isApprox(longEdge, 610)) return 'Arch C';
@@ -494,14 +529,28 @@
         const pageSizeFilter = filterPageSize.value;
         const maxMbFilter = filterFileSize.value;
         const dimSearchFilter = filterDimensions.value.toLowerCase().trim();
+        const pageCountFilter = filterPageCount.value;
+        const orientationFilter = filterOrientation.value;
+        const statusFilter = filterStatus.value;
 
         let filteredData = allFilesData.filter(file => {
+          // Status filter
+          if (statusFilter === 'SUCCESS' && file.error) return false;
+          if (statusFilter === 'ERROR' && !file.error) return false;
+
+          if (file.error) return true; // Keep errors visible if 'All' or 'Errors Only' selected
+
           if (pageSizeFilter !== 'ALL' && file.drawingSize !== pageSizeFilter) return false;
           
           if (maxMbFilter !== 'ALL') {
             const maxBytes = parseFloat(maxMbFilter) * 1024 * 1024;
             if (file.sizeBytes > maxBytes) return false;
           }
+
+          if (pageCountFilter === '1' && file.pageCount !== 1) return false;
+          if (pageCountFilter === 'MULTI' && file.pageCount <= 1) return false;
+
+          if (orientationFilter !== 'ALL' && file.orientation !== orientationFilter) return false;
 
           if (dimSearchFilter) {
             const dimStringMM = `${file.widthMm} x ${file.heightMm}`;
@@ -535,6 +584,10 @@
                 valA = a.drawingSize;
                 valB = b.drawingSize;
                 break;
+              case 'pages':
+                valA = a.pageCount;
+                valB = b.pageCount;
+                break;
             }
 
             if (valA < valB) return sortConfig.ascending ? -1 : 1;
@@ -552,7 +605,7 @@
             tr.innerHTML = `
               <td>${file.name}</td>
               <td>${file.sizeString}</td>
-              <td colspan="2" class="error-text">Error: ${file.error}</td>
+              <td colspan="3" class="error-text">Error: ${file.error}</td>
             `;
           } else {
             const dims = currentUnit === 'MM' 
@@ -564,6 +617,7 @@
               <td>${file.sizeString}</td>
               <td>${dims}</td>
               <td><strong>${file.drawingSize}</strong></td>
+              <td>${file.pageCount}</td>
             `;
           }
           resultsBody.appendChild(tr);
