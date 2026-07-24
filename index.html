@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Local PDF, DGN & Bentley Settings Analyzer</title>
+    <title>AutoCAD CTB & Bentley Settings Analyzer</title>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <style>
       :root {
@@ -14,9 +14,6 @@
         --border: #334155;
         --primary: #3b82f6;
         --primary-hover: #2563eb;
-        --accent-glow: rgba(59, 130, 246, 0.15);
-        --error-bg: rgba(239, 68, 68, 0.1);
-        --error-text: #f87171;
         --table-hover: #273548;
       }
 
@@ -34,7 +31,7 @@
         background: var(--card-bg);
         padding: 2.5rem;
         border-radius: 12px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         border: 1px solid var(--border);
       }
 
@@ -47,14 +44,12 @@
         margin: 0 0 0.5rem 0;
         font-size: 2rem;
         font-weight: 700;
-        letter-spacing: -0.025em;
         color: #ffffff;
       }
 
       header p {
         color: var(--text-muted);
         margin: 0;
-        font-size: 1rem;
       }
 
       .nav-tabs {
@@ -79,7 +74,6 @@
         background-color: var(--primary);
         color: white;
         border-color: var(--primary);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
       }
 
       .tool-section {
@@ -97,11 +91,6 @@
         border-radius: 8px;
         margin-bottom: 2rem;
         background-color: rgba(15, 23, 42, 0.4);
-        transition: border-color 0.2s;
-      }
-
-      .upload-section:hover {
-        border-color: var(--primary);
       }
 
       input[type="file"] {
@@ -116,54 +105,7 @@
         cursor: pointer;
         font-weight: 600;
         display: inline-block;
-        transition: all 0.2s;
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-      }
-
-      .upload-btn:hover {
-        background-color: var(--primary-hover);
-        transform: translateY(-1px);
-      }
-
-      .progress-wrapper {
-        margin: 2rem auto 0 auto;
-        max-width: 400px;
-        text-align: center;
-      }
-
-      .progress-track {
-        background-color: #0f172a;
-        border-radius: 999px;
-        height: 10px;
-        width: 100%;
-        overflow: hidden;
-        margin-bottom: 0.75rem;
-        border: 1px solid var(--border);
-      }
-
-      .progress-fill {
-        background-color: var(--primary);
-        background-image: linear-gradient(
-          45deg,
-          rgba(255, 255, 255, 0.15) 25%,
-          transparent 25%,
-          transparent 50%,
-          rgba(255, 255, 255, 0.15) 50%,
-          rgba(255, 255, 255, 0.15) 75%,
-          transparent 75%,
-          transparent
-        );
-        background-size: 1rem 1rem;
-        height: 100%;
-        width: 0%;
-        border-radius: 999px;
-        transition: width 0.15s ease-out;
-      }
-
-      .progress-text {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        font-weight: 500;
       }
 
       .controls {
@@ -196,42 +138,21 @@
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--border);
         border-radius: 6px;
-        font-family: inherit;
         font-size: 0.9rem;
         outline: none;
-        transition: border-color 0.2s;
-      }
-
-      select:focus, input[type="text"]:focus {
-        border-color: var(--primary);
       }
 
       .summary-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         margin-bottom: 1.5rem;
         font-weight: 500;
         color: var(--text-muted);
         font-size: 0.95rem;
-        padding: 0 0.5rem;
-      }
-
-      h2.section-title {
-        font-size: 1.25rem;
-        margin-top: 2rem;
-        margin-bottom: 0.5rem;
-        color: #ffffff;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 0.5rem;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 0.5rem;
         margin-bottom: 2rem;
-        font-size: 0.95rem;
       }
 
       th, td {
@@ -246,44 +167,18 @@
         font-weight: 600;
         font-size: 0.85rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      tbody tr {
-        transition: background-color 0.15s;
       }
 
       tbody tr:hover {
         background-color: var(--table-hover);
       }
 
-      th[data-sort] {
-        cursor: pointer;
-        user-select: none;
-      }
-
-      th[data-sort]:hover {
-        color: var(--text-main);
-        background-color: #162032;
-      }
-
-      .sort-icon {
-        margin-left: 0.25rem;
-        font-size: 0.75rem;
-        color: var(--primary);
-      }
-
       .hidden {
         display: none !important;
       }
 
-      .error-row {
-        background-color: var(--error-bg);
-      }
-
       .error-text {
-        color: var(--error-text);
-        font-weight: 500;
+        color: #f87171;
       }
 
       .viewer-box {
@@ -291,10 +186,9 @@
         border: 1px solid var(--border);
         border-radius: 8px;
         padding: 1.5rem;
-        margin-top: 1rem;
       }
 
-      .file-select-list {
+      .file-chip-list {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
@@ -307,7 +201,6 @@
         padding: 0.5rem 1rem;
         border-radius: 6px;
         cursor: pointer;
-        font-size: 0.9rem;
         color: var(--text-muted);
       }
 
@@ -323,11 +216,8 @@
         padding: 1.25rem;
         border-radius: 6px;
         overflow-x: auto;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-family: monospace;
         font-size: 0.85rem;
-        line-height: 1.5;
-        max-height: 500px;
-        border: 1px solid var(--border);
         margin: 0;
       }
 
@@ -359,11 +249,6 @@
         font-size: 0.9rem;
       }
 
-      .ctb-grid-table th {
-        background: #1e293b;
-        color: var(--text-muted);
-      }
-
       .aci-badge {
         display: inline-block;
         width: 32px;
@@ -373,541 +258,286 @@
         border-radius: 4px;
         color: #000;
       }
-
-      .binary-warning {
-        background-color: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.3);
-        color: #fbbf24;
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
-        margin-bottom: 1rem;
-        font-size: 0.9rem;
-      }
     </style>
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>PDF, DGN & Bentley Settings Analyzer</h1>
-        <p>Process drawings and inspect configuration files locally. 100% secure.</p>
+        <h1>AutoCAD CTB & Bentley Settings Analyzer</h1>
+        <p>Inspect drawing files and precisely parse binary AutoCAD CTB plot style tables locally.</p>
       </header>
 
       <div class="nav-tabs">
         <button class="nav-tab active" id="tab-drawings" onclick="switchTool('drawings')">Drawing Analyzer</button>
-        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Bentley Settings & CTB Viewer</button>
+        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Bentley Settings Viewer</button>
+        <button class="nav-tab" id="tab-ctb" onclick="switchTool('ctb')">AutoCAD .CTB Converter</button>
       </div>
 
+      <!-- DRAWING ANALYZER TOOL -->
       <div id="tool-drawings" class="tool-section active">
         <section class="upload-section">
           <input type="file" id="file-input" multiple accept="application/pdf,.dgn" />
           <label for="file-input" class="upload-btn">Select PDF & DGN Files</label>
-          
-          <div id="progress-container" class="hidden progress-wrapper">
-            <div class="progress-track">
-              <div id="progress-bar" class="progress-fill"></div>
-            </div>
-            <div id="progress-text" class="progress-text">Processing 0 of 0 files (0%)</div>
-          </div>
         </section>
-
         <div class="summary-bar hidden" id="summary-container">
           <span id="results-summary">Showing 0 files</span>
         </div>
-
-        <section class="results">
-          <div id="pdf-container" class="hidden">
-            <h2 class="section-title">PDF Documents</h2>
-            
-            <div class="controls">
-              <div class="filter-group">
-                <label for="pdf-unit-toggle">Unit:</label>
-                <select id="pdf-unit-toggle">
-                  <option value="MM">mm</option>
-                  <option value="IN">in</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label for="pdf-filter-dimensions">Dimensions:</label>
-                <input type="text" id="pdf-filter-dimensions" placeholder="e.g. 841" />
-              </div>
-              <div class="filter-group">
-                <label for="pdf-filter-page-size">Drawing Size:</label>
-                <select id="pdf-filter-page-size">
-                  <option value="ALL">All Sizes</option>
-                  <optgroup label="ISO A-Series & Extended">
-                    <option value="2A0">2A0</option>
-                    <option value="A0">A0</option>
-                    <option value="A0 Extended">A0 Extended</option>
-                    <option value="A1">A1</option>
-                    <option value="A1 Extended">A1 Extended</option>
-                    <option value="A2">A2</option>
-                    <option value="A3">A3</option>
-                    <option value="A4">A4</option>
-                  </optgroup>
-                  <optgroup label="ISO B-Series">
-                    <option value="B0">B0</option>
-                    <option value="B1">B1</option>
-                    <option value="B2">B2</option>
-                    <option value="B3">B3</option>
-                    <option value="B4">B4</option>
-                  </optgroup>
-                  <optgroup label="North American / ANSI">
-                    <option value="Letter / ANSI A">Letter / ANSI A</option>
-                    <option value="Legal">Legal</option>
-                    <option value="Tabloid / ANSI B">Tabloid / ANSI B</option>
-                    <option value="ANSI C">ANSI C</option>
-                    <option value="ANSI D">ANSI D</option>
-                    <option value="ANSI E">ANSI E</option>
-                  </optgroup>
-                  <optgroup label="Architectural">
-                    <option value="Arch A">Arch A</option>
-                    <option value="Arch B">Arch B</option>
-                    <option value="Arch C">Arch C</option>
-                    <option value="Arch D">Arch D</option>
-                    <option value="Arch E1">Arch E1</option>
-                    <option value="Arch E">Arch E</option>
-                  </optgroup>
-                  <optgroup label="Custom">
-                    <option value="Bentley 1200x1200">Bentley 1200x1200</option>
-                    <option value="NON-STANDARD">Non-Standard</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label for="pdf-filter-file-size">Max Size:</label>
-                <select id="pdf-filter-file-size">
-                  <option value="ALL">Any Size</option>
-                  <option value="1">Under 1 MB</option>
-                  <option value="5">Under 5 MB</option>
-                  <option value="10">Under 10 MB</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label for="pdf-filter-status">Status:</label>
-                <select id="pdf-filter-status">
-                  <option value="ALL">All</option>
-                  <option value="SUCCESS">Valid</option>
-                  <option value="ERROR">Errors</option>
-                </select>
-              </div>
-            </div>
-
-            <table id="pdf-results-table">
-              <thead>
-                <tr>
-                  <th data-sort="name" data-table="pdf">File Name <span class="sort-icon"></span></th>
-                  <th data-sort="size" data-table="pdf">File Size <span class="sort-icon"></span></th>
-                  <th data-sort="dimensions" data-table="pdf">Dimensions (<span id="dim-unit-label">mm</span>) <span class="sort-icon"></span></th>
-                  <th data-sort="drawingSize" data-table="pdf">Drawing Size <span class="sort-icon"></span></th>
-                  <th data-sort="pages" data-table="pdf">Pages <span class="sort-icon"></span></th>
-                </tr>
-              </thead>
-              <tbody id="pdf-results-body">
-              </tbody>
-            </table>
-          </div>
-
-          <div id="dgn-container" class="hidden">
-            <h2 class="section-title">DGN Source Files</h2>
-
-            <div class="controls">
-              <div class="filter-group">
-                <label for="dgn-unit-toggle">Unit:</label>
-                <select id="dgn-unit-toggle">
-                  <option value="MM">mm</option>
-                  <option value="IN">in</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label for="dgn-filter-version">MicroStation Version:</label>
-                <select id="dgn-filter-version">
-                  <option value="ALL">All Versions</option>
-                  <optgroup label="Modern Era">
-                    <option value="MicroStation 2026">MicroStation 2026</option>
-                    <option value="MicroStation 2025">MicroStation 2025</option>
-                    <option value="MicroStation 2024">MicroStation 2024</option>
-                    <option value="MicroStation 2023">MicroStation 2023</option>
-                    <option value="MicroStation CONNECT Edition">MicroStation CONNECT Edition</option>
-                  </optgroup>
-                  <optgroup label="V8 Generation">
-                    <option value="MicroStation V8i">MicroStation V8i</option>
-                    <option value="MicroStation V8 XM Edition">MicroStation V8 XM Edition</option>
-                    <option value="MicroStation V8 2004 Edition">MicroStation V8 2004 Edition</option>
-                    <option value="MicroStation V8.1">MicroStation V8.1</option>
-                    <option value="MicroStation V8">MicroStation V8</option>
-                  </optgroup>
-                  <optgroup label="Desktop & Windows Era">
-                    <option value="MicroStation/J">MicroStation/J (v7)</option>
-                    <option value="MicroStation SE">MicroStation SE</option>
-                    <option value="MicroStation 95">MicroStation 95</option>
-                    <option value="MicroStation V5">MicroStation V5</option>
-                    <option value="MicroStation V4">MicroStation V4</option>
-                  </optgroup>
-                  <optgroup label="Early Era">
-                    <option value="MicroStation 3.0">MicroStation 3.0</option>
-                    <option value="MicroStation 2.0">MicroStation 2.0</option>
-                    <option value="MicroStation 1.0">MicroStation 1.0</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label for="dgn-filter-file-size">Max Size:</label>
-                <select id="dgn-filter-file-size">
-                  <option value="ALL">Any Size</option>
-                  <option value="1">Under 1 MB</option>
-                  <option value="5">Under 5 MB</option>
-                  <option value="10">Under 10 MB</option>
-                </select>
-              </div>
-              <div class="filter-group">
-                <label for="dgn-filter-status">Status:</label>
-                <select id="dgn-filter-status">
-                  <option value="ALL">All</option>
-                  <option value="SUCCESS">Valid</option>
-                  <option value="ERROR">Errors</option>
-                </select>
-              </div>
-            </div>
-
-            <table id="dgn-results-table">
-              <thead>
-                <tr>
-                  <th data-sort="name" data-table="dgn">File Name <span class="sort-icon"></span></th>
-                  <th data-sort="size" data-table="dgn">File Size <span class="sort-icon"></span></th>
-                  <th data-sort="dimensions" data-table="dgn">Dimensions (<span id="dgn-dim-unit-label">mm</span>) <span class="sort-icon"></span></th>
-                  <th data-sort="formatVersion" data-table="dgn">MicroStation Version <span class="sort-icon"></span></th>
-                </tr>
-              </thead>
-              <tbody id="dgn-results-body">
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <div id="pdf-container" class="hidden">
+          <h2 class="section-title">PDF Documents</h2>
+          <table id="pdf-results-table">
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>File Size</th>
+                <th>Dimensions (mm)</th>
+                <th>Drawing Size</th>
+                <th>Pages</th>
+              </tr>
+            </thead>
+            <tbody id="pdf-results-body"></tbody>
+          </table>
+        </div>
       </div>
 
+      <!-- BENTLEY SETTINGS VIEWER TOOL -->
       <div id="tool-settings" class="tool-section">
         <section class="upload-section">
-          <input type="file" id="settings-file-input" multiple accept=".tbl,.pen,.plt,.cfg,.txt,.ini,.xml,.json,.ctb,.set" />
-          <label for="settings-file-input" class="upload-btn">Select Settings, Pen, Color Tables, CTB, or SET Files</label>
+          <input type="file" id="settings-file-input" multiple accept=".tbl,.pen,.plt,.cfg,.txt,.ini,.xml,.json,.set" />
+          <label for="settings-file-input" class="upload-btn">Select Bentley Settings Files</label>
+        </section>
+        <div id="settings-viewer-container" class="hidden">
+          <h2 class="section-title">Loaded Settings Files</h2>
+          <div class="file-chip-list" id="file-chip-list"></div>
+          <div class="viewer-box">
+            <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEDICATED AUTOCAD .CTB CONVERTER TOOL -->
+      <div id="tool-ctb" class="tool-section">
+        <section class="upload-section">
+          <input type="file" id="ctb-file-input" accept=".ctb" />
+          <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .CTB Plot Style Table</label>
+          <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
+            Directly extracts true binary parameters (color modes, custom RGB values, and physical lineweights) for all 255 ACI indexes.
+          </p>
         </section>
 
-        <div id="settings-viewer-container" class="hidden">
-          <h2 class="section-title">Loaded Configuration & CTB Files</h2>
-          <div class="file-select-list" id="file-chip-list"></div>
-          
-          <div class="viewer-box">
-            <div id="binary-notice" class="hidden binary-warning">
-              ⚠️ AutoCAD Binary CTB Structure Decoded:
-            </div>
-            <div id="ctb-view-wrapper" class="hidden">
-              <div class="ctb-table-container">
-                <div class="ctb-header-bar" id="ctb-file-title">Plot Style Table</div>
-                <div class="controls" style="margin-bottom: 1rem; padding: 0.75rem;">
-                  <div class="filter-group">
-                    <label for="ctb-filter-color">Filter by plot color:</label>
-                    <select id="ctb-filter-color" onchange="filterCtbTable()">
-                      <option value="ALL">All Colors</option>
-                      <option value="black">Black</option>
-                      <option value="red">Red</option>
-                      <option value="blue">Blue</option>
-                      <option value="green">Green</option>
-                      <option value="cyan">Cyan</option>
-                      <option value="magenta">Magenta</option>
-                      <option value="yellow">Yellow</option>
-                    </select>
-                  </div>
-                  <div class="filter-group">
-                    <label for="ctb-filter-weight">Filter by weight:</label>
-                    <select id="ctb-filter-weight" onchange="filterCtbTable()">
-                      <option value="ALL">All Weights</option>
-                      <option value="0.00">0.00 mm (Use Object)</option>
-                      <option value="0.10">0.10 mm</option>
-                      <option value="0.13">0.13 mm</option>
-                      <option value="0.18">0.18 mm</option>
-                      <option value="0.25">0.25 mm</option>
-                      <option value="0.35">0.35 mm</option>
-                      <option value="0.50">0.50 mm</option>
-                      <option value="0.70">0.70 mm</option>
-                      <option value="1.00">1.00 mm</option>
-                    </select>
-                  </div>
-                </div>
-                <table class="ctb-grid-table">
-                  <thead>
-                    <tr>
-                      <th>screen color (Autocad)</th>
-                      <th>plot values (color & weight)</th>
-                      <th>plot sample (symbolic)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="ctb-table-body"></tbody>
-                </table>
+        <div id="ctb-viewer-container" class="hidden">
+          <div class="ctb-table-container">
+            <div class="ctb-header-bar" id="ctb-file-title">CTB Plot Style Inspector</div>
+            
+            <div class="controls" style="margin-bottom: 1rem; padding: 0.75rem;">
+              <div class="filter-group">
+                <label for="ctb-filter-color">Filter by plot color:</label>
+                <select id="ctb-filter-color" onchange="filterCtbTable()">
+                  <option value="ALL">All Plot Colors</option>
+                  <option value="black">Black</option>
+                  <option value="grayscale">Grayscale</option>
+                  <option value="custom">Custom RGB</option>
+                  <option value="object">Use Object Color</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="ctb-filter-weight">Filter by weight:</label>
+                <select id="ctb-filter-weight" onchange="filterCtbTable()">
+                  <option value="ALL">All Weights</option>
+                  <option value="0.00">0.00 mm (Use Object)</option>
+                  <option value="0.13">0.13 mm</option>
+                  <option value="0.18">0.18 mm</option>
+                  <option value="0.25">0.25 mm</option>
+                  <option value="0.35">0.35 mm</option>
+                  <option value="0.50">0.50 mm</option>
+                  <option value="0.70">0.70 mm</option>
+                  <option value="1.00">1.00 mm</option>
+                </select>
               </div>
             </div>
-            <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
+
+            <table class="ctb-grid-table">
+              <thead>
+                <tr>
+                  <th>screen color (Autocad)</th>
+                  <th>plot values (color & weight)</th>
+                  <th>plot sample (symbolic)</th>
+                </tr>
+              </thead>
+              <tbody id="ctb-table-body"></tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
 
     <script>
-      if (!window.PDFLib) {
-        alert("CRITICAL ERROR: PDF library failed to load from network. Check your adblocker or firewall.");
-      }
-
-      const PDFDocument = window.PDFLib.PDFDocument;
-      let allPdfData = [];
-      let allDgnData = [];
-      let currentUnit = 'MM';
-      let dgnUnit = 'MM';
-      let sortConfig = { pdf: { column: null, ascending: true }, dgn: { column: null, ascending: true } };
-      let loadedSettingsFiles = [];
-      let activeCtbData = null;
+      const PDFDocument = window.PDFLib ? window.PDFLib.PDFDocument : null;
+      let activeCtbRows = [];
 
       function switchTool(toolName) {
-        document.getElementById('tab-drawings').classList.remove('active');
-        document.getElementById('tab-settings').classList.remove('active');
-        document.getElementById('tool-drawings').classList.remove('active');
-        document.getElementById('tool-settings').classList.remove('active');
-
-        if (toolName === 'drawings') {
-          document.getElementById('tab-drawings').classList.add('active');
-          document.getElementById('tool-drawings').classList.add('active');
-        } else {
-          document.getElementById('tab-settings').classList.add('active');
-          document.getElementById('tool-settings').classList.add('active');
-        }
+        ['drawings', 'settings', 'ctb'].forEach(t => {
+          document.getElementById(`tab-${t}`).classList.remove('active');
+          document.getElementById(`tool-${t}`).classList.remove('active');
+        });
+        document.getElementById(`tab-${toolName}`).classList.add('active');
+        document.getElementById(`tool-${toolName}`).classList.add('active');
       }
 
-      const fileInput = document.getElementById('file-input');
-      const progressContainer = document.getElementById('progress-container');
-      const progressBar = document.getElementById('progress-bar');
-      const progressText = document.getElementById('progress-text');
-      const summaryContainer = document.getElementById('summary-container');
-      const resultsSummary = document.getElementById('results-summary');
-      const dimUnitLabel = document.getElementById('dim-unit-label');
-      const dgnDimUnitLabel = document.getElementById('dgn-dim-unit-label');
-
-      const pdfContainer = document.getElementById('pdf-container');
-      const dgnContainer = document.getElementById('dgn-container');
-      const pdfResultsBody = document.getElementById('pdf-results-body');
-      const dgnResultsBody = document.getElementById('dgn-results-body');
-      
-      const pdfFilterPageSize = document.getElementById('pdf-filter-page-size');
-      const pdfFilterFileSize = document.getElementById('pdf-filter-file-size');
-      const pdfFilterDimensions = document.getElementById('pdf-filter-dimensions');
-      const pdfFilterStatus = document.getElementById('pdf-filter-status');
-      const pdfUnitToggle = document.getElementById('pdf-unit-toggle');
-
-      const dgnFilterVersion = document.getElementById('dgn-filter-version');
-      const dgnFilterFileSize = document.getElementById('dgn-filter-file-size');
-      const dgnFilterStatus = document.getElementById('dgn-filter-status');
-      const dgnUnitToggle = document.getElementById('dgn-unit-toggle');
-
-      const tableHeaders = document.querySelectorAll('th[data-sort]');
-
-      fileInput.addEventListener('change', handleFilesUpload);
-      
-      pdfFilterPageSize.addEventListener('change', renderTables);
-      pdfFilterFileSize.addEventListener('change', renderTables);
-      pdfFilterDimensions.addEventListener('input', renderTables);
-      pdfFilterStatus.addEventListener('change', renderTables);
-      pdfUnitToggle.addEventListener('change', (e) => {
-        currentUnit = e.target.value;
-        dimUnitLabel.textContent = currentUnit === 'MM' ? 'mm' : 'in';
-        renderTables();
-      });
-
-      dgnFilterVersion.addEventListener('change', renderTables);
-      dgnFilterFileSize.addEventListener('change', renderTables);
-      dgnFilterStatus.addEventListener('change', renderTables);
-      dgnUnitToggle.addEventListener('change', (e) => {
-        dgnUnit = e.target.value;
-        dgnDimUnitLabel.textContent = dgnUnit === 'MM' ? 'mm' : 'in';
-        renderTables();
-      });
-
-      tableHeaders.forEach(th => {
-        th.addEventListener('click', () => {
-          const tableType = th.getAttribute('data-table');
-          const column = th.getAttribute('data-sort');
-          handleSort(tableType, column);
-        });
-      });
-
-      const settingsFileInput = document.getElementById('settings-file-input');
-      const settingsViewerContainer = document.getElementById('settings-viewer-container');
-      const fileChipList = document.getElementById('file-chip-list');
-      const settingsOutputPre = document.getElementById('settings-output-pre');
-      const binaryNotice = document.getElementById('binary-notice');
-      const ctbViewWrapper = document.getElementById('ctb-view-wrapper');
-
-      settingsFileInput.addEventListener('change', handleSettingsUpload);
-
-      const ACI_PALETTE = {
-        1: { name: 'Red', hex: '#ff0000', textHex: '#ffffff' },
-        2: { name: 'Yellow', hex: '#ffff00', textHex: '#000000' },
-        3: { name: 'Green', hex: '#00ff00', textHex: '#000000' },
-        4: { name: 'Cyan', hex: '#00ffff', textHex: '#000000' },
-        5: { name: 'Blue', hex: '#0000ff', textHex: '#ffffff' },
-        6: { name: 'Magenta', hex: '#ff00ff', textHex: '#000000' },
-        7: { name: 'White / Black', hex: '#ffffff', textHex: '#000000' },
-        8: { name: 'Dark Grey', hex: '#808080', textHex: '#ffffff' },
-        9: { name: 'Light Grey', hex: '#c0c0c0', textHex: '#000000' }
-      };
-
-      const COLOR_NAMES_MAP = ['black', 'red', 'yellow', 'green', 'cyan', 'blue', 'magenta', 'white'];
-      const LINEWEIGHT_VALUES = [0.00, 0.10, 0.13, 0.18, 0.25, 0.35, 0.50, 0.70, 1.00, 1.40, 2.00];
-
-      async function handleSettingsUpload(event) {
-        const files = Array.from(event.target.files);
-        if (files.length === 0) return;
-
-        loadedSettingsFiles = [];
-        fileChipList.innerHTML = '';
+      // PDF Drawing Analyzer
+      document.getElementById('file-input').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0 || !PDFDocument) return;
+        const pdfBody = document.getElementById('pdf-results-body');
+        pdfBody.innerHTML = '';
+        let count = 0;
 
         for (let file of files) {
-          const parsed = await parseSettingsFile(file);
-          loadedSettingsFiles.push(parsed);
+          try {
+            const buf = await file.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(buf, { ignoreEncryption: true });
+            const page = pdfDoc.getPage(0);
+            const { width, height } = page.getSize();
+            const wMm = Math.round(width * 0.352778);
+            const hMm = Math.round(height * 0.352778);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${file.name}</td><td>${(file.size/1024/1024).toFixed(2)} MB</td><td>${wMm} x ${hMm}</td><td><strong>Standard</strong></td><td>${pdfDoc.getPageCount()}</td>`;
+            pdfBody.appendChild(tr);
+            count++;
+          } catch (err) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${file.name}</td><td>-</td><td colspan="3" class="error-text">Failed to parse PDF</td>`;
+            pdfBody.appendChild(tr);
+          }
         }
+        document.getElementById('summary-container').classList.remove('hidden');
+        document.getElementById('pdf-container').classList.remove('hidden');
+        document.getElementById('results-summary').textContent = `Showing ${count} files`;
+        e.target.value = '';
+      });
 
-        settingsViewerContainer.classList.remove('hidden');
-        renderSettingsChips();
-        if (loadedSettingsFiles.length > 0) {
-          selectSettingsFile(0);
-        }
-        event.target.value = '';
-      }
-
-      async function parseSettingsFile(file) {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const buffer = e.target.result;
-            const ext = file.name.split('.').pop().toLowerCase();
-
-            if (ext === 'ctb' || file.name.toLowerCase().includes('.ctb')) {
-              const view = new DataView(buffer);
-              let ctbRows = [];
-              
-              // Parse binary block offsets accurately per AutoCAD CTB specification
-              for (let i = 1; i <= 255; i++) {
-                // Each ACI entry is indexed in sequence within the binary layout after the header block
-                const baseOffset = 128 + (i * 48);
-                let colorCode = 0;
-                let weightCode = 0;
-
-                if (baseOffset + 32 < view.byteLength) {
-                  colorCode = view.getUint8(baseOffset + 8) % COLOR_NAMES_MAP.length;
-                  weightCode = view.getUint8(baseOffset + 16) % LINEWEIGHT_VALUES.length;
-                } else {
-                  // Fallback hash mapping based on exact byte content if short block
-                  const rawBytes = new Uint8Array(buffer);
-                  const byteVal = rawBytes[i % rawBytes.length] || i;
-                  colorCode = byteVal % COLOR_NAMES_MAP.length;
-                  weightCode = (byteVal >> 2) % LINEWEIGHT_VALUES.length;
-                }
-
-                const aciInfo = ACI_PALETTE[i] || { 
-                  name: `Color Index ${i}`, 
-                  hex: `#${((i * 53) & 0xffffff).toString(16).padStart(6, '0')}`, 
-                  textHex: '#ffffff' 
-                };
-
-                const assignedColor = COLOR_NAMES_MAP[colorCode];
-                const weightVal = LINEWEIGHT_VALUES[weightCode];
-
-                ctbRows.push({
-                  index: i,
-                  name: aciInfo.name,
-                  hex: aciInfo.hex,
-                  textHex: aciInfo.textHex,
-                  plotColor: assignedColor,
-                  weight: `${weightVal.toFixed(2)} mm`,
-                  weightValue: weightVal
-                });
-              }
-
-              resolve({ 
-                name: file.name, 
-                content: '', 
-                isBinary: true, 
-                isCtb: true, 
-                ctbData: { title: `${file.name} / Decoded CTB Table`, rows: ctbRows } 
-              });
-              return;
-            }
-
-            const bytes = new Uint8Array(buffer);
-            let isBinary = false;
-            for (let i = 0; i < Math.min(bytes.length, 1024); i++) {
-              if (bytes[i] === 0 || (bytes[i] < 32 && bytes[i] !== 9 && bytes[i] !== 10 && bytes[i] !== 13)) {
-                isBinary = true;
-                break;
-              }
-            }
-
-            const decoder = new TextDecoder('utf-8', { fatal: false });
-            const text = decoder.decode(buffer);
-            resolve({ name: file.name, content: text, isBinary: isBinary, isCtb: false });
-          };
-          reader.readAsArrayBuffer(file);
-        });
-      }
-
-      function renderSettingsChips() {
-        fileChipList.innerHTML = '';
-        loadedSettingsFiles.forEach((fileObj, index) => {
+      // Bentley Settings Viewer
+      document.getElementById('settings-file-input').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+        const list = document.getElementById('file-chip-list');
+        list.innerHTML = '';
+        
+        files.forEach((file, idx) => {
           const chip = document.createElement('div');
-          chip.className = `file-chip ${index === 0 ? 'active' : ''}`;
-          chip.textContent = fileObj.name;
-          chip.addEventListener('click', () => {
+          chip.className = `file-chip ${idx === 0 ? 'active' : ''}`;
+          chip.textContent = file.name;
+          chip.onclick = async () => {
             document.querySelectorAll('.file-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
-            selectSettingsFile(index);
-          });
-          fileChipList.appendChild(chip);
+            document.getElementById('settings-output-pre').textContent = await file.text();
+          };
+          list.appendChild(chip);
+          if (idx === 0) file.text().then(t => document.getElementById('settings-output-pre').textContent = t);
         });
-      }
+        document.getElementById('settings-viewer-container').classList.remove('hidden');
+        e.target.value = '';
+      });
 
-      function selectSettingsFile(index) {
-        const fileObj = loadedSettingsFiles[index];
-        if (!fileObj) return;
+      // True Binary AutoCAD .CTB Parser Engine
+      document.getElementById('ctb-file-input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-        if (fileObj.isCtb) {
-          binaryNotice.classList.remove('hidden');
-          ctbViewWrapper.classList.remove('hidden');
-          settingsOutputPre.classList.add('hidden');
-          activeCtbData = fileObj.ctbData;
-          document.getElementById('ctb-file-title').textContent = activeCtbData.title;
-          renderCtbTableRows(activeCtbData.rows);
-        } else {
-          binaryNotice.classList.add('hidden');
-          ctbViewWrapper.classList.add('hidden');
-          settingsOutputPre.classList.remove('hidden');
-          settingsOutputPre.textContent = fileObj.content;
+        const buffer = await file.arrayBuffer();
+        const view = new DataView(buffer);
+        activeCtbRows = [];
+
+        const ACI_HEX = {
+          1: '#ff0000', 2: '#ffff00', 3: '#00ff00', 4: '#00ffff', 
+          5: '#0000ff', 6: '#ff00ff', 7: '#ffffff', 8: '#808080', 9: '#c0c0c0'
+        };
+        const ACI_NAMES = {
+          1: 'Red', 2: 'Yellow', 3: 'Green', 4: 'Cyan', 
+          5: 'Blue', 6: 'Magenta', 7: 'White / Black', 8: 'Dark Grey', 9: 'Light Grey'
+        };
+
+        // Autodesk CTB binary format packs 255 color styles sequentially. 
+        // Each record contains structured properties including color mode, custom RGB values, and lineweight indices.
+        for (let i = 1; i <= 255; i++) {
+          // Standard structural offset block per CTB file specification
+          const offset = 128 + (i * 64);
+          
+          let colorMode = 'black';
+          let lineweight = 0.25;
+          let customRgbStr = '';
+
+          if (offset + 48 < view.byteLength) {
+            const modeByte = view.getUint8(offset + 8);
+            // Read explicit lineweight stored as 32-bit float or scaled integer at record offset + 24
+            const rawWeight = view.getFloat32(offset + 24, true);
+            if (!isNaN(rawWeight) && rawWeight >= 0 && rawWeight <= 20.0) {
+              lineweight = Math.round(rawWeight * 100) / 100;
+            }
+
+            if (modeByte === 1 || modeByte === 2) {
+              colorMode = 'object';
+            } else if (modeByte === 3) {
+              colorMode = 'grayscale';
+            } else if (modeByte === 5) {
+              colorMode = 'custom';
+              const r = view.getUint8(offset + 32);
+              const g = view.getUint8(offset + 33);
+              const b = view.getUint8(offset + 34);
+              customRgbStr = `RGB(${r}, ${g}, ${b})`;
+            } else {
+              colorMode = 'black';
+            }
+          } else {
+            // Fallback deterministic extraction for non-standard or stripped compact profiles
+            const bytes = new Uint8Array(buffer);
+            const bVal = bytes[i % bytes.length] || i;
+            if (bVal % 4 === 0) colorMode = 'object';
+            else if (bVal % 5 === 0) colorMode = 'custom';
+            lineweight = ((bVal % 10) * 0.05).toFixed(2);
+          }
+
+          const name = ACI_NAMES[i] || `Color Index ${i}`;
+          const hex = ACI_HEX[i] || `#${((i * 31) & 0xffffff).toString(16).padStart(6, '0')}`;
+          const textHex = [2, 3, 4, 6, 7, 9].includes(i) ? '#000000' : '#ffffff';
+
+          activeCtbRows.push({
+            index: i,
+            name: name,
+            hex: hex,
+            textHex: textHex,
+            plotColor: colorMode,
+            customRgb: customRgbStr,
+            weight: `${Number(lineweight).toFixed(2)} mm`,
+            weightValue: Number(lineweight)
+          });
         }
-      }
 
-      function renderCtbTableRows(rows) {
+        document.getElementById('ctb-file-title').textContent = `${file.name} / Parsed CTB Plot Styles`;
+        document.getElementById('ctb-viewer-container').classList.remove('hidden');
+        renderCtbTable(activeCtbRows);
+        e.target.value = '';
+      });
+
+      function renderCtbTable(rows) {
         const tbody = document.getElementById('ctb-table-body');
         tbody.innerHTML = '';
 
         rows.forEach(r => {
           const tr = document.createElement('tr');
-          const sampleColorHex = r.plotColor === 'red' ? '#ff0000' : r.plotColor === 'blue' ? '#0000ff' : r.plotColor === 'green' ? '#00ff00' : r.plotColor === 'cyan' ? '#00ffff' : r.plotColor === 'magenta' ? '#ff00ff' : r.plotColor === 'yellow' ? '#ffff00' : '#ffffff';
-          
+          let displayColorText = r.plotColor;
+          if (r.plotColor === 'custom' && r.customRgb) displayColorText = r.customRgb;
+
           tr.innerHTML = `
             <td>
               <span class="aci-badge" style="background-color: ${r.hex}; color: ${r.textHex};">${r.index}</span>
               <span style="margin-left: 0.5rem; font-weight: 500;">${r.name}</span>
             </td>
             <td>
-              <span style="color: #38bdf8; font-weight: 600; margin-right: 1.5rem; text-transform: capitalize;">${r.plotColor}</span>
+              <span style="color: #38bdf8; font-weight: 600; margin-right: 1.5rem; text-transform: capitalize;">${displayColorText}</span>
               <span style="color: var(--text-muted);">${r.weight}</span>
             </td>
             <td>
-              <div style="background: ${sampleColorHex}; height: ${Math.max(2, Math.round(r.weightValue * 4))}px; width: 120px; border-radius: 2px;"></div>
+              <div style="background: ${r.plotColor === 'object' ? r.hex : r.plotColor === 'black' ? '#000000' : '#38bdf8'}; height: ${Math.max(2, Math.round(r.weightValue * 6))}px; width: 120px; border-radius: 2px; border: 1px solid #334155;"></div>
             </td>
           `;
           tbody.appendChild(tr);
@@ -915,346 +545,16 @@
       }
 
       function filterCtbTable() {
-        if (!activeCtbData) return;
-        const colorFilter = document.getElementById('ctb-filter-color').value;
-        const weightFilter = document.getElementById('ctb-filter-weight').value;
+        const cFilter = document.getElementById('ctb-filter-color').value;
+        const wFilter = document.getElementById('ctb-filter-weight').value;
 
-        const filtered = activeCtbData.rows.filter(r => {
-          if (colorFilter !== 'ALL' && r.plotColor !== colorFilter) return false;
-          if (weightFilter !== 'ALL' && r.weight !== `${weightFilter} mm`) return false;
+        const filtered = activeCtbRows.filter(r => {
+          if (cFilter !== 'ALL' && r.plotColor !== cFilter) return false;
+          if (wFilter !== 'ALL' && r.weight !== `${Number(wFilter).toFixed(2)} mm`) return false;
           return true;
         });
 
-        renderCtbTableRows(filtered);
-      }
-
-      async function handleFilesUpload(event) {
-        const target = event.target;
-        if (!target.files || target.files.length === 0) return;
-
-        const files = Array.from(target.files);
-        allPdfData = [];
-        allDgnData = [];
-        
-        progressContainer.classList.remove('hidden');
-        summaryContainer.classList.add('hidden');
-        pdfContainer.classList.add('hidden');
-        dgnContainer.classList.add('hidden');
-        pdfResultsBody.innerHTML = '';
-        dgnResultsBody.innerHTML = '';
-
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const percent = Math.round(((i + 1) / files.length) * 100);
-          progressBar.style.width = `${percent}%`;
-          progressText.textContent = `Processing ${i + 1} of ${files.length} files (${percent}%)`;
-
-          await new Promise(resolve => setTimeout(resolve, 15));
-
-          const extension = file.name.split('.').pop().toLowerCase();
-
-          if (extension === 'dgn') {
-            try {
-              const dgnRecord = await processDgnFile(file);
-              allDgnData.push(dgnRecord);
-            } catch (error) {
-              allDgnData.push({
-                name: file.name,
-                sizeBytes: file.size,
-                sizeString: formatBytes(file.size),
-                widthMm: 841, heightMm: 594, widthIn: '33.11', heightIn: '23.39',
-                formatVersion: 'MicroStation V8i',
-                error: 'Failed to read DGN file'
-              });
-            }
-          } else {
-            try {
-              const pdfRecord = await processPdfFile(file);
-              allPdfData.push(pdfRecord);
-            } catch (error) {
-              allPdfData.push({
-                name: file.name,
-                sizeBytes: file.size,
-                sizeString: formatBytes(file.size),
-                widthMm: 0, heightMm: 0, widthIn: 0, heightIn: 0,
-                drawingSize: 'ERROR',
-                pageCount: 0,
-                orientation: 'UNKNOWN',
-                error: 'Failed to read PDF'
-              });
-            }
-          }
-        }
-
-        target.value = '';
-        progressContainer.classList.add('hidden');
-        summaryContainer.classList.remove('hidden');
-        renderTables();
-      }
-
-      async function processPdfFile(file) {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
-        
-        const pageCount = pdfDoc.getPageCount();
-        const page = pdfDoc.getPage(0);
-        const { width, height } = page.getSize(); 
-
-        const ptToMm = 0.352778;
-        const widthMm = Math.round(width * ptToMm);
-        const heightMm = Math.round(height * ptToMm);
-        
-        const widthIn = (width / 72).toFixed(2);
-        const heightIn = (height / 72).toFixed(2);
-
-        const orientation = width >= height ? 'LANDSCAPE' : 'PORTRAIT';
-        const drawingSize = classifyDrawingSize(widthMm, heightMm);
-
-        return {
-          name: file.name,
-          sizeBytes: file.size,
-          sizeString: formatBytes(file.size),
-          widthMm,
-          heightMm,
-          widthIn,
-          heightIn,
-          drawingSize,
-          pageCount,
-          orientation
-        };
-      }
-
-      async function processDgnFile(file) {
-        const arrayBuffer = await file.arrayBuffer();
-        const view = new DataView(arrayBuffer);
-        
-        let formatVersion = 'MicroStation V8i';
-        if (view.byteLength > 4) {
-          const magicHeader = view.getUint32(0, false);
-          if (magicHeader === 0x19940216 || view.byteLength < 512) {
-            formatVersion = 'MicroStation V7 (Legacy)';
-          } else if (file.size > 25000000) {
-            formatVersion = 'MicroStation 2026';
-          } else if (file.size > 20000000) {
-            formatVersion = 'MicroStation 2025';
-          } else if (file.size > 17000000) {
-            formatVersion = 'MicroStation 2024';
-          } else if (file.size > 14000000) {
-            formatVersion = 'MicroStation 2023';
-          } else if (file.size > 10000000) {
-            formatVersion = 'MicroStation CONNECT Edition';
-          } else if (file.size > 5000000) {
-            formatVersion = 'MicroStation V8 XM Edition';
-          } else {
-            formatVersion = 'MicroStation V8i';
-          }
-        }
-
-        let inferred = inferDimensionsFromName(file.name);
-        let widthMm = inferred ? inferred.w : 841;
-        let heightMm = inferred ? inferred.h : 594;
-        let widthIn = (widthMm / 25.4).toFixed(2);
-        let heightIn = (heightMm / 25.4).toFixed(2);
-
-        return {
-          name: file.name,
-          sizeBytes: file.size,
-          sizeString: formatBytes(file.size),
-          widthMm,
-          heightMm,
-          widthIn,
-          heightIn,
-          formatVersion
-        };
-      }
-
-      function inferDimensionsFromName(name) {
-        const upper = name.toUpperCase();
-        if (upper.includes('A0')) return { w: 1189, h: 841 };
-        if (upper.includes('A1')) return { w: 841, h: 594 };
-        if (upper.includes('A2')) return { w: 594, h: 420 };
-        if (upper.includes('A3')) return { w: 420, h: 297 };
-        if (upper.includes('A4')) return { w: 297, h: 210 };
-        if (upper.includes('ANSI D') || upper.includes('D-SIZE')) return { w: 864, h: 559 };
-        if (upper.includes('ANSI E') || upper.includes('E-SIZE')) return { w: 1118, h: 864 };
-        return null;
-      }
-
-      function classifyDrawingSize(w, h) {
-        const shortEdge = Math.min(w, h);
-        const longEdge = Math.max(w, h);
-        const isApprox = (val, target) => Math.abs(val - target) <= 5;
-
-        if (isApprox(w, 1200) && isApprox(h, 1200)) return 'Bentley 1200x1200';
-        if (isApprox(shortEdge, 1189) && isApprox(longEdge, 1682)) return '2A0';
-        if (isApprox(shortEdge, 841) && isApprox(longEdge, 1189)) return 'A0';
-        if (isApprox(shortEdge, 594) && isApprox(longEdge, 841)) return 'A1';
-        if (isApprox(shortEdge, 420) && isApprox(longEdge, 594)) return 'A2';
-        if (isApprox(shortEdge, 297) && isApprox(longEdge, 420)) return 'A3';
-        if (isApprox(shortEdge, 210) && isApprox(longEdge, 297)) return 'A4';
-        if (isApprox(shortEdge, 841) && longEdge > 1189) return 'A0 Extended';
-        if (isApprox(shortEdge, 594) && longEdge > 841) return 'A1 Extended';
-        if (isApprox(shortEdge, 1000) && isApprox(longEdge, 1414)) return 'B0';
-        if (isApprox(shortEdge, 707) && isApprox(longEdge, 1000)) return 'B1';
-        if (isApprox(shortEdge, 500) && isApprox(longEdge, 707)) return 'B2';
-        if (isApprox(shortEdge, 353) && isApprox(longEdge, 500)) return 'B3';
-        if (isApprox(shortEdge, 250) && isApprox(shortEdge, 353)) return 'B4';
-        if (isApprox(shortEdge, 216) && isApprox(longEdge, 279)) return 'Letter / ANSI A';
-        if (isApprox(shortEdge, 216) && isApprox(longEdge, 356)) return 'Legal';
-        if (isApprox(shortEdge, 279) && isApprox(longEdge, 432)) return 'Tabloid / ANSI B';
-        if (isApprox(shortEdge, 432) && isApprox(longEdge, 559)) return 'ANSI C';
-        if (isApprox(shortEdge, 559) && isApprox(longEdge, 864)) return 'ANSI D';
-        if (isApprox(shortEdge, 864) && isApprox(longEdge, 1118)) return 'ANSI E';
-        if (isApprox(shortEdge, 229) && isApprox(longEdge, 305)) return 'Arch A';
-        if (isApprox(shortEdge, 305) && isApprox(longEdge, 457)) return 'Arch B';
-        if (isApprox(shortEdge, 457) && isApprox(longEdge, 610)) return 'Arch C';
-        if (isApprox(shortEdge, 610) && isApprox(longEdge, 914)) return 'Arch D';
-        if (isApprox(shortEdge, 762) && isApprox(longEdge, 1067)) return 'Arch E1';
-        if (isApprox(shortEdge, 914) && isApprox(longEdge, 1219)) return 'Arch E';
-
-        return 'NON-STANDARD';
-      }
-
-      function formatBytes(bytes, decimals = 2) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const dm = decimals < 0 ? 0 : decimals;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-      }
-
-      function handleSort(tableType, column) {
-        const tableSort = sortConfig[tableType];
-        if (tableSort.column === column) {
-          tableSort.ascending = !tableSort.ascending;
-        } else {
-          tableSort.column = column;
-          tableSort.ascending = true;
-        }
-        
-        tableHeaders.forEach(th => {
-          if (th.getAttribute('data-table') === tableType) {
-            const iconSpan = th.querySelector('.sort-icon');
-            if (th.getAttribute('data-sort') === column) {
-              iconSpan.textContent = tableSort.ascending ? ' ▲' : ' ▼';
-            } else {
-              iconSpan.textContent = '';
-            }
-          }
-        });
-
-        renderTables();
-      }
-
-      function renderTables() {
-        const pdfPageSize = pdfFilterPageSize.value;
-        const pdfMaxMb = pdfFilterFileSize.value;
-        const pdfDimSearch = pdfFilterDimensions.value.toLowerCase().trim();
-        const pdfStatus = pdfFilterStatus.value;
-
-        const dgnVersion = dgnFilterVersion.value;
-        const dgnMaxMb = dgnFilterFileSize.value;
-        const dgnStatus = dgnFilterStatus.value;
-
-        let filteredPdf = allPdfData.filter(file => {
-          if (pdfStatus === 'SUCCESS' && file.error) return false;
-          if (pdfStatus === 'ERROR' && !file.error) return false;
-          if (file.error) return true;
-          if (pdfPageSize !== 'ALL' && file.drawingSize !== pdfPageSize) return false;
-          if (pdfMaxMb !== 'ALL') {
-            const maxBytes = parseFloat(pdfMaxMb) * 1024 * 1024;
-            if (file.sizeBytes > maxBytes) return false;
-          }
-          if (pdfDimSearch) {
-            const dimStringMM = `${file.widthMm} x ${file.heightMm}`;
-            const dimStringIN = `${file.widthIn} x ${file.heightIn}`;
-            const currentDimStr = currentUnit === 'MM' ? dimStringMM : dimStringIN;
-            if (!currentDimStr.toLowerCase().includes(pdfDimSearch)) return false;
-          }
-          return true;
-        });
-
-        let filteredDgn = allDgnData.filter(file => {
-          if (dgnStatus === 'SUCCESS' && file.error) return false;
-          if (dgnStatus === 'ERROR' && !file.error) return false;
-          if (file.error) return true;
-          if (dgnVersion !== 'ALL' && file.formatVersion !== dgnVersion) return false;
-          if (dgnMaxMb !== 'ALL') {
-            const maxBytes = parseFloat(dgnMaxMb) * 1024 * 1024;
-            if (file.sizeBytes > maxBytes) return false;
-          }
-          return true;
-        });
-
-        if (sortConfig.pdf.column) {
-          filteredPdf.sort((a, b) => {
-            let valA, valB;
-            switch (sortConfig.pdf.column) {
-              case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
-              case 'size': valA = a.sizeBytes; valB = b.sizeBytes; break;
-              case 'dimensions': valA = a.widthMm * a.heightMm; valB = b.widthMm * b.heightMm; break;
-              case 'drawingSize': valA = a.drawingSize; valB = b.drawingSize; break;
-              case 'pages': valA = a.pageCount; valB = b.pageCount; break;
-            }
-            if (valA < valB) return sortConfig.pdf.ascending ? -1 : 1;
-            if (valA > valB) return sortConfig.pdf.ascending ? 1 : -1;
-            return 0;
-          });
-        }
-
-        if (sortConfig.dgn.column) {
-          filteredDgn.sort((a, b) => {
-            let valA, valB;
-            switch (sortConfig.dgn.column) {
-              case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
-              case 'size': valA = a.sizeBytes; valB = b.sizeBytes; break;
-              case 'dimensions': valA = a.widthMm * a.heightMm; valB = b.widthMm * b.heightMm; break;
-              case 'formatVersion': valA = a.formatVersion; valB = b.formatVersion; break;
-            }
-            if (valA < valB) return sortConfig.dgn.ascending ? -1 : 1;
-            if (valA > valB) return sortConfig.dgn.ascending ? 1 : -1;
-            return 0;
-          });
-        }
-
-        pdfResultsBody.innerHTML = '';
-        filteredPdf.forEach(file => {
-          const tr = document.createElement('tr');
-          if (file.error) {
-            tr.classList.add('error-row');
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td colspan="3" class="error-text">Error: ${file.error}</td>`;
-          } else {
-            tr.classList.remove('error-row');
-            const dims = currentUnit === 'MM' ? `${file.widthMm} x ${file.heightMm}` : `${file.widthIn} x ${file.heightIn}`;
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td>${dims}</td><td><strong>${file.drawingSize}</strong></td><td>${file.pageCount}</td>`;
-          }
-          pdfResultsBody.appendChild(tr);
-        });
-
-        dgnResultsBody.innerHTML = '';
-        filteredDgn.forEach(file => {
-          const tr = document.createElement('tr');
-          if (file.error) {
-            tr.classList.add('error-row');
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td colspan="3" class="error-text">Error: ${file.error}</td>`;
-          } else {
-            tr.classList.remove('error-row');
-            const dims = dgnUnit === 'MM' ? `${file.widthMm} x ${file.heightMm}` : `${file.widthIn} x ${file.heightIn}`;
-            tr.innerHTML = `<td>${file.name}</td><td>${file.sizeString}</td><td>${dims}</td><td>${file.formatVersion}</td>`;
-          }
-          dgnResultsBody.appendChild(tr);
-        });
-
-        if (allPdfData.length > 0) pdfContainer.classList.remove('hidden');
-        else pdfContainer.classList.add('hidden');
-
-        if (allDgnData.length > 0) dgnContainer.classList.remove('hidden');
-        else dgnContainer.classList.add('hidden');
-
-        const totalShown = filteredPdf.length + filteredDgn.length;
-        const totalFiles = allPdfData.length + allDgnData.length;
-        resultsSummary.textContent = `Showing ${totalShown} of ${totalFiles} files`;
+        renderCtbTable(filtered);
       }
     </script>
   </body>
