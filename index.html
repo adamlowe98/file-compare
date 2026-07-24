@@ -392,7 +392,8 @@
               <select id="dgn-filter-version">
                 <option value="ALL">All Versions</option>
                 <optgroup label="Modern Era">
-                  <option value="MicroStation 2025-2026">MicroStation 2025 - 2026</option>
+                  <option value="MicroStation 2026">MicroStation 2026</option>
+                  <option value="MicroStation 2025">MicroStation 2025</option>
                   <option value="MicroStation 2024">MicroStation 2024</option>
                   <option value="MicroStation 2023">MicroStation 2023</option>
                   <option value="MicroStation CONNECT Edition">MicroStation CONNECT Edition</option>
@@ -626,9 +627,13 @@
           const magicHeader = view.getUint32(0, false);
           if (magicHeader === 0x19940216 || view.byteLength < 512) {
             formatVersion = 'MicroStation V7 (Legacy)';
+          } else if (file.size > 25000000) {
+            formatVersion = 'MicroStation 2026';
           } else if (file.size > 20000000) {
+            formatVersion = 'MicroStation 2025';
+          } else if (file.size > 17000000) {
             formatVersion = 'MicroStation 2024';
-          } else if (file.size > 15000000) {
+          } else if (file.size > 14000000) {
             formatVersion = 'MicroStation 2023';
           } else if (file.size > 10000000) {
             formatVersion = 'MicroStation CONNECT Edition';
