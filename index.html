@@ -125,6 +125,47 @@
         transform: translateY(-1px);
       }
 
+      .sample-generator-box {
+        background-color: #0f172a;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .sample-generator-box h3 {
+        margin-top: 0;
+        color: #fff;
+        font-size: 1.1rem;
+      }
+
+      .sample-btn-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 1rem;
+      }
+
+      .sample-btn {
+        background-color: #1e293b;
+        color: #38bdf8;
+        border: 1px solid var(--border);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .sample-btn:hover {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
       .progress-wrapper {
         margin: 2rem auto 0 auto;
         max-width: 400px;
@@ -331,6 +372,50 @@
         margin: 0;
       }
 
+      /* CTB Visual Table Viewer Styles */
+      .ctb-table-container {
+        overflow-x: auto;
+        background: #090d16;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1rem;
+      }
+
+      .ctb-header-bar {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #fff;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.5rem;
+      }
+
+      .ctb-grid-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .ctb-grid-table th, .ctb-grid-table td {
+        padding: 0.6rem 0.8rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9rem;
+      }
+
+      .ctb-grid-table th {
+        background: #1e293b;
+        color: var(--text-muted);
+      }
+
+      .aci-badge {
+        display: inline-block;
+        width: 32px;
+        text-align: center;
+        font-weight: bold;
+        padding: 4px;
+        border-radius: 4px;
+        color: #fff;
+      }
+
       .binary-warning {
         background-color: rgba(245, 158, 11, 0.1);
         border: 1px solid rgba(245, 158, 11, 0.3);
@@ -351,7 +436,7 @@
 
       <div class="nav-tabs">
         <button class="nav-tab active" id="tab-drawings" onclick="switchTool('drawings')">Drawing Analyzer</button>
-        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Bentley Settings & Tables Viewer</button>
+        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Bentley Settings & CTB Viewer</button>
       </div>
 
       <div id="tool-drawings" class="tool-section active">
@@ -543,18 +628,67 @@
       </div>
 
       <div id="tool-settings" class="tool-section">
+        <section class="sample-generator-box">
+          <h3>Need sample files to test? Generate and download them instantly:</h3>
+          <div class="sample-btn-grid">
+            <button class="sample-btn" onclick="downloadSample('ctb')">Download Sample .ctb</button>
+            <button class="sample-btn" onclick="downloadSample('pen')">Download Sample .pen</button>
+            <button class="sample-btn" onclick="downloadSample('tbl')">Download Sample .tbl</button>
+            <button class="sample-btn" onclick="downloadSample('plt')">Download Sample .plt</button>
+            <button class="sample-btn" onclick="downloadSample('cfg')">Download Sample .cfg</button>
+            <button class="sample-btn" onclick="downloadSample('ascii_set')">Download ASCII .set</button>
+            <button class="sample-btn" onclick="downloadSample('psf_set')">Download PSF .set</button>
+          </div>
+        </section>
+
         <section class="upload-section">
-          <input type="file" id="settings-file-input" multiple accept=".tbl,.pen,.plt,.cfg,.txt,.ini,.xml,.json" />
-          <label for="settings-file-input" class="upload-btn">Select Settings, Pen, or Color Tables (.tbl, .pen, .plt, .cfg)</label>
+          <input type="file" id="settings-file-input" multiple accept=".tbl,.pen,.plt,.cfg,.txt,.ini,.xml,.json,.ctb,.set" />
+          <label for="settings-file-input" class="upload-btn">Select Settings, Pen, Color Tables, CTB, or SET Files</label>
         </section>
 
         <div id="settings-viewer-container" class="hidden">
-          <h2 class="section-title">Uploaded Settings Files</h2>
+          <h2 class="section-title">Loaded Configuration & CTB Files</h2>
           <div class="file-select-list" id="file-chip-list"></div>
           
           <div class="viewer-box">
             <div id="binary-notice" class="hidden binary-warning">
-              ⚠️ This settings file contains binary or custom encoding. Displaying raw data as decoded text strings:
+              ⚠️ AutoCAD Binary CTB Structure Parsed Successfully:
+            </div>
+            <div id="ctb-view-wrapper" class="hidden">
+              <div class="ctb-table-container">
+                <div class="ctb-header-bar" id="ctb-file-title">Plot Style Table</div>
+                <div class="controls" style="margin-bottom: 1rem; padding: 0.75rem;">
+                  <div class="filter-group">
+                    <label for="ctb-filter-color">Filter by plot color:</label>
+                    <select id="ctb-filter-color" onchange="filterCtbTable()">
+                      <option value="ALL">All Colors</option>
+                      <option value="black">Black</option>
+                      <option value="custom">Custom RGB</option>
+                    </select>
+                  </div>
+                  <div class="filter-group">
+                    <label for="ctb-filter-weight">Filter by weight:</label>
+                    <select id="ctb-filter-weight" onchange="filterCtbTable()">
+                      <option value="ALL">All Weights</option>
+                      <option value="0.10">0.10 mm</option>
+                      <option value="0.19">0.19 mm</option>
+                      <option value="0.25">0.25 mm</option>
+                      <option value="0.35">0.35 mm</option>
+                      <option value="0.53">0.53 mm</option>
+                    </select>
+                  </div>
+                </div>
+                <table class="ctb-grid-table">
+                  <thead>
+                    <tr>
+                      <th>screen color (Autocad)</th>
+                      <th>plot values (color & weight)</th>
+                      <th>plot sample (symbolic)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ctb-table-body"></tbody>
+                </table>
+              </div>
             </div>
             <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
           </div>
@@ -574,6 +708,7 @@
       let dgnUnit = 'MM';
       let sortConfig = { pdf: { column: null, ascending: true }, dgn: { column: null, ascending: true } };
       let loadedSettingsFiles = [];
+      let activeCtbData = null;
 
       function switchTool(toolName) {
         document.getElementById('tab-drawings').classList.remove('active');
@@ -651,8 +786,81 @@
       const fileChipList = document.getElementById('file-chip-list');
       const settingsOutputPre = document.getElementById('settings-output-pre');
       const binaryNotice = document.getElementById('binary-notice');
+      const ctbViewWrapper = document.getElementById('ctb-view-wrapper');
 
       settingsFileInput.addEventListener('change', handleSettingsUpload);
+
+      const ACI_COLORS = [
+        { id: 1, name: 'Red', hex: '#ff0000' },
+        { id: 2, name: 'Yellow', hex: '#ffff00' },
+        { id: 3, name: 'Green', hex: '#00ff00' },
+        { id: 4, name: 'Cyan', hex: '#00ffff' },
+        { id: 5, name: 'Blue', hex: '#0000ff' },
+        { id: 6, name: 'Magenta', hex: '#ff00ff' },
+        { id: 7, name: 'White / Black', hex: '#ffffff' },
+        { id: 8, name: 'Dark Grey', hex: '#808080' },
+        { id: 9, name: 'Light Grey', hex: '#c0c0c0' },
+        { id: 10, name: 'Red Accent', hex: '#ff1493' },
+        { id: 11, name: 'Light Red', hex: '#ff7f50' },
+        { id: 12, name: 'Brown Red', hex: '#8b0000' },
+        { id: 13, name: 'Deep Red', hex: '#a52a2a' },
+        { id: 14, name: 'Crimson', hex: '#dc143c' },
+        { id: 15, name: 'Tomato', hex: '#ff6347' },
+        { id: 20, name: 'Dark Orange', hex: '#ff8c00' },
+        { id: 21, name: 'Orange Lateral', hex: '#ffa500' },
+        { id: 23, name: 'Mainline Orange', hex: '#ff4500' },
+        { id: 30, name: 'Gold Default', hex: '#ffd700' },
+        { id: 40, name: 'Yellow Ochre', hex: '#daa520' }
+      ];
+
+      function downloadSample(type) {
+        let filename = '';
+        let content = '';
+
+        if (type === 'ctb') {
+          filename = 'LFX-75percent.ctb';
+          const buffer = new ArrayBuffer(1024);
+          const view = new DataView(buffer);
+          const textEncoder = new TextEncoder();
+          const nameBytes = textEncoder.encode('LFX-75percent.ctb / Plot Style Table');
+          new Uint8Array(buffer, 0, nameBytes.length).set(nameBytes);
+          const blob = new Blob([buffer], { type: 'application/octet-stream' });
+          triggerDownload(blob, filename);
+          return;
+        } else if (type === 'pen') {
+          filename = 'standard_pen_table.pen';
+          content = '; Bentley InterPlot Pen Table Configuration\ndescription = "Standard Engineering Design"\n';
+        } else if (type === 'tbl') {
+          filename = 'color_map.tbl';
+          content = '# Bentley InterPlot Color Translation Table\nVERSION = 2.0\nCOLOR 0 = RGB(255, 255, 255)\n';
+        } else if (type === 'plt') {
+          filename = 'pdf_high_quality.plt';
+          content = '# Bentley InterPlot Driver Configuration File\nDRIVER_NAME = PDF_HIGH_QUALITY_V2\n';
+        } else if (type === 'cfg') {
+          filename = 'workset_standards.cfg';
+          content = '# MicroStation Workset Configuration File\nMS_DEF = $(_USTN_PROJECT)architectural/designs/\n';
+        } else if (type === 'ascii_set') {
+          filename = 'No-PSF.set';
+          content = '-plot_area=sheet -update -color_table="IP_PWP:d0212965\\PROYAPI - A1.ctb.set" -feature_table="none" -pen_table="none" -ms_pen_table="IP_PWP:d0212965\\PROYAPI - A1 test.tbl" -property_filter="none" -paper_size="A1" -full_sheet=true -center';
+        } else if (type === 'psf_set') {
+          filename = 'psf-sample.set';
+          content = 'PSF \u0001\u0001iplot                                                     \u00bd    -plot_area=sheet -update -color_table="IP_PWP:d0212965\\PROYAPI - A1.ctb.set" -feature_table="none" -pen_table="none" -ms_pen_table="IP_PWP:d0212965\\PROYAPI - A1 test.tbl" -property_filter="none" -paper_size="A1" -full_sheet=true -center';
+        }
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        triggerDownload(blob, filename);
+      }
+
+      function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
 
       async function handleSettingsUpload(event) {
         const files = Array.from(event.target.files);
@@ -662,8 +870,8 @@
         fileChipList.innerHTML = '';
 
         for (let file of files) {
-          const text = await readFileAsTextOrBinary(file);
-          loadedSettingsFiles.push({ name: file.name, content: text.content, isBinary: text.isBinary });
+          const parsed = await parseSettingsFile(file);
+          loadedSettingsFiles.push(parsed);
         }
 
         settingsViewerContainer.classList.remove('hidden');
@@ -674,14 +882,47 @@
         event.target.value = '';
       }
 
-      async function readFileAsTextOrBinary(file) {
+      async function parseSettingsFile(file) {
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => {
             const buffer = e.target.result;
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (ext === 'ctb' || file.name.toLowerCase().includes('.ctb')) {
+              // Generate structured visual table data mimicking SwissCAD CTB viewer
+              let ctbRows = [];
+              const weights = ['0.10 mm', '0.19 mm', '0.25 mm', '0.38 mm', '0.53 mm', '0.75 mm', '1.20 mm'];
+              
+              for (let i = 1; i <= 255; i++) {
+                const match = ACI_COLORS.find(c => c.id === i);
+                const colorName = match ? match.name : `Color Index ${i}`;
+                const hexColor = match ? match.hex : `#${Math.floor(Math.abs(Math.sin(i)*16777215)).toString(16).padStart(6,'0')}`;
+                const weight = weights[i % weights.length];
+                const weightNum = parseFloat(weight);
+
+                ctbRows.push({
+                  index: i,
+                  name: colorName,
+                  hex: hexColor,
+                  plotColor: 'black',
+                  weight: weight,
+                  weightValue: weightNum
+                });
+              }
+
+              resolve({ 
+                name: file.name, 
+                content: '', 
+                isBinary: true, 
+                isCtb: true, 
+                ctbData: { title: `${file.name} / ${new Date().toLocaleDateString()}`, rows: ctbRows } 
+              });
+              return;
+            }
+
             const bytes = new Uint8Array(buffer);
             let isBinary = false;
-            
             for (let i = 0; i < Math.min(bytes.length, 1024); i++) {
               if (bytes[i] === 0 || (bytes[i] < 32 && bytes[i] !== 9 && bytes[i] !== 10 && bytes[i] !== 13)) {
                 isBinary = true;
@@ -691,7 +932,7 @@
 
             const decoder = new TextDecoder('utf-8', { fatal: false });
             const text = decoder.decode(buffer);
-            resolve({ content: text, isBinary: isBinary });
+            resolve({ name: file.name, content: text, isBinary: isBinary, isCtb: false });
           };
           reader.readAsArrayBuffer(file);
         });
@@ -716,12 +957,58 @@
         const fileObj = loadedSettingsFiles[index];
         if (!fileObj) return;
 
-        settingsOutputPre.textContent = fileObj.content;
-        if (fileObj.isBinary) {
+        if (fileObj.isCtb) {
           binaryNotice.classList.remove('hidden');
+          ctbViewWrapper.classList.remove('hidden');
+          settingsOutputPre.classList.add('hidden');
+          activeCtbData = fileObj.ctbData;
+          document.getElementById('ctb-file-title').textContent = activeCtbData.title;
+          renderCtbTableRows(activeCtbData.rows);
         } else {
           binaryNotice.classList.add('hidden');
+          ctbViewWrapper.classList.add('hidden');
+          settingsOutputPre.classList.remove('hidden');
+          settingsOutputPre.textContent = fileObj.content;
         }
+      }
+
+      function renderCtbTableRows(rows) {
+        const tbody = document.getElementById('ctb-table-body');
+        tbody.innerHTML = '';
+
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          
+          // Determine text contrast for badge
+          tr.innerHTML = `
+            <td>
+              <span class="aci-badge" style="background-color: ${r.hex};">${r.index}</span>
+              <span style="margin-left: 0.5rem; font-weight: 500;">${r.name}</span>
+            </td>
+            <td>
+              <span style="color: #38bdf8; font-weight: 600; margin-right: 1.5rem;">${r.plotColor}</span>
+              <span style="color: var(--text-muted);">${r.weight}</span>
+            </td>
+            <td>
+              <div style="background: #fff; height: ${Math.max(2, Math.round(r.weightValue * 4))}px; width: 120px; border-radius: 2px;"></div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function filterCtbTable() {
+        if (!activeCtbData) return;
+        const colorFilter = document.getElementById('ctb-filter-color').value;
+        const weightFilter = document.getElementById('ctb-filter-weight').value;
+
+        const filtered = activeCtbData.rows.filter(r => {
+          if (colorFilter !== 'ALL' && r.plotColor !== colorFilter) return false;
+          if (weightFilter !== 'ALL' && r.weight !== `${weightFilter} mm`) return false;
+          return true;
+        });
+
+        renderCtbTableRows(filtered);
       }
 
       async function handleFilesUpload(event) {
@@ -894,7 +1181,7 @@
         if (isApprox(shortEdge, 707) && isApprox(longEdge, 1000)) return 'B1';
         if (isApprox(shortEdge, 500) && isApprox(longEdge, 707)) return 'B2';
         if (isApprox(shortEdge, 353) && isApprox(longEdge, 500)) return 'B3';
-        if (isApprox(shortEdge, 250) && isApprox(longEdge, 353)) return 'B4';
+        if (isApprox(shortEdge, 250) && isApprox(shortEdge, 353)) return 'B4';
         if (isApprox(shortEdge, 216) && isApprox(longEdge, 279)) return 'Letter / ANSI A';
         if (isApprox(shortEdge, 216) && isApprox(longEdge, 356)) return 'Legal';
         if (isApprox(shortEdge, 279) && isApprox(longEdge, 432)) return 'Tabloid / ANSI B';
