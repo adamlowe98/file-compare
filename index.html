@@ -120,7 +120,6 @@
         font-weight: 500;
       }
 
-      /* Make controls wrap nicely since we added more */
       .controls {
         display: flex;
         flex-wrap: wrap;
@@ -167,7 +166,6 @@
         font-weight: 600;
       }
 
-      /* Sortable Header Styles */
       th[data-sort] {
         cursor: pointer;
         user-select: none;
@@ -230,12 +228,33 @@
           <label for="filter-page-size">Size Group:</label>
           <select id="filter-page-size">
             <option value="ALL">All</option>
-            <option value="A0">A0</option>
-            <option value="A1">A1</option>
-            <option value="A2">A2</option>
-            <option value="A3">A3</option>
-            <option value="A4">A4</option>
-            <option value="NON-STANDARD">Custom</option>
+            <optgroup label="North American / ANSI">
+              <option value="Letter / ANSI A">Letter / ANSI A</option>
+              <option value="Legal">Legal</option>
+              <option value="Tabloid / ANSI B">Tabloid / ANSI B</option>
+              <option value="ANSI C">ANSI C</option>
+              <option value="ANSI D">ANSI D</option>
+              <option value="ANSI E">ANSI E</option>
+            </optgroup>
+            <optgroup label="Architectural (Arch)">
+              <option value="Arch A">Arch A</option>
+              <option value="Arch B">Arch B</option>
+              <option value="Arch C">Arch C</option>
+              <option value="Arch D">Arch D</option>
+              <option value="Arch E1">Arch E1</option>
+              <option value="Arch E">Arch E</option>
+            </optgroup>
+            <optgroup label="ISO A-Series">
+              <option value="A0">A0</option>
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="A3">A3</option>
+              <option value="A4">A4</option>
+            </optgroup>
+            <optgroup label="Custom / Other">
+              <option value="Bentley 1200x1200">Bentley 1200x1200</option>
+              <option value="NON-STANDARD">Non-Standard / Custom</option>
+            </optgroup>
           </select>
         </div>
 
@@ -256,7 +275,6 @@
         <table id="results-table" class="hidden">
           <thead>
             <tr>
-              <!-- Clickable sort headers -->
               <th data-sort="name">File Name <span class="sort-icon"></span></th>
               <th data-sort="size">File Size <span class="sort-icon"></span></th>
               <th data-sort="dimensions">Dimensions (<span id="dim-unit-label">mm</span>) <span class="sort-icon"></span></th>
@@ -277,9 +295,8 @@
       const PDFDocument = window.PDFLib.PDFDocument;
       let allFilesData = [];
       let currentUnit = 'MM';
-      let sortConfig = { column: null, ascending: true }; // Holds sorting state
+      let sortConfig = { column: null, ascending: true };
 
-      // DOM Elements
       const fileInput = document.getElementById('file-input');
       const progressContainer = document.getElementById('progress-container');
       const progressBar = document.getElementById('progress-bar');
@@ -290,25 +307,22 @@
       const resultsSummary = document.getElementById('results-summary');
       const dimUnitLabel = document.getElementById('dim-unit-label');
       
-      // Filters
       const filterPageSize = document.getElementById('filter-page-size');
       const filterFileSize = document.getElementById('filter-file-size');
       const filterDimensions = document.getElementById('filter-dimensions');
       const unitToggle = document.getElementById('unit-toggle');
       const tableHeaders = document.querySelectorAll('th[data-sort]');
 
-      // Event Listeners
       fileInput.addEventListener('change', handleFilesUpload);
       filterPageSize.addEventListener('change', renderTable);
       filterFileSize.addEventListener('change', renderTable);
-      filterDimensions.addEventListener('input', renderTable); // triggers as you type
+      filterDimensions.addEventListener('input', renderTable);
       unitToggle.addEventListener('change', (e) => {
         currentUnit = e.target.value;
         dimUnitLabel.textContent = currentUnit === 'MM' ? 'mm' : 'in';
         renderTable();
       });
 
-      // Attach sorting listeners
       tableHeaders.forEach(th => {
         th.addEventListener('click', () => handleSort(th.getAttribute('data-sort')));
       });
@@ -365,12 +379,10 @@
         const page = pdfDoc.getPage(0);
         const { width, height } = page.getSize(); 
 
-        // PDF sizes are in Points (1/72 inch)
         const ptToMm = 0.352778;
         const widthMm = Math.round(width * ptToMm);
         const heightMm = Math.round(height * ptToMm);
         
-        // Calculate inches
         const widthIn = (width / 72).toFixed(2);
         const heightIn = (height / 72).toFixed(2);
 
@@ -391,13 +403,33 @@
       function classifyDrawingSize(w, h) {
         const shortEdge = Math.min(w, h);
         const longEdge = Math.max(w, h);
-        const isApprox = (val, target) => Math.abs(val - target) <= 5;
+        const isApprox = (val, target) => Math.abs(val - target) <= 5; // 5mm tolerance
 
+        // Custom Bentley Square Size
+        if (isApprox(w, 1200) && isApprox(h, 1200)) return 'Bentley 1200x1200';
+
+        // ISO A-Series
         if (isApprox(shortEdge, 841) && isApprox(longEdge, 1189)) return 'A0';
         if (isApprox(shortEdge, 594) && isApprox(longEdge, 841)) return 'A1';
         if (isApprox(shortEdge, 420) && isApprox(longEdge, 594)) return 'A2';
         if (isApprox(shortEdge, 297) && isApprox(longEdge, 420)) return 'A3';
         if (isApprox(shortEdge, 210) && isApprox(longEdge, 297)) return 'A4';
+
+        // North American / ANSI Sizes (Converted to mm)
+        if (isApprox(shortEdge, 216) && isApprox(longEdge, 279)) return 'Letter / ANSI A';
+        if (isApprox(shortEdge, 216) && isApprox(longEdge, 356)) return 'Legal';
+        if (isApprox(shortEdge, 279) && isApprox(longEdge, 432)) return 'Tabloid / ANSI B';
+        if (isApprox(shortEdge, 432) && isApprox(longEdge, 559)) return 'ANSI C';
+        if (isApprox(shortEdge, 559) && isApprox(longEdge, 864)) return 'ANSI D';
+        if (isApprox(shortEdge, 864) && isApprox(longEdge, 1118)) return 'ANSI E';
+
+        // Architectural (Arch) Sizes
+        if (isApprox(shortEdge, 229) && isApprox(longEdge, 305)) return 'Arch A';
+        if (isApprox(shortEdge, 305) && isApprox(longEdge, 457)) return 'Arch B';
+        if (isApprox(shortEdge, 457) && isApprox(longEdge, 610)) return 'Arch C';
+        if (isApprox(shortEdge, 610) && isApprox(longEdge, 914)) return 'Arch D';
+        if (isApprox(shortEdge, 762) && isApprox(longEdge, 1067)) return 'Arch E1';
+        if (isApprox(shortEdge, 914) && isApprox(longEdge, 1219)) return 'Arch E';
 
         return 'NON-STANDARD';
       }
@@ -413,13 +445,12 @@
 
       function handleSort(column) {
         if (sortConfig.column === column) {
-          sortConfig.ascending = !sortConfig.ascending; // Toggle direction
+          sortConfig.ascending = !sortConfig.ascending;
         } else {
           sortConfig.column = column;
-          sortConfig.ascending = true; // Default to ascending on new column
+          sortConfig.ascending = true;
         }
         
-        // Update the visual arrows in headers
         tableHeaders.forEach(th => {
           const iconSpan = th.querySelector('.sort-icon');
           if (th.getAttribute('data-sort') === column) {
@@ -437,31 +468,25 @@
         const maxMbFilter = filterFileSize.value;
         const dimSearchFilter = filterDimensions.value.toLowerCase().trim();
 
-        // 1. FILTERING
         let filteredData = allFilesData.filter(file => {
-          // Page size filter
           if (pageSizeFilter !== 'ALL' && file.drawingSize !== pageSizeFilter) return false;
           
-          // File size filter
           if (maxMbFilter !== 'ALL') {
             const maxBytes = parseFloat(maxMbFilter) * 1024 * 1024;
             if (file.sizeBytes > maxBytes) return false;
           }
 
-          // Dimensions text search
           if (dimSearchFilter) {
             const dimStringMM = `${file.widthMm} x ${file.heightMm}`;
             const dimStringIN = `${file.widthIn} x ${file.heightIn}`;
             const currentDimStr = currentUnit === 'MM' ? dimStringMM : dimStringIN;
             
-            // Allow searching by exact strings like "841" or "33.11"
             if (!currentDimStr.toLowerCase().includes(dimSearchFilter)) return false;
           }
 
           return true;
         });
 
-        // 2. SORTING
         if (sortConfig.column) {
           filteredData.sort((a, b) => {
             let valA, valB;
@@ -476,7 +501,6 @@
                 valB = b.sizeBytes;
                 break;
               case 'dimensions':
-                // Sort by total area to accurately size them up/down
                 valA = a.widthMm * a.heightMm; 
                 valB = b.widthMm * b.heightMm;
                 break;
@@ -492,7 +516,6 @@
           });
         }
 
-        // 3. RENDERING
         resultsBody.innerHTML = '';
 
         filteredData.forEach(file => {
