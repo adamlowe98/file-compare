@@ -355,22 +355,26 @@
                 <select id="pdf-filter-page-size" onchange="filterDrawingTables()">
                   <option value="ALL">All Sizes (Comprehensive)</option>
                   <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm)</option>
-                  <!-- ISO A Series -->
+                  <!-- ISO A Series & Extended -->
+                  <option value="4A0">4A0 (1682 x 2378 mm)</option>
+                  <option value="2A0">2A0 (1189 x 1682 mm)</option>
                   <option value="A0">A0 (841 x 1189 mm)</option>
+                  <option value="A0 Extended">A0 Extended</option>
                   <option value="A1">A1 (594 x 841 mm)</option>
+                  <option value="A1 Extended">A1 Extended</option>
                   <option value="A2">A2 (420 x 594 mm)</option>
+                  <option value="A2 Extended">A2 Extended</option>
                   <option value="A3">A3 (297 x 420 mm)</option>
+                  <option value="A3 Extended">A3 Extended</option>
                   <option value="A4">A4 (210 x 297 mm)</option>
+                  <option value="A4 Extended">A4 Extended</option>
                   <option value="A5">A5 (148 x 210 mm)</option>
                   <option value="A6">A6 (105 x 148 mm)</option>
                   <option value="A7">A7 (74 x 105 mm)</option>
                   <option value="A8">A8 (52 x 74 mm)</option>
                   <option value="A9">A9 (37 x 52 mm)</option>
                   <option value="A10">A10 (26 x 37 mm)</option>
-                  <!-- Extended ISO A Series -->
-                  <option value="2A0">2A0 (1189 x 1682 mm)</option>
-                  <option value="4A0">4A0 (1682 x 2378 mm)</option>
-                  <!-- ISO B Series -->
+                  <!-- ISO B Series & Extended -->
                   <option value="B0">B0 (1000 x 1414 mm)</option>
                   <option value="B1">B1 (707 x 1000 mm)</option>
                   <option value="B2">B2 (500 x 707 mm)</option>
@@ -382,6 +386,7 @@
                   <option value="B8">B8 (62 x 88 mm)</option>
                   <option value="B9">B9 (44 x 62 mm)</option>
                   <option value="B10">B10 (31 x 44 mm)</option>
+                  <option value="B Series Extended">B Series Extended</option>
                   <!-- ISO C Series -->
                   <option value="C0">C0 (917 x 1297 mm)</option>
                   <option value="C1">C1 (648 x 917 mm)</option>
@@ -648,13 +653,18 @@
       function classifySize(w, h) {
         const s = Math.min(w, h), l = Math.max(w, h);
         if (Math.abs(s - 1200) <= 10 && Math.abs(l - 1200) <= 10) return 'Bentley 1200x1200';
-        if (Math.abs(s - 1189) <= 10 && Math.abs(l - 1682) <= 10) return '2A0';
-        if (Math.abs(s - 1682) <= 10 && Math.abs(l - 2378) <= 10) return '4A0';
+        if (Math.abs(s - 1682) <= 12 && Math.abs(l - 2378) <= 12) return '4A0';
+        if (Math.abs(s - 1189) <= 12 && Math.abs(l - 1682) <= 12) return '2A0';
         if (Math.abs(s - 841) <= 6 && Math.abs(l - 1189) <= 6) return 'A0';
+        if (Math.abs(s - 841) <= 6 && l > 1195 && l <= 1682) return 'A0 Extended';
         if (Math.abs(s - 594) <= 6 && Math.abs(l - 841) <= 6) return 'A1';
+        if (Math.abs(s - 594) <= 6 && l > 847 && l <= 1189) return 'A1 Extended';
         if (Math.abs(s - 420) <= 6 && Math.abs(l - 594) <= 6) return 'A2';
+        if (Math.abs(s - 420) <= 6 && l > 600 && l <= 841) return 'A2 Extended';
         if (Math.abs(s - 297) <= 6 && Math.abs(l - 420) <= 6) return 'A3';
+        if (Math.abs(s - 297) <= 6 && l > 426 && l <= 594) return 'A3 Extended';
         if (Math.abs(s - 210) <= 6 && Math.abs(l - 297) <= 6) return 'A4';
+        if (Math.abs(s - 210) <= 6 && l > 303 && l <= 420) return 'A4 Extended';
         if (Math.abs(s - 148) <= 6 && Math.abs(l - 210) <= 6) return 'A5';
         if (Math.abs(s - 105) <= 6 && Math.abs(l - 148) <= 6) return 'A6';
         if (Math.abs(s - 74) <= 6 && Math.abs(l - 105) <= 6) return 'A7';
@@ -672,6 +682,7 @@
         if (Math.abs(s - 62) <= 6 && Math.abs(l - 88) <= 6) return 'B8';
         if (Math.abs(s - 44) <= 6 && Math.abs(l - 62) <= 6) return 'B9';
         if (Math.abs(s - 31) <= 6 && Math.abs(l - 44) <= 6) return 'B10';
+        if (Math.abs(s - 1000) > 10 && l > 1414) return 'B Series Extended';
         if (Math.abs(s - 917) <= 6 && Math.abs(l - 1297) <= 6) return 'C0';
         if (Math.abs(s - 648) <= 6 && Math.abs(l - 917) <= 6) return 'C1';
         if (Math.abs(s - 458) <= 6 && Math.abs(l - 648) <= 6) return 'C2';
@@ -713,8 +724,7 @@
         const opts = select.options;
         for (let i = 0; i < opts.length; i++) {
           let val = opts[i].value;
-          if (val === 'ALL') {
-            opts[i].text = 'All Sizes (Comprehensive)';
+          if (val === 'ALL' || val.includes('Extended')) {
             continue;
           }
           let dims = getDimensionsForSize(val, unit);
@@ -728,7 +738,7 @@
       function getDimensionsForSize(name, unit) {
         const mappingMm = {
           'Bentley 1200x1200': '1200 x 1200',
-          '2A0': '1189 x 1682', '4A0': '1682 x 2378',
+          '4A0': '1682 x 2378', '2A0': '1189 x 1682',
           'A0': '841 x 1189', 'A1': '594 x 841', 'A2': '420 x 594', 'A3': '297 x 420', 'A4': '210 x 297', 'A5': '148 x 210', 'A6': '105 x 148', 'A7': '74 x 105', 'A8': '52 x 74', 'A9': '37 x 52', 'A10': '26 x 37',
           'B0': '1000 x 1414', 'B1': '707 x 1000', 'B2': '500 x 707', 'B3': '353 x 500', 'B4': '250 x 353', 'B5': '176 x 250', 'B6': '125 x 176', 'B7': '88 x 125', 'B8': '62 x 88', 'B9': '44 x 62', 'B10': '31 x 44',
           'C0': '917 x 1297', 'C1': '648 x 917', 'C2': '458 x 648', 'C3': '324 x 458', 'C4': '229 x 324', 'C5': '162 x 229', 'C6': '114 x 162', 'C7': '81 x 114', 'C8': '57 x 81',
