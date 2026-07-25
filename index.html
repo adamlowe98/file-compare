@@ -359,15 +359,15 @@
                   <option value="4A0">4A0 (1682 x 2378 mm)</option>
                   <option value="2A0">2A0 (1189 x 1682 mm)</option>
                   <option value="A0">A0 (841 x 1189 mm)</option>
-                  <option value="A0 Extended">A0 Extended</option>
+                  <option value="A0 Extended">A0 Extended (841 x 1241 mm)</option>
                   <option value="A1">A1 (594 x 841 mm)</option>
-                  <option value="A1 Extended">A1 Extended</option>
+                  <option value="A1 Extended">A1 Extended (594 x 891 mm)</option>
                   <option value="A2">A2 (420 x 594 mm)</option>
-                  <option value="A2 Extended">A2 Extended</option>
+                  <option value="A2 Extended">A2 Extended (420 x 630 mm)</option>
                   <option value="A3">A3 (297 x 420 mm)</option>
-                  <option value="A3 Extended">A3 Extended</option>
+                  <option value="A3 Extended">A3 Extended (297 x 445 mm)</option>
                   <option value="A4">A4 (210 x 297 mm)</option>
-                  <option value="A4 Extended">A4 Extended</option>
+                  <option value="A4 Extended">A4 Extended (210 x 315 mm)</option>
                   <option value="A5">A5 (148 x 210 mm)</option>
                   <option value="A6">A6 (105 x 148 mm)</option>
                   <option value="A7">A7 (74 x 105 mm)</option>
@@ -386,7 +386,7 @@
                   <option value="B8">B8 (62 x 88 mm)</option>
                   <option value="B9">B9 (44 x 62 mm)</option>
                   <option value="B10">B10 (31 x 44 mm)</option>
-                  <option value="B Series Extended">B Series Extended</option>
+                  <option value="B Series Extended">B Series Extended (Custom Over-length)</option>
                   <!-- ISO C Series -->
                   <option value="C0">C0 (917 x 1297 mm)</option>
                   <option value="C1">C1 (648 x 917 mm)</option>
@@ -656,15 +656,15 @@
         if (Math.abs(s - 1682) <= 12 && Math.abs(l - 2378) <= 12) return '4A0';
         if (Math.abs(s - 1189) <= 12 && Math.abs(l - 1682) <= 12) return '2A0';
         if (Math.abs(s - 841) <= 6 && Math.abs(l - 1189) <= 6) return 'A0';
-        if (Math.abs(s - 841) <= 6 && l > 1195 && l <= 1682) return 'A0 Extended';
+        if (Math.abs(s - 841) <= 6 && l > 1195 && l <= 1241) return 'A0 Extended';
         if (Math.abs(s - 594) <= 6 && Math.abs(l - 841) <= 6) return 'A1';
-        if (Math.abs(s - 594) <= 6 && l > 847 && l <= 1189) return 'A1 Extended';
+        if (Math.abs(s - 594) <= 6 && l > 847 && l <= 891) return 'A1 Extended';
         if (Math.abs(s - 420) <= 6 && Math.abs(l - 594) <= 6) return 'A2';
-        if (Math.abs(s - 420) <= 6 && l > 600 && l <= 841) return 'A2 Extended';
+        if (Math.abs(s - 420) <= 6 && l > 600 && l <= 630) return 'A2 Extended';
         if (Math.abs(s - 297) <= 6 && Math.abs(l - 420) <= 6) return 'A3';
-        if (Math.abs(s - 297) <= 6 && l > 426 && l <= 594) return 'A3 Extended';
+        if (Math.abs(s - 297) <= 6 && l > 426 && l <= 445) return 'A3 Extended';
         if (Math.abs(s - 210) <= 6 && Math.abs(l - 297) <= 6) return 'A4';
-        if (Math.abs(s - 210) <= 6 && l > 303 && l <= 420) return 'A4 Extended';
+        if (Math.abs(s - 210) <= 6 && l > 303 && l <= 315) return 'A4 Extended';
         if (Math.abs(s - 148) <= 6 && Math.abs(l - 210) <= 6) return 'A5';
         if (Math.abs(s - 105) <= 6 && Math.abs(l - 148) <= 6) return 'A6';
         if (Math.abs(s - 74) <= 6 && Math.abs(l - 105) <= 6) return 'A7';
@@ -1030,7 +1030,7 @@
           if (r.plotColor === 'white') {
             tblContent += `rgb(255,255,255), `;
           } else if (r.plotColor.includes('grey')) {
-            const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
+            const pct = parseInt(r.plotColor.replace('grey ', '']) || 50;
             const val = Math.round(255 * (1 - pct / 100));
             tblContent += `rgb(${val},${val},${val}), `;
           } else {
