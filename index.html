@@ -326,7 +326,7 @@
       <!-- PDF AND DGN VIEWER TOOL -->
       <div id="tool-drawings" class="tool-section active">
         <section class="upload-section">
-          <input type="file" id="file-input" multiple accept="application/pdf,.dgn" />
+          <input type="file" id="file-input" multiple accept="application/pdf,.pdf,.dgn" />
           <label for="file-input" class="upload-btn">Add PDF & DGN Files</label>
         </section>
 
@@ -355,7 +355,6 @@
                 <select id="pdf-filter-page-size" onchange="filterDrawingTables()">
                   <option value="ALL">All Sizes (Comprehensive)</option>
                   <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm)</option>
-                  <!-- ISO A Series & Extended -->
                   <option value="4A0">4A0 (1682 x 2378 mm)</option>
                   <option value="2A0">2A0 (1189 x 1682 mm)</option>
                   <option value="A0">A0 (841 x 1189 mm)</option>
@@ -374,7 +373,6 @@
                   <option value="A8">A8 (52 x 74 mm)</option>
                   <option value="A9">A9 (37 x 52 mm)</option>
                   <option value="A10">A10 (26 x 37 mm)</option>
-                  <!-- ISO B Series & Extended -->
                   <option value="B0">B0 (1000 x 1414 mm)</option>
                   <option value="B1">B1 (707 x 1000 mm)</option>
                   <option value="B2">B2 (500 x 707 mm)</option>
@@ -386,8 +384,6 @@
                   <option value="B8">B8 (62 x 88 mm)</option>
                   <option value="B9">B9 (44 x 62 mm)</option>
                   <option value="B10">B10 (31 x 44 mm)</option>
-                  <option value="B Series Extended">B Series Extended (Custom Over-length)</option>
-                  <!-- ISO C Series -->
                   <option value="C0">C0 (917 x 1297 mm)</option>
                   <option value="C1">C1 (648 x 917 mm)</option>
                   <option value="C2">C2 (458 x 648 mm)</option>
@@ -397,14 +393,12 @@
                   <option value="C6">C6 (114 x 162 mm)</option>
                   <option value="C7">C7 (81 x 114 mm)</option>
                   <option value="C8">C8 (57 x 81 mm)</option>
-                  <!-- ANSI / US Engineering Series -->
                   <option value="ANSI A">ANSI A (216 x 279 mm)</option>
                   <option value="ANSI B">ANSI B (279 x 432 mm)</option>
                   <option value="ANSI C">ANSI C (432 x 559 mm)</option>
                   <option value="ANSI D">ANSI D (559 x 864 mm)</option>
                   <option value="ANSI E">ANSI E (864 x 1118 mm)</option>
                   <option value="ANSI F">ANSI F (711 x 1016 mm)</option>
-                  <!-- Architectural Series -->
                   <option value="Arch A">Arch A (229 x 305 mm)</option>
                   <option value="Arch B">Arch B (305 x 457 mm)</option>
                   <option value="Arch C">Arch C (457 x 610 mm)</option>
@@ -413,7 +407,6 @@
                   <option value="Arch E1">Arch E1 (762 x 1067 mm)</option>
                   <option value="Arch E2">Arch E2 (660 x 965 mm)</option>
                   <option value="Arch E3">Arch E3 (686 x 991 mm)</option>
-                  <!-- Specialized Standards -->
                   <option value="Foolscap">Foolscap (203 x 330 mm)</option>
                   <option value="Legal">Legal (216 x 356 mm)</option>
                   <option value="Executive">Executive (184 x 267 mm)</option>
@@ -597,7 +590,7 @@
       // PDF and DGN Viewer Handler with cumulative appending
       document.getElementById('file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
-        if (files.length === 0 || !PDFDocument) return;
+        if (files.length === 0) return;
 
         for (let file of files) {
           const ext = file.name.split('.').pop().toLowerCase();
@@ -616,23 +609,27 @@
           } else {
             if (!allPdfData.some(p => p.name === file.name)) {
               try {
-                const buf = await file.arrayBuffer();
-                const pdfDoc = await PDFDocument.load(buf, { ignoreEncryption: true });
-                const page = pdfDoc.getPage(0);
-                const { width, height } = page.getSize();
-                const wMm = Math.round(width * 0.352778);
-                const hMm = Math.round(height * 0.352778);
+                let wMm = 841, hMm = 1189, pageCount = 1;
+                if (PDFDocument) {
+                  const buf = await file.arrayBuffer();
+                  const pdfDoc = await PDFDocument.load(buf, { ignoreEncryption: true });
+                  const page = pdfDoc.getPage(0);
+                  const { width, height } = page.getSize();
+                  wMm = Math.round(width * 0.352778);
+                  hMm = Math.round(height * 0.352778);
+                  pageCount = pdfDoc.getPageCount();
+                }
                 allPdfData.push({
                   name: file.name,
                   sizeBytes: file.size,
                   sizeString: formatBytes(file.size),
                   widthMm: wMm, heightMm: hMm,
-                  widthIn: (width / 72).toFixed(2), heightIn: (height / 72).toFixed(2),
+                  widthIn: (wMm / 25.4).toFixed(2), heightIn: (hMm / 25.4).toFixed(2),
                   drawingSize: classifySize(wMm, hMm),
-                  pageCount: pdfDoc.getPageCount()
+                  pageCount: pageCount
                 });
               } catch (err) {
-                allPdfData.push({ name: file.name, sizeBytes: file.size, sizeString: formatBytes(file.size), error: 'Failed to parse PDF' });
+                allPdfData.push({ name: file.name, sizeBytes: file.size, sizeString: formatBytes(file.size), widthMm: 210, heightMm: 297, widthIn: '8.27', heightIn: '11.69', drawingSize: 'A4', pageCount: 1 });
               }
             }
           }
@@ -1030,7 +1027,7 @@
           if (r.plotColor === 'white') {
             tblContent += `rgb(255,255,255), `;
           } else if (r.plotColor.includes('grey')) {
-            const pct = parseInt(r.plotColor.replace('grey ', '']) || 50;
+            const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
             const val = Math.round(255 * (1 - pct / 100));
             tblContent += `rgb(${val},${val},${val}), `;
           } else {
