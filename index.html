@@ -904,19 +904,24 @@
         let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
         // Step 3: Split into raw tokens and use regex to strictly insert a newline before every occurrence of '-'
-        // This guarantees every variable gets its own line.
         let cleaned = normalized
           .replace(/[ \t]+/g, ' ') // Collapse multiple spaces
           .replace(/\s*-\s*/g, '\n-'); // Force a newline before every hyphen
 
-        // Step 4: Clean up any empty or stray lines and join properly
+        // Step 4: Clean up lines, remove the leading '-' from each variable, and keep line breaks
         let lines = cleaned.split('\n');
         let finalLines = [];
 
         lines.forEach(line => {
           let trimmed = line.trim();
           if (trimmed && trimmed !== '-') {
-            finalLines.push(trimmed);
+            // Remove the leading hyphen if present
+            if (trimmed.startsWith('-')) {
+              trimmed = trimmed.substring(1).trim();
+            }
+            if (trimmed) {
+              finalLines.push(trimmed);
+            }
           }
         });
 
