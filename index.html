@@ -344,28 +344,6 @@
         color: var(--text-muted);
       }
 
-      .copy-btn-container {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 0.75rem;
-      }
-
-      .copy-btn {
-        background-color: #334155;
-        color: #fff;
-        border: 1px solid var(--border);
-        padding: 0.4rem 0.8rem;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 600;
-        transition: background-color 0.2s;
-      }
-
-      .copy-btn:hover {
-        background-color: #475569;
-      }
-
       .ctb-table-container {
         overflow-x: auto;
         background: #090d16;
@@ -595,10 +573,7 @@
         <div id="settings-viewer-container" class="hidden">
           <h2 class="section-title">Loaded Settings Files</h2>
           <div class="file-chip-list" id="file-chip-list"></div>
-          <div class="controls" style="justify-content: space-between; margin-bottom: 1rem; align-items: center;">
-            <div class="copy-btn-container" style="margin-bottom: 0;">
-              <button class="copy-btn" onclick="copyActiveContent()">Copy Current Text</button>
-            </div>
+          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem; align-items: center;">
             <div class="toggle-container">
               <span class="toggle-label" id="toggle-label-raw">Raw Content</span>
               <label class="toggle-switch">
@@ -949,28 +924,22 @@
       }
 
       function formatSettingsContent(text) {
-        // Step 1: Normalize line breaks across platforms first
         let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-        // Step 2: Strip everything before the very first variable starting with a hyphen
         let matchIdx = normalized.search(/-[a-zA-Z0-9_]+/);
         if (matchIdx !== -1) {
           normalized = normalized.substring(matchIdx);
         }
 
-        // Step 3: Split into raw tokens and use regex to strictly insert a newline before every occurrence of '-'
         let cleaned = normalized
-          .replace(/[ \t]+/g, ' ') // Collapse multiple spaces
-          .replace(/\s*-\s*/g, '\n-'); // Force a newline before every hyphen
+          .replace(/[ \t]+/g, ' ')
+          .replace(/\s*-\s*/g, '\n-');
 
-        // Step 4: Clean up lines, remove the leading '-' from each variable, and keep line breaks
         let lines = cleaned.split('\n');
         let finalLines = [];
 
         lines.forEach(line => {
           let trimmed = line.trim();
           if (trimmed && trimmed !== '-') {
-            // Remove the leading hyphen if present
             if (trimmed.startsWith('-')) {
               trimmed = trimmed.substring(1).trim();
             }
@@ -1017,7 +986,6 @@
 
         if (loadedSettingsFiles.length > 0) {
           document.getElementById('settings-viewer-container').classList.remove('hidden');
-          // If active file was removed or none selected, default to the first one
           if (!document.querySelector('.file-chip.active') && loadedSettingsFiles.length > 0) {
             list.firstChild.classList.add('active');
           }
@@ -1041,28 +1009,6 @@
 
       function toggleSettingsViewMode() {
         displayActiveSettingsContent();
-      }
-
-      function copyActiveContent() {
-        const activeChip = document.querySelector('.file-chip.active');
-        if (!activeChip) return;
-        const fileName = activeChip.getAttribute('data-filename');
-        const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
-        if (!fileObj) return;
-
-        const isFormatted = document.getElementById('settings-view-toggle').checked;
-        const textToCopy = isFormatted ? fileObj.formatted : fileObj.raw;
-
-        navigator.clipboard.writeText(textToCopy).then(() => {
-          const btn = document.querySelector('.copy-btn');
-          const originalText = btn.textContent;
-          btn.textContent = 'Copied!';
-          setTimeout(() => {
-            btn.textContent = originalText;
-          }, 2000);
-        }).catch(err => {
-          alert('Failed to copy text.');
-        });
       }
 
       // AutoCAD .ctb converter Parser Engine
