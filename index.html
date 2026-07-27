@@ -496,6 +496,15 @@
         <div id="settings-viewer-container" class="hidden">
           <h2 class="section-title">Loaded Settings Files</h2>
           <div class="file-chip-list" id="file-chip-list"></div>
+          <div class="controls" style="justify-content: space-between; margin-bottom: 1rem;">
+            <div class="filter-group">
+              <label for="settings-view-mode">View Format:</label>
+              <select id="settings-view-mode" onchange="updateSettingsViewMode()">
+                <option value="formatted">Formatted (.set View)</option>
+                <option value="raw">Original Raw Content</option>
+              </select>
+            </div>
+          </div>
           <div class="viewer-box">
             <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
           </div>
@@ -809,21 +818,70 @@
         renderDrawingTables(filteredPdf, filteredDgn);
       }
 
-      // Settings File Viewer Handler with cumulative appending
+      // Settings File Viewer Handler with Formatted / Raw Toggle
       document.getElementById('settings-file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
         for (let file of files) {
           if (!loadedSettingsFiles.some(sf => sf.name === file.name)) {
-            const textContent = await file.text();
-            loadedSettingsFiles.push({ name: file.name, content: textContent });
+            const rawText = await file.text();
+            const formattedText = formatSettingsContent(rawText);
+            loadedSettingsFiles.push({ name: file.name, raw: rawText, formatted: formattedText });
           }
         }
 
         renderSettingsChips();
         e.target.value = '';
       });
+
+      function formatSettingsContent(text) {
+        // Enforce formatting without breaking range brackets (e.g., [1-128])
+        // We protect range patterns temporarily using a placeholder or smart splitting
+        let processed = text.replace(/\r\n/g, '\n');
+        
+        // Normalize commas or spacing between key-value pairs if single-line
+        // Insert newlines after commas or keys, but avoid splitting inside brackets like [1-128]
+        // Let's tokenize or handle via safe regex replacement:
+        
+        // If the file is a single-line or unstructured clump, split safely:
+        let parts = processed.split(/[\r\n]+/);
+        let expandedLines = [];
+
+        parts.forEach(line => {
+          line = line.trim();
+          if (!line) return;
+          
+          // If a line contains multiple assignments or commas not inside brackets, expand them
+          // Example: area=fit_all, area_types=[1-128], ms_pen_table="..."
+          // Let's find commas that are NOT inside square brackets [...]
+          let currentSegment = '';
+          let bracketDepth = 0;
+          let segments = [];
+
+          for (let i = 0; i < line.length; i++) {
+            let char = line[i];
+            if (char === '[') bracketDepth++;
+            else if (char === ']') bracketDepth--;
+
+            if (char === ',' && bracketDepth === 0) {
+              segments.push(currentSegment.trim());
+              currentSegment = '';
+            } else {
+              currentSegment += char;
+            }
+          }
+          if (currentSegment.trim()) {
+            segments.push(currentSegment.trim());
+          }
+
+          segments.forEach(seg => {
+            if (seg) expandedLines.push(seg);
+          });
+        });
+
+        return expandedLines.join('\n');
+      }
 
       function renderSettingsChips() {
         const list = document.getElementById('file-chip-list');
@@ -839,18 +897,33 @@
           chip.onclick = () => {
             document.querySelectorAll('.file-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
-            document.getElementById('settings-output-pre').textContent = fileObj.content;
+            displayActiveSettingsContent();
           };
           list.appendChild(chip);
 
           if (isActive) {
-            document.getElementById('settings-output-pre').textContent = fileObj.content;
+            displayActiveSettingsContent();
           }
         });
 
         if (loadedSettingsFiles.length > 0) {
           document.getElementById('settings-viewer-container').classList.remove('hidden');
         }
+      }
+
+      function displayActiveSettingsContent() {
+        const activeChip = document.querySelector('.file-chip.active');
+        if (!activeChip) return;
+        const fileName = activeChip.textContent;
+        const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
+        if (!fileObj) return;
+
+        const mode = document.getElementById('settings-view-mode').value;
+        document.getElementById('settings-output-pre').textContent = mode === 'raw' ? fileObj.raw : fileObj.formatted;
+      }
+
+      function updateSettingsViewMode() {
+        displayActiveSettingsContent();
       }
 
       // AutoCAD .ctb converter Parser Engine
