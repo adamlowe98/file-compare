@@ -892,70 +892,53 @@
       });
 
       function formatSettingsContent(text) {
-        // Strip out non-printable binary headers like "PSF... iplot"
-        // Find where configuration parameters begin (usually starting with a hyphen or valid key=value/option)
-        let cleaned = text.replace(/^[^\w-]*/, '');
+        // Step 1: Normalize all line breaks
+        let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         
-        // Split by lines or clean up broken line feeds caused by file encodings
-        let rawLines = cleaned.split(/\r?\n/);
-        let joinedText = rawLines.join(' ');
-
-        // Clean up unwanted hyphen line-breaks inside level names (e.g., "TITLEBLOCK\n-\nLines" -> "TITLEBLOCK Lines" or similar)
-        // More robustly: let's extract all key=value pairs or lines starting with '-' or valid identifiers
-        
-        // Let's normalize spaces and replace broken hyphens between words
-        joinedText = joinedText.replace(/([a-zA-Z0-9\]"])\s*-\s*([a-zA-Z0-9\["])/g, '$1 $2');
-
-        // Extract lines or tokens that look like parameters (e.g. starting with optional dash followed by key=value or standalone flag)
-        // Let's use a regex tokenizer to find keys and values accurately
-        let matches = [];
-        // Match parameters starting with optional dash, key, and optional value (handling quotes and brackets correctly)
-        // Example patterns: -area=fit_all or area_levels=["..."] or -maximize
-        let regex = /-?([a-zA-Z0-9_]+)(?:=("[^"]*"|\[[^\]]*\]|[^\s]+))?/g;
-        let match;
-
-        while ((match = regex.exec(joinedText)) !== null) {
-          let key = match[1];
-          let val = match[2];
-          
-          // Clean up any internal hard newlines or weird dashes inside the value or key
-          if (key) key = key.replace(/-/g, '').trim();
-          if (val) {
-            // Clean up internal newlines or broken hyphens inside brackets or quotes
-            val = val.replace(/\s*-\s*/g, ' ');
-            val = val.replace(/\s+/g, ' ').trim();
-          }
-
-          if (key) {
-            if (val !== undefined) {
-              matches.push(`${key}=${val}`);
-            } else {
-              matches.push(key);
-            }
-          }
+        // Step 2: Strip everything before the very first hyphen (-) character
+        let firstHyphenIdx = normalized.indexOf('-');
+        if (firstHyphenIdx !== -1) {
+          normalized = normalized.substring(firstHyphenIdx);
         }
 
-        // If regex extraction missed anything due to custom formats, fallback to a clean line-by-line filter
-        if (matches.length === 0) {
-          let lines = cleaned.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-          let filtered = [];
-          for (let i = 0; i < lines.length; i++) {
-            let line = lines[i];
-            // Skip binary or header garbage lines
-            if (line.includes('PSF') || line.includes('iplot') || line.length < 2) continue;
-            // Remove leading hyphen
-            if (line.startsWith('-')) line = line.substring(1);
-            // If line ends with a lone hyphen, join with next line
-            if (line.endsWith('-') && i + 1 < lines.length) {
-              line = line.slice(0, -1) + lines[i + 1].trim();
-              i++;
-            }
-            filtered.push(line);
-          }
-          return filtered.join('\n');
-        }
+        // Step 3: Split into raw lines and join fragmented lines/level names
+        let lines = normalized.split('\n');
+        let processedLines = [];
+        let currentParam = '';
 
-        return matches.join('\n');
+        for (let i = 0; i < lines.length; i++) {
+          let line = lines[i].trim();
+          if (!line) continue;
+
+          // If the line starts with a hyphen, it's a new parameter block
+          if (line.startsWith('-')) {
+            if (currentParam) processedLines.push(currentParam);
+            currentParam = line;
+          } else {
+            // Continuation of a multi-line value (like level names wrapped across lines)
+            if (line === '-') continue;
+            currentParam += ' ' + line;
+          }
+        }
+        if (currentParam) processedLines.push(currentParam);
+
+        // Step 4: Clean up each parameter line (remove leading dash, fix inner spacing/broken hyphens)
+        let finalParameters = [];
+        processedLines.forEach(param => {
+          if (param.startsWith('-')) {
+            param = param.substring(1).trim();
+          }
+
+          // Clean up broken hyphens inside level names or values (e.g. "TITLEBLOCK - Lines" -> "TITLEBLOCK Lines")
+          param = param.replace(/\s*-\s*/g, ' ');
+          param = param.replace(/\s+/g, ' ');
+
+          if (param) {
+            finalParameters.push(param);
+          }
+        });
+
+        return finalParameters.join('\n');
       }
 
       function renderSettingsChips() {
