@@ -232,6 +232,7 @@
         border: 1px solid var(--border);
         border-radius: 8px;
         padding: 1.5rem;
+        position: relative;
       }
 
       .file-chip-list {
@@ -242,18 +243,37 @@
       }
 
       .file-chip {
+        display: inline-flex;
+        align-items: center;
         background-color: #1e293b;
         border: 1px solid var(--border);
-        padding: 0.5rem 1rem;
+        padding: 0.4rem 0.75rem;
         border-radius: 6px;
         cursor: pointer;
         color: var(--text-muted);
+        gap: 0.5rem;
+        font-size: 0.9rem;
       }
 
       .file-chip.active {
         background-color: var(--primary);
         color: white;
         border-color: var(--primary);
+      }
+
+      .file-chip .remove-chip {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 0;
+        line-height: 1;
+        opacity: 0.7;
+      }
+
+      .file-chip .remove-chip:hover {
+        opacity: 1;
       }
 
       pre.settings-output {
@@ -322,6 +342,28 @@
         font-size: 0.85rem;
         font-weight: 600;
         color: var(--text-muted);
+      }
+
+      .copy-btn-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 0.75rem;
+      }
+
+      .copy-btn {
+        background-color: #334155;
+        color: #fff;
+        border: 1px solid var(--border);
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: background-color 0.2s;
+      }
+
+      .copy-btn:hover {
+        background-color: #475569;
       }
 
       .ctb-table-container {
@@ -553,7 +595,10 @@
         <div id="settings-viewer-container" class="hidden">
           <h2 class="section-title">Loaded Settings Files</h2>
           <div class="file-chip-list" id="file-chip-list"></div>
-          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem;">
+          <div class="controls" style="justify-content: space-between; margin-bottom: 1rem; align-items: center;">
+            <div class="copy-btn-container" style="margin-bottom: 0;">
+              <button class="copy-btn" onclick="copyActiveContent()">Copy Current Text</button>
+            </div>
             <div class="toggle-container">
               <span class="toggle-label" id="toggle-label-raw">Raw Content</span>
               <label class="toggle-switch">
@@ -876,7 +921,7 @@
         renderDrawingTables(filteredPdf, filteredDgn);
       }
 
-      // Settings File Viewer Handler with Toggle Switch
+      // Settings File Viewer Handler with Toggle Switch & Deletion Support
       document.getElementById('settings-file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -892,6 +937,16 @@
         renderSettingsChips();
         e.target.value = '';
       });
+
+      function removeSettingsFile(fileName, event) {
+        event.stopPropagation();
+        loadedSettingsFiles = loadedSettingsFiles.filter(f => f.name !== fileName);
+        renderSettingsChips();
+
+        if (loadedSettingsFiles.length === 0) {
+          document.getElementById('settings-viewer-container').classList.add('hidden');
+        }
+      }
 
       function formatSettingsContent(text) {
         // Step 1: Strip everything before the very first variable starting with a hyphen
@@ -932,34 +987,48 @@
         const list = document.getElementById('file-chip-list');
         list.innerHTML = '';
         
+        let activeFileName = document.querySelector('.file-chip.active')?.getAttribute('data-filename');
+
         loadedSettingsFiles.forEach((fileObj, idx) => {
           const chip = document.createElement('div');
-          const activeFileName = document.querySelector('.file-chip.active')?.textContent;
           const isActive = activeFileName ? activeFileName === fileObj.name : idx === 0;
 
           chip.className = `file-chip ${isActive ? 'active' : ''}`;
-          chip.textContent = fileObj.name;
+          chip.setAttribute('data-filename', fileObj.name);
+          
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = fileObj.name;
+          chip.appendChild(nameSpan);
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-chip';
+          removeBtn.innerHTML = '&times;';
+          removeBtn.title = 'Remove file';
+          removeBtn.onclick = (ev) => removeSettingsFile(fileObj.name, ev);
+          chip.appendChild(removeBtn);
+
           chip.onclick = () => {
             document.querySelectorAll('.file-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             displayActiveSettingsContent();
           };
           list.appendChild(chip);
-
-          if (isActive) {
-            displayActiveSettingsContent();
-          }
         });
 
         if (loadedSettingsFiles.length > 0) {
           document.getElementById('settings-viewer-container').classList.remove('hidden');
+          // If active file was removed or none selected, default to the first one
+          if (!document.querySelector('.file-chip.active') && loadedSettingsFiles.length > 0) {
+            list.firstChild.classList.add('active');
+          }
+          displayActiveSettingsContent();
         }
       }
 
       function displayActiveSettingsContent() {
         const activeChip = document.querySelector('.file-chip.active');
         if (!activeChip) return;
-        const fileName = activeChip.textContent;
+        const fileName = activeChip.getAttribute('data-filename');
         const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
         if (!fileObj) return;
 
@@ -972,6 +1041,28 @@
 
       function toggleSettingsViewMode() {
         displayActiveSettingsContent();
+      }
+
+      function copyActiveContent() {
+        const activeChip = document.querySelector('.file-chip.active');
+        if (!activeChip) return;
+        const fileName = activeChip.getAttribute('data-filename');
+        const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
+        if (!fileObj) return;
+
+        const isFormatted = document.getElementById('settings-view-toggle').checked;
+        const textToCopy = isFormatted ? fileObj.formatted : fileObj.raw;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const btn = document.querySelector('.copy-btn');
+          const originalText = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => {
+            btn.textContent = originalText;
+          }, 2000);
+        }).catch(err => {
+          alert('Failed to copy text.');
+        });
       }
 
       // AutoCAD .ctb converter Parser Engine
