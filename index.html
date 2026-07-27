@@ -1044,8 +1044,14 @@
       }
 
       function copyActiveContent() {
-        const preElement = document.getElementById('settings-output-pre');
-        const textToCopy = preElement.textContent || preElement.innerText || "";
+        const activeChip = document.querySelector('.file-chip.active');
+        if (!activeChip) return;
+        const fileName = activeChip.getAttribute('data-filename');
+        const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
+        if (!fileObj) return;
+
+        const isFormatted = document.getElementById('settings-view-toggle').checked;
+        const textToCopy = isFormatted ? fileObj.formatted : fileObj.raw;
 
         navigator.clipboard.writeText(textToCopy).then(() => {
           const btn = document.querySelector('.copy-btn');
