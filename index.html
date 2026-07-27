@@ -892,39 +892,70 @@
       });
 
       function formatSettingsContent(text) {
-        // Normalize line breaks and clean up carriage returns
-        let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        // Strip out non-printable binary headers like "PSF... iplot"
+        // Find where configuration parameters begin (usually starting with a hyphen or valid key=value/option)
+        let cleaned = text.replace(/^[^\w-]*/, '');
         
-        // If the content is single-line or needs key-value separation:
-        // We want to split by comma ONLY when that comma is NOT part of a bracketed level range like [1-128]
-        let segments = [];
-        let currentSegment = '';
-        let bracketDepth = 0;
+        // Split by lines or clean up broken line feeds caused by file encodings
+        let rawLines = cleaned.split(/\r?\n/);
+        let joinedText = rawLines.join(' ');
 
-        for (let i = 0; i < normalized.length; i++) {
-          let char = normalized[i];
-          if (char === '[') bracketDepth++;
-          else if (char === ']') bracketDepth--;
+        // Clean up unwanted hyphen line-breaks inside level names (e.g., "TITLEBLOCK\n-\nLines" -> "TITLEBLOCK Lines" or similar)
+        // More robustly: let's extract all key=value pairs or lines starting with '-' or valid identifiers
+        
+        // Let's normalize spaces and replace broken hyphens between words
+        joinedText = joinedText.replace(/([a-zA-Z0-9\]"])\s*-\s*([a-zA-Z0-9\["])/g, '$1 $2');
 
-          if ((char === ',' || char === '\n') && bracketDepth === 0) {
-            let trimmed = currentSegment.trim();
-            if (trimmed) segments.push(trimmed);
-            currentSegment = '';
-          } else {
-            currentSegment += char;
+        // Extract lines or tokens that look like parameters (e.g. starting with optional dash followed by key=value or standalone flag)
+        // Let's use a regex tokenizer to find keys and values accurately
+        let matches = [];
+        // Match parameters starting with optional dash, key, and optional value (handling quotes and brackets correctly)
+        // Example patterns: -area=fit_all or area_levels=["..."] or -maximize
+        let regex = /-?([a-zA-Z0-9_]+)(?:=("[^"]*"|\[[^\]]*\]|[^\s]+))?/g;
+        let match;
+
+        while ((match = regex.exec(joinedText)) !== null) {
+          let key = match[1];
+          let val = match[2];
+          
+          // Clean up any internal hard newlines or weird dashes inside the value or key
+          if (key) key = key.replace(/-/g, '').trim();
+          if (val) {
+            // Clean up internal newlines or broken hyphens inside brackets or quotes
+            val = val.replace(/\s*-\s*/g, ' ');
+            val = val.replace(/\s+/g, ' ').trim();
+          }
+
+          if (key) {
+            if (val !== undefined) {
+              matches.push(`${key}=${val}`);
+            } else {
+              matches.push(key);
+            }
           }
         }
-        let finalTrimmed = currentSegment.trim();
-        if (finalTrimmed) segments.push(finalTrimmed);
 
-        // If no commas/newlines split it up meaningfully, try splitting by spaces between key=value pairs
-        if (segments.length <= 1) {
-          // Fallback parsing for space-separated parameters
-          segments = normalized.split(/\s+/).filter(Boolean);
+        // If regex extraction missed anything due to custom formats, fallback to a clean line-by-line filter
+        if (matches.length === 0) {
+          let lines = cleaned.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          let filtered = [];
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+            // Skip binary or header garbage lines
+            if (line.includes('PSF') || line.includes('iplot') || line.length < 2) continue;
+            // Remove leading hyphen
+            if (line.startsWith('-')) line = line.substring(1);
+            // If line ends with a lone hyphen, join with next line
+            if (line.endsWith('-') && i + 1 < lines.length) {
+              line = line.slice(0, -1) + lines[i + 1].trim();
+              i++;
+            }
+            filtered.push(line);
+          }
+          return filtered.join('\n');
         }
 
-        // Join each segment on its own line for clean readability
-        return segments.join('\n');
+        return matches.join('\n');
       }
 
       function renderSettingsChips() {
@@ -965,7 +996,6 @@
         const isFormatted = document.getElementById('settings-view-toggle').checked;
         document.getElementById('settings-output-pre').textContent = isFormatted ? fileObj.formatted : fileObj.raw;
         
-        // Update label styles based on toggle state
         document.getElementById('toggle-label-raw').style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
         document.getElementById('toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
       }
