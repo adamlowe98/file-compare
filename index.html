@@ -267,6 +267,61 @@
         margin: 0;
       }
 
+      /* Toggle Switch Styles */
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        height: 26px;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #334155;
+        transition: .3s;
+        border-radius: 26px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: var(--primary);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+
+      .toggle-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
       .ctb-table-container {
         overflow-x: auto;
         background: #090d16;
@@ -496,13 +551,14 @@
         <div id="settings-viewer-container" class="hidden">
           <h2 class="section-title">Loaded Settings Files</h2>
           <div class="file-chip-list" id="file-chip-list"></div>
-          <div class="controls" style="justify-content: space-between; margin-bottom: 1rem;">
-            <div class="filter-group">
-              <label for="settings-view-mode">View Format:</label>
-              <select id="settings-view-mode" onchange="updateSettingsViewMode()">
-                <option value="formatted">Formatted (.set View)</option>
-                <option value="raw">Original Raw Content</option>
-              </select>
+          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem;">
+            <div class="toggle-container">
+              <span class="toggle-label" id="toggle-label-raw">Raw Content</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="settings-view-toggle" onchange="toggleSettingsViewMode()" checked />
+                <span class="slider"></span>
+              </label>
+              <span class="toggle-label" id="toggle-label-fmt" style="color: var(--text-main);">Formatted View</span>
             </div>
           </div>
           <div class="viewer-box">
@@ -818,7 +874,7 @@
         renderDrawingTables(filteredPdf, filteredDgn);
       }
 
-      // Settings File Viewer Handler with Formatted / Raw Toggle
+      // Settings File Viewer Handler with Toggle Switch
       document.getElementById('settings-file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -836,51 +892,39 @@
       });
 
       function formatSettingsContent(text) {
-        // Enforce formatting without breaking range brackets (e.g., [1-128])
-        // We protect range patterns temporarily using a placeholder or smart splitting
-        let processed = text.replace(/\r\n/g, '\n');
+        // Normalize line breaks and clean up carriage returns
+        let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         
-        // Normalize commas or spacing between key-value pairs if single-line
-        // Insert newlines after commas or keys, but avoid splitting inside brackets like [1-128]
-        // Let's tokenize or handle via safe regex replacement:
-        
-        // If the file is a single-line or unstructured clump, split safely:
-        let parts = processed.split(/[\r\n]+/);
-        let expandedLines = [];
+        // If the content is single-line or needs key-value separation:
+        // We want to split by comma ONLY when that comma is NOT part of a bracketed level range like [1-128]
+        let segments = [];
+        let currentSegment = '';
+        let bracketDepth = 0;
 
-        parts.forEach(line => {
-          line = line.trim();
-          if (!line) return;
-          
-          // If a line contains multiple assignments or commas not inside brackets, expand them
-          // Example: area=fit_all, area_types=[1-128], ms_pen_table="..."
-          // Let's find commas that are NOT inside square brackets [...]
-          let currentSegment = '';
-          let bracketDepth = 0;
-          let segments = [];
+        for (let i = 0; i < normalized.length; i++) {
+          let char = normalized[i];
+          if (char === '[') bracketDepth++;
+          else if (char === ']') bracketDepth--;
 
-          for (let i = 0; i < line.length; i++) {
-            let char = line[i];
-            if (char === '[') bracketDepth++;
-            else if (char === ']') bracketDepth--;
-
-            if (char === ',' && bracketDepth === 0) {
-              segments.push(currentSegment.trim());
-              currentSegment = '';
-            } else {
-              currentSegment += char;
-            }
+          if ((char === ',' || char === '\n') && bracketDepth === 0) {
+            let trimmed = currentSegment.trim();
+            if (trimmed) segments.push(trimmed);
+            currentSegment = '';
+          } else {
+            currentSegment += char;
           }
-          if (currentSegment.trim()) {
-            segments.push(currentSegment.trim());
-          }
+        }
+        let finalTrimmed = currentSegment.trim();
+        if (finalTrimmed) segments.push(finalTrimmed);
 
-          segments.forEach(seg => {
-            if (seg) expandedLines.push(seg);
-          });
-        });
+        // If no commas/newlines split it up meaningfully, try splitting by spaces between key=value pairs
+        if (segments.length <= 1) {
+          // Fallback parsing for space-separated parameters
+          segments = normalized.split(/\s+/).filter(Boolean);
+        }
 
-        return expandedLines.join('\n');
+        // Join each segment on its own line for clean readability
+        return segments.join('\n');
       }
 
       function renderSettingsChips() {
@@ -918,11 +962,15 @@
         const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
         if (!fileObj) return;
 
-        const mode = document.getElementById('settings-view-mode').value;
-        document.getElementById('settings-output-pre').textContent = mode === 'raw' ? fileObj.raw : fileObj.formatted;
+        const isFormatted = document.getElementById('settings-view-toggle').checked;
+        document.getElementById('settings-output-pre').textContent = isFormatted ? fileObj.formatted : fileObj.raw;
+        
+        // Update label styles based on toggle state
+        document.getElementById('toggle-label-raw').style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
+        document.getElementById('toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
       }
 
-      function updateSettingsViewMode() {
+      function toggleSettingsViewMode() {
         displayActiveSettingsContent();
       }
 
