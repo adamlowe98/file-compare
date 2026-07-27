@@ -925,16 +925,44 @@
 
       function formatSettingsContent(text) {
         let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        
         let matchIdx = normalized.search(/-[a-zA-Z0-9_]+/);
         if (matchIdx !== -1) {
           normalized = normalized.substring(matchIdx);
         }
 
-        let cleaned = normalized
-          .replace(/[ \t]+/g, ' ')
-          .replace(/\s*-\s*/g, '\n-');
+        // Tokenize character by character to protect hyphens inside quotes ("...") or brackets (...)
+        let result = '';
+        let inQuotes = false;
+        let bracketDepth = 0;
 
-        let lines = cleaned.split('\n');
+        for (let i = 0; i < normalized.length; i++) {
+          let char = normalized[i];
+
+          if (char === '"' && (i === 0 || normalized[i - 1] !== '\\')) {
+            inQuotes = !inQuotes;
+            result += char;
+          } else if (!inQuotes && char === '(') {
+            bracketDepth++;
+            result += char;
+          } else if (!inQuotes && char === ')' && bracketDepth > 0) {
+            bracketDepth--;
+            result += char;
+          } else if (char === '-') {
+            // If hyphen is inside quotes or brackets, keep it as-is without introducing structural line breaks before it
+            if (inQuotes || bracketDepth > 0) {
+              result += '-';
+            } else {
+              // Structural configuration hyphen gets a clean newline prefix
+              result += '\n-';
+            }
+          } else {
+            result += char;
+          }
+        }
+
+        // Clean up line spaces and individual items
+        let lines = result.split('\n');
         let finalLines = [];
 
         lines.forEach(line => {
