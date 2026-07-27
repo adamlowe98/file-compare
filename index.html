@@ -894,8 +894,7 @@
       });
 
       function formatSettingsContent(text) {
-        // Step 1: Find the absolute first occurrence of a hyphen followed by a variable name (e.g., "-area")
-        // We match a hyphen followed by a word character to ensure we capture actual variables/flags
+        // Step 1: Strip everything before the very first variable starting with a hyphen
         let matchIdx = text.search(/-[a-zA-Z0-9_]+/);
         if (matchIdx !== -1) {
           text = text.substring(matchIdx);
@@ -904,42 +903,24 @@
         // Step 2: Normalize line breaks
         let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        // Step 3: Extract individual parameters starting with '-'
-        let lines = normalized.split('\n');
-        let parameters = [];
-        let currentParam = '';
+        // Step 3: Split into raw tokens and use regex to strictly insert a newline before every occurrence of '-'
+        // This guarantees every variable gets its own line.
+        let cleaned = normalized
+          .replace(/[ \t]+/g, ' ') // Collapse multiple spaces
+          .replace(/\s*-\s*/g, '\n-'); // Force a newline before every hyphen
 
-        for (let i = 0; i < lines.length; i++) {
-          let line = lines[i].trim();
-          if (!line) continue;
+        // Step 4: Clean up any empty or stray lines and join properly
+        let lines = cleaned.split('\n');
+        let finalLines = [];
 
-          if (line.startsWith('-')) {
-            if (currentParam) parameters.push(currentParam);
-            currentParam = line;
-          } else {
-            if (line === '-') continue;
-            currentParam += ' ' + line;
-          }
-        }
-        if (currentParam) parameters.push(currentParam);
-
-        // Step 4: Clean up each parameter and guarantee an explicit newline separation
-        let formattedLines = [];
-        parameters.forEach(param => {
-          if (param.startsWith('-')) {
-            param = param.substring(1).trim();
-          }
-
-          // Clean up internal fragmented hyphens inside level names or values
-          param = param.replace(/\s*-\s*/g, ' ');
-          param = param.replace(/\s+/g, ' ');
-
-          if (param) {
-            formattedLines.push(param);
+        lines.forEach(line => {
+          let trimmed = line.trim();
+          if (trimmed && trimmed !== '-') {
+            finalLines.push(trimmed);
           }
         });
 
-        return formattedLines.join('\n');
+        return finalLines.join('\n');
       }
 
       function renderSettingsChips() {
