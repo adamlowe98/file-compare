@@ -949,14 +949,14 @@
       }
 
       function formatSettingsContent(text) {
-        // Step 1: Strip everything before the very first variable starting with a hyphen
-        let matchIdx = text.search(/-[a-zA-Z0-9_]+/);
-        if (matchIdx !== -1) {
-          text = text.substring(matchIdx);
-        }
-
-        // Step 2: Normalize line breaks
+        // Step 1: Normalize line breaks across platforms first
         let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        // Step 2: Strip everything before the very first variable starting with a hyphen
+        let matchIdx = normalized.search(/-[a-zA-Z0-9_]+/);
+        if (matchIdx !== -1) {
+          normalized = normalized.substring(matchIdx);
+        }
 
         // Step 3: Split into raw tokens and use regex to strictly insert a newline before every occurrence of '-'
         let cleaned = normalized
@@ -1238,7 +1238,7 @@
           tblContent += `color(${r.index}) = { `;
           if (r.plotColor === 'white') {
             tblContent += `rgb(255,255,255), `;
-          } else if (r.plotColor.includes('grey')) {
+          } else if (r.plotContent?.includes('grey')) {
             const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
             const val = Math.round(255 * (1 - pct / 100));
             tblContent += `rgb(${val},${val},${val}), `;
