@@ -1044,14 +1044,8 @@
       }
 
       function copyActiveContent() {
-        const activeChip = document.querySelector('.file-chip.active');
-        if (!activeChip) return;
-        const fileName = activeChip.getAttribute('data-filename');
-        const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
-        if (!fileObj) return;
-
-        const isFormatted = document.getElementById('settings-view-toggle').checked;
-        const textToCopy = isFormatted ? fileObj.formatted : fileObj.raw;
+        const preElement = document.getElementById('settings-output-pre');
+        const textToCopy = preElement.textContent || preElement.innerText || "";
 
         navigator.clipboard.writeText(textToCopy).then(() => {
           const btn = document.querySelector('.copy-btn');
@@ -1238,7 +1232,7 @@
           tblContent += `color(${r.index}) = { `;
           if (r.plotColor === 'white') {
             tblContent += `rgb(255,255,255), `;
-          } else if (r.plotContent?.includes('grey')) {
+          } else if (r.plotColor.includes('grey')) {
             const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
             const val = Math.round(255 * (1 - pct / 100));
             tblContent += `rgb(${val},${val},${val}), `;
