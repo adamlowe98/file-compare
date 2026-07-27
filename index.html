@@ -265,7 +265,8 @@
         font-family: monospace;
         font-size: 0.85rem;
         margin: 0;
-        white-space: pre;
+        white-space: pre-wrap;
+        word-break: break-all;
       }
 
       /* Toggle Switch Styles */
@@ -559,7 +560,7 @@
                 <input type="checkbox" id="settings-view-toggle" onchange="toggleSettingsViewMode()" checked />
                 <span class="slider"></span>
               </label>
-              <span class="toggle-label" id="toggle-label-fmt" style="color: var(--text-main);">List Version</span>
+              <span class="toggle-label" id="toggle-label-fmt" style="color: var(--text-main);">Simplified</span>
             </div>
           </div>
           <div class="viewer-box">
@@ -893,8 +894,9 @@
       });
 
       function formatSettingsContent(text) {
-        // Step 1: Find the absolute first occurrence of a hyphen followed by a valid variable name (e.g., "-area=")
-        let matchIdx = text.search(/-[a-zA-Z0-9_]+\s*=/);
+        // Step 1: Find the absolute first occurrence of a hyphen followed by a variable name (e.g., "-area")
+        // We match a hyphen followed by a word character to ensure we capture actual variables/flags
+        let matchIdx = text.search(/-[a-zA-Z0-9_]+/);
         if (matchIdx !== -1) {
           text = text.substring(matchIdx);
         }
@@ -902,7 +904,7 @@
         // Step 2: Normalize line breaks
         let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        // Step 3: Parse key-value tokens robustly across multi-line splits
+        // Step 3: Extract individual parameters starting with '-'
         let lines = normalized.split('\n');
         let parameters = [];
         let currentParam = '';
@@ -921,14 +923,14 @@
         }
         if (currentParam) parameters.push(currentParam);
 
-        // Step 4: Format each parameter as "key=value" with clean spacing
+        // Step 4: Clean up each parameter and guarantee an explicit newline separation
         let formattedLines = [];
         parameters.forEach(param => {
           if (param.startsWith('-')) {
             param = param.substring(1).trim();
           }
 
-          // Clean up internal fragmented hyphens inside level names or brackets
+          // Clean up internal fragmented hyphens inside level names or values
           param = param.replace(/\s*-\s*/g, ' ');
           param = param.replace(/\s+/g, ' ');
 
