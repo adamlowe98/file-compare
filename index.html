@@ -265,6 +265,7 @@
         font-family: monospace;
         font-size: 0.85rem;
         margin: 0;
+        white-space: pre;
       }
 
       /* Toggle Switch Styles */
@@ -558,7 +559,7 @@
                 <input type="checkbox" id="settings-view-toggle" onchange="toggleSettingsViewMode()" checked />
                 <span class="slider"></span>
               </label>
-              <span class="toggle-label" id="toggle-label-fmt" style="color: var(--text-main);">Formatted View</span>
+              <span class="toggle-label" id="toggle-label-fmt" style="color: var(--text-main);">List Version</span>
             </div>
           </div>
           <div class="viewer-box">
@@ -892,53 +893,51 @@
       });
 
       function formatSettingsContent(text) {
-        // Step 1: Normalize all line breaks
-        let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
-        // Step 2: Strip everything before the very first hyphen (-) character
-        let firstHyphenIdx = normalized.indexOf('-');
-        if (firstHyphenIdx !== -1) {
-          normalized = normalized.substring(firstHyphenIdx);
+        // Step 1: Find the absolute first occurrence of a hyphen followed by a valid variable name (e.g., "-area=")
+        let matchIdx = text.search(/-[a-zA-Z0-9_]+\s*=/);
+        if (matchIdx !== -1) {
+          text = text.substring(matchIdx);
         }
 
-        // Step 3: Split into raw lines and join fragmented lines/level names
+        // Step 2: Normalize line breaks
+        let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        // Step 3: Parse key-value tokens robustly across multi-line splits
         let lines = normalized.split('\n');
-        let processedLines = [];
+        let parameters = [];
         let currentParam = '';
 
         for (let i = 0; i < lines.length; i++) {
           let line = lines[i].trim();
           if (!line) continue;
 
-          // If the line starts with a hyphen, it's a new parameter block
           if (line.startsWith('-')) {
-            if (currentParam) processedLines.push(currentParam);
+            if (currentParam) parameters.push(currentParam);
             currentParam = line;
           } else {
-            // Continuation of a multi-line value (like level names wrapped across lines)
             if (line === '-') continue;
             currentParam += ' ' + line;
           }
         }
-        if (currentParam) processedLines.push(currentParam);
+        if (currentParam) parameters.push(currentParam);
 
-        // Step 4: Clean up each parameter line (remove leading dash, fix inner spacing/broken hyphens)
-        let finalParameters = [];
-        processedLines.forEach(param => {
+        // Step 4: Format each parameter as "key=value" with clean spacing
+        let formattedLines = [];
+        parameters.forEach(param => {
           if (param.startsWith('-')) {
             param = param.substring(1).trim();
           }
 
-          // Clean up broken hyphens inside level names or values (e.g. "TITLEBLOCK - Lines" -> "TITLEBLOCK Lines")
+          // Clean up internal fragmented hyphens inside level names or brackets
           param = param.replace(/\s*-\s*/g, ' ');
           param = param.replace(/\s+/g, ' ');
 
           if (param) {
-            finalParameters.push(param);
+            formattedLines.push(param);
           }
         });
 
-        return finalParameters.join('\n');
+        return formattedLines.join('\n');
       }
 
       function renderSettingsChips() {
