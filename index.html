@@ -139,6 +139,14 @@
         background-color: #4f46e5;
       }
 
+      .action-btn-danger {
+        background-color: #ef4444;
+      }
+
+      .action-btn-danger:hover {
+        background-color: #dc2626;
+      }
+
       .action-group {
         display: flex;
         gap: 0.5rem;
@@ -388,7 +396,7 @@
 
       .form-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.25rem;
         margin-bottom: 1.5rem;
       }
@@ -734,7 +742,7 @@
       <div id="tool-papersize" class="tool-section">
         <h2 class="section-title">Custom Paper Size JSON Generator</h2>
         <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">
-          Select from standard preset sizes or specify a custom paper size name and dimensions.
+          Build a collection of multiple paper sizes by selecting presets or entering custom sizes, then generate or download the final JSON structure.
         </p>
 
         <div class="form-grid">
@@ -780,12 +788,34 @@
           </div>
         </div>
 
+        <div class="controls" style="justify-content: flex-start; gap: 0.75rem;">
+          <button class="action-btn" onclick="addPaperSizeItem()">+ Add Paper Size</button>
+        </div>
+
+        <div id="added-papers-container" class="hidden" style="margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.05rem; color: #fff; margin-bottom: 0.75rem;">Queued Paper Sizes</h3>
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name / ID</th>
+                  <th>Units</th>
+                  <th>Width</th>
+                  <th>Height</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="added-papers-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="controls" style="justify-content: flex-end;">
           <button class="action-btn" onclick="generatePaperSizeJson()">Generate JSON</button>
         </div>
 
         <div class="viewer-box" style="margin-top: 1rem;">
-          <pre class="settings-output" id="ps-json-output">// Click "Generate JSON" above to create output.</pre>
+          <pre class="settings-output" id="ps-json-output">// Add paper sizes above and click "Generate JSON".</pre>
         </div>
         <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
           <button class="action-btn action-btn-secondary" onclick="downloadPaperSizeJson()">Download JSON File</button>
@@ -801,6 +831,7 @@
       let currentUnit = 'MM';
       let activeCtbRows = [];
       let currentLoadedFileName = "converted_styles";
+      let queuedPaperSizes = [];
 
       const PRESET_SIZES_MM = {
         'A4': [210, 297],
@@ -1282,11 +1313,9 @@
         if (isNaN(w) || isNaN(h)) return;
 
         if (unit === 'in') {
-          // Convert mm to inches
           widthInput.value = (w / 25.4).toFixed(2);
           heightInput.value = (h / 25.4).toFixed(2);
         } else {
-          // Convert inches to mm
           widthInput.value = (w * 25.4).toFixed(1);
           heightInput.value = (h * 25.4).toFixed(1);
         }
@@ -1296,36 +1325,71 @@
         document.getElementById('ps-preset').value = 'custom';
       }
 
-      function generatePaperSizeJson() {
+      function addPaperSizeItem() {
         const name = document.getElementById('ps-name').value.trim() || 'Custom_Paper';
         const unit = document.getElementById('ps-unit').value;
         const width = parseFloat(document.getElementById('ps-width').value) || 0;
         const height = parseFloat(document.getElementById('ps-height').value) || 0;
 
-        const paperConfig = {
-          paper_size_definition: {
-            name: name,
-            units: unit,
-            dimensions: {
-              width: width,
-              height: height
-            }
-          }
+        queuedPaperSizes.push({ name, units: unit, dimensions: { width, height } });
+        renderQueuedPaperSizes();
+      }
+
+      function removeQueuedPaperSize(index) {
+        queuedPaperSizes.splice(index, 1);
+        renderQueuedPaperSizes();
+      }
+
+      function renderQueuedPaperSizes() {
+        const container = document.getElementById('added-papers-container');
+        const tbody = document.getElementById('added-papers-tbody');
+        tbody.innerHTML = '';
+
+        if (queuedPaperSizes.length === 0) {
+          container.classList.add('hidden');
+          return;
+        }
+
+        container.classList.remove('hidden');
+        queuedPaperSizes.forEach((item, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${item.name}</strong></td>
+            <td>${item.units}</td>
+            <td>${item.dimensions.width}</td>
+            <td>${item.dimensions.height}</td>
+            <td><button class="action-btn action-btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="removeQueuedPaperSize(${idx})">Remove</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function generatePaperSizeJson() {
+        if (queuedPaperSizes.length === 0) {
+          document.getElementById('ps-json-output').textContent = '// No paper sizes queued. Please add at least one paper size first.';
+          return '';
+        }
+
+        const payload = {
+          paper_sizes: queuedPaperSizes
         };
 
-        const jsonString = JSON.stringify(paperConfig, null, 2);
+        const jsonString = JSON.stringify(payload, null, 2);
         document.getElementById('ps-json-output').textContent = jsonString;
         return jsonString;
       }
 
       function downloadPaperSizeJson() {
         const jsonContent = generatePaperSizeJson();
-        const name = document.getElementById('ps-name').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_') || 'custom_paper';
+        if (!jsonContent || queuedPaperSizes.length === 0) {
+          alert("Please add at least one paper size to queue before downloading.");
+          return;
+        }
         const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${name}.json`;
+        a.download = `custom_paper_sizes.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
