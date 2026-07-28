@@ -734,28 +734,49 @@
       <div id="tool-papersize" class="tool-section">
         <h2 class="section-title">Custom Paper Size JSON Generator</h2>
         <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">
-          Generate configuration JSON snippets for custom paper/plot sizes.
+          Select from standard preset sizes or specify a custom paper size name and dimensions.
         </p>
 
         <div class="form-grid">
           <div class="form-group">
+            <label for="ps-preset">Select Size Preset:</label>
+            <select id="ps-preset" onchange="onPresetChange()">
+              <option value="custom">-- Custom Size --</option>
+              <option value="A4">A4 (210 x 297 mm)</option>
+              <option value="A3">A3 (297 x 420 mm)</option>
+              <option value="A2">A2 (420 x 594 mm)</option>
+              <option value="A1">A1 (594 x 841 mm)</option>
+              <option value="A0">A0 (841 x 1189 mm)</option>
+              <option value="ANSI A">ANSI A (216 x 279 mm)</option>
+              <option value="ANSI B">ANSI B (279 x 432 mm)</option>
+              <option value="ANSI C">ANSI C (432 x 559 mm)</option>
+              <option value="ANSI D">ANSI D (559 x 864 mm)</option>
+              <option value="ANSI E">ANSI E (864 x 1118 mm)</option>
+              <option value="Arch A">Arch A (229 x 305 mm)</option>
+              <option value="Arch B">Arch B (305 x 457 mm)</option>
+              <option value="Arch C">Arch C (457 x 610 mm)</option>
+              <option value="Arch D">Arch D (610 x 914 mm)</option>
+              <option value="Arch E">Arch E (914 x 1219 mm)</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label for="ps-name">Paper Size Name / ID:</label>
-            <input type="text" id="ps-name" placeholder="e.g. Custom_Arch_X" value="Custom_Arch_X" />
+            <input type="text" id="ps-name" placeholder="e.g. Custom_Arch_X" value="A4" />
           </div>
           <div class="form-group">
             <label for="ps-unit">Units:</label>
-            <select id="ps-unit">
+            <select id="ps-unit" onchange="onUnitChange()">
               <option value="mm">Millimeters (mm)</option>
               <option value="in">Inches (in)</option>
             </select>
           </div>
           <div class="form-group">
             <label for="ps-width">Width:</label>
-            <input type="number" id="ps-width" value="900" step="1" />
+            <input type="number" id="ps-width" value="210" step="any" oninput="onCustomDimensionInput()" />
           </div>
           <div class="form-group">
             <label for="ps-height">Height:</label>
-            <input type="number" id="ps-height" value="1200" step="1" />
+            <input type="number" id="ps-height" value="297" step="any" oninput="onCustomDimensionInput()" />
           </div>
         </div>
 
@@ -780,6 +801,24 @@
       let currentUnit = 'MM';
       let activeCtbRows = [];
       let currentLoadedFileName = "converted_styles";
+
+      const PRESET_SIZES_MM = {
+        'A4': [210, 297],
+        'A3': [297, 420],
+        'A2': [420, 594],
+        'A1': [594, 841],
+        'A0': [841, 1189],
+        'ANSI A': [216, 279],
+        'ANSI B': [279, 432],
+        'ANSI C': [432, 559],
+        'ANSI D': [559, 864],
+        'ANSI E': [864, 1118],
+        'Arch A': [229, 305],
+        'Arch B': [305, 457],
+        'Arch C': [457, 610],
+        'Arch D': [610, 914],
+        'Arch E': [914, 1219]
+      };
 
       function switchTool(toolName) {
         ['drawings', 'settings', 'ctb', 'papersize'].forEach(t => {
@@ -1096,11 +1135,9 @@
       function parseCfgVariables(text) {
         const lines = text.split(/\r?\n/);
         const vars = [];
-        // Matches lines like: IPLOT_MSTN_TIMEOUT = value or VAR = "value"
         const regex = /^\s*([A-Za-z0-9_.-]+)\s*=\s*(.*)$/;
 
         lines.forEach(line => {
-          // Skip comments
           let trimmed = line.trim();
           if (trimmed.startsWith('#') || trimmed.startsWith(';') || !trimmed) return;
 
@@ -1208,6 +1245,57 @@
       }
 
       // Paper Size JSON Generator functions
+      function onPresetChange() {
+        const preset = document.getElementById('ps-preset').value;
+        const nameInput = document.getElementById('ps-name');
+        const unitSelect = document.getElementById('ps-unit');
+        const widthInput = document.getElementById('ps-width');
+        const heightInput = document.getElementById('ps-height');
+
+        if (preset === 'custom') {
+          nameInput.value = 'Custom_Paper';
+          return;
+        }
+
+        nameInput.value = preset;
+        if (PRESET_SIZES_MM[preset]) {
+          let [wMm, hMm] = PRESET_SIZES_MM[preset];
+          let unit = unitSelect.value;
+          if (unit === 'in') {
+            widthInput.value = (wMm / 25.4).toFixed(2);
+            heightInput.value = (hMm / 25.4).toFixed(2);
+          } else {
+            widthInput.value = wMm;
+            heightInput.value = hMm;
+          }
+        }
+      }
+
+      function onUnitChange() {
+        const unit = document.getElementById('ps-unit').value;
+        const widthInput = document.getElementById('ps-width');
+        const heightInput = document.getElementById('ps-height');
+        
+        let w = parseFloat(widthInput.value);
+        let h = parseFloat(heightInput.value);
+
+        if (isNaN(w) || isNaN(h)) return;
+
+        if (unit === 'in') {
+          // Convert mm to inches
+          widthInput.value = (w / 25.4).toFixed(2);
+          heightInput.value = (h / 25.4).toFixed(2);
+        } else {
+          // Convert inches to mm
+          widthInput.value = (w * 25.4).toFixed(1);
+          heightInput.value = (h * 25.4).toFixed(1);
+        }
+      }
+
+      function onCustomDimensionInput() {
+        document.getElementById('ps-preset').value = 'custom';
+      }
+
       function generatePaperSizeJson() {
         const name = document.getElementById('ps-name').value.trim() || 'Custom_Paper';
         const unit = document.getElementById('ps-unit').value;
@@ -1417,7 +1505,7 @@
           tblContent += `color(${r.index}) = { `;
           if (r.plotColor === 'white') {
             tblContent += `rgb(255,255,255), `;
-          } else if (r.plotContent?.includes('grey')) {
+          } else if (r.plotColor.includes('grey')) {
             const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
             const val = Math.round(255 * (1 - pct / 100));
             tblContent += `rgb(${val},${val},${val}), `;
