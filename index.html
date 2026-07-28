@@ -1447,8 +1447,38 @@
       }
 
       function onCustomDimensionInput() {
-        document.getElementById('ps-preset').value = 'custom';
-        document.getElementById('ps-warning').classList.add('hidden');
+        const presetSelect = document.getElementById('ps-preset');
+        const warningEl = document.getElementById('ps-warning');
+        
+        // If they edit dimensions, check if it matches an unadded preset
+        let w = parseFloat(document.getElementById('ps-width').value) || 0;
+        let h = parseFloat(document.getElementById('ps-height').value) || 0;
+        const unit = document.getElementById('ps-unit').value;
+        
+        if (unit === 'in') {
+          w *= 25.4;
+          h *= 25.4;
+        }
+
+        let matchedPreset = 'custom';
+        for (let [key, dims] of Object.entries(PRESET_SIZES_MM)) {
+          // Check standard orientation or swapped orientation
+          if ((Math.abs(dims[0] - w) < 2 && Math.abs(dims[1] - h) < 2) || 
+              (Math.abs(dims[1] - w) < 2 && Math.abs(dims[0] - h) < 2)) {
+            matchedPreset = key;
+            break;
+          }
+        }
+
+        presetSelect.value = matchedPreset;
+        if (matchedPreset !== 'custom') {
+          const nameInput = document.getElementById('ps-name');
+          if (!queuedPaperSizes.some(item => item.name.toLowerCase() === matchedPreset.toLowerCase())) {
+            nameInput.value = matchedPreset;
+          }
+        }
+
+        warningEl.classList.add('hidden');
       }
 
       function onCustomNameInput() {
@@ -1460,8 +1490,20 @@
         const unit = document.getElementById('ps-unit').value;
         const width = parseFloat(document.getElementById('ps-width').value) || 0;
         const height = parseFloat(document.getElementById('ps-height').value) || 0;
+        const preset = document.getElementById('ps-preset').value;
         const warningEl = document.getElementById('ps-warning');
 
+        // Check rule 1: Premade presets can only be added once
+        if (preset !== 'custom') {
+          const presetAlreadyAdded = queuedPaperSizes.some(item => item.name.toLowerCase() === preset.toLowerCase());
+          if (presetAlreadyAdded) {
+            warningEl.textContent = `The preset "${preset}" has already been added. Premade page sizes can only be added once.`;
+            warningEl.classList.remove('hidden');
+            return;
+          }
+        }
+
+        // Check rule 2: Custom or any names cannot have duplicates to avoid conflicts
         const nameExists = queuedPaperSizes.some(item => item.name.toLowerCase() === name.toLowerCase());
         if (nameExists) {
           warningEl.textContent = `A paper size with the name "${name}" has already been added. Duplicate names are not allowed.`;
