@@ -642,16 +642,6 @@
         <div id="settings-viewer-container" class="hidden">
           <h2 class="section-title">Loaded Settings Files</h2>
           <div class="file-chip-list" id="file-chip-list"></div>
-          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem; align-items: center;">
-            <div class="toggle-container">
-              <span class="toggle-label" id="toggle-label-raw">Raw Content</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="settings-view-toggle" onchange="toggleSettingsViewMode()" checked />
-                <span class="slider"></span>
-              </label>
-              <span class="toggle-label" id="toggle-label-fmt" style="color: var(--text-main);">Simplified</span>
-            </div>
-          </div>
           <div class="viewer-box">
             <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
           </div>
@@ -668,7 +658,7 @@
           <h2 class="section-title">Loaded InterPlot CFG Files</h2>
           <div class="file-chip-list" id="interplot-chip-list"></div>
           
-          <!-- InterPlot CFG Variable Quick Read Panel (Moved Above Raw Content Viewer) -->
+          <!-- InterPlot CFG Variable Quick Read Panel -->
           <div class="cfg-parsed-panel" id="cfg-parsed-panel" style="margin-top: 0; margin-bottom: 1.5rem;">
             <h3>InterPlot CFG Variable Inspector</h3>
             <div style="margin-bottom: 0.75rem;">
@@ -686,17 +676,6 @@
                   <tr><td colspan="2" style="color: var(--text-muted);">No configuration variables detected yet.</td></tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem; align-items: center;">
-            <div class="toggle-container">
-              <span class="toggle-label" id="interplot-toggle-label-raw">Raw Content</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="interplot-view-toggle" onchange="toggleInterplotViewMode()" checked />
-                <span class="slider"></span>
-              </label>
-              <span class="toggle-label" id="interplot-toggle-label-fmt" style="color: var(--text-main);">Simplified</span>
             </div>
           </div>
 
@@ -1126,8 +1105,7 @@
         for (let file of files) {
           if (!loadedSettingsFiles.some(sf => sf.name === file.name)) {
             const rawText = await file.text();
-            const formattedText = formatSettingsContent(rawText);
-            loadedSettingsFiles.push({ name: file.name, raw: rawText, formatted: formattedText });
+            loadedSettingsFiles.push({ name: file.name, raw: rawText });
           }
         }
 
@@ -1143,59 +1121,6 @@
         if (loadedSettingsFiles.length === 0) {
           document.getElementById('settings-viewer-container').classList.add('hidden');
         }
-      }
-
-      function formatSettingsContent(text) {
-        let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
-        let matchIdx = normalized.search(/-[a-zA-Z0-9_]+/);
-        if (matchIdx !== -1) {
-          normalized = normalized.substring(matchIdx);
-        }
-
-        let result = '';
-        let inQuotes = false;
-        let bracketDepth = 0;
-
-        for (let i = 0; i < normalized.length; i++) {
-          let char = normalized[i];
-
-          if (char === '"' && (i === 0 || normalized[i - 1] !== '\\')) {
-            inQuotes = !inQuotes;
-            result += char;
-          } else if (!inQuotes && char === '(') {
-            bracketDepth++;
-            result += char;
-          } else if (!inQuotes && char === ')' && bracketDepth > 0) {
-            bracketDepth--;
-            result += char;
-          } else if (char === '-') {
-            if (inQuotes || bracketDepth > 0) {
-              result += '-';
-            } else {
-              result += '\n-';
-            }
-          } else {
-            result += char;
-          }
-        }
-
-        let lines = result.split('\n');
-        let finalLines = [];
-
-        lines.forEach(line => {
-          let trimmed = line.trim();
-          if (trimmed && trimmed !== '-') {
-            if (trimmed.startsWith('-')) {
-              trimmed = trimmed.substring(1).trim();
-            }
-            if (trimmed) {
-              finalLines.push(trimmed);
-            }
-          }
-        });
-
-        return finalLines.join('\n');
       }
 
       function renderSettingsChips() {
@@ -1246,15 +1171,7 @@
         const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
         if (!fileObj) return;
 
-        const isFormatted = document.getElementById('settings-view-toggle').checked;
-        document.getElementById('settings-output-pre').textContent = isFormatted ? fileObj.formatted : fileObj.raw;
-        
-        document.getElementById('toggle-label-raw').style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
-        document.getElementById('toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
-      }
-
-      function toggleSettingsViewMode() {
-        displayActiveSettingsContent();
+        document.getElementById('settings-output-pre').textContent = fileObj.raw;
       }
 
       // InterPlot CFG Viewer Handler
@@ -1265,9 +1182,8 @@
         for (let file of files) {
           if (!loadedInterplotFiles.some(sf => sf.name === file.name)) {
             const rawText = await file.text();
-            const formattedText = formatSettingsContent(rawText);
             const parsedVariables = parseCfgVariables(rawText);
-            loadedInterplotFiles.push({ name: file.name, raw: rawText, formatted: formattedText, variables: parsedVariables });
+            loadedInterplotFiles.push({ name: file.name, raw: rawText, variables: parsedVariables });
           }
         }
 
@@ -1292,6 +1208,7 @@
 
         lines.forEach(line => {
           let trimmed = line.trim();
+          // Exclude commented out lines starting with # or ;
           if (trimmed.startsWith('#') || trimmed.startsWith(';') || !trimmed) return;
 
           const match = line.match(regex);
@@ -1350,17 +1267,8 @@
         const fileObj = loadedInterplotFiles.find(f => f.name === fileName);
         if (!fileObj) return;
 
-        const isFormatted = document.getElementById('interplot-view-toggle').checked;
-        document.getElementById('interplot-output-pre').textContent = isFormatted ? fileObj.formatted : fileObj.raw;
-        
-        document.getElementById('interplot-toggle-label-raw').style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
-        document.getElementById('interplot-toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
-
+        document.getElementById('interplot-output-pre').textContent = fileObj.raw;
         renderCfgVariablesTable(fileObj.variables);
-      }
-
-      function toggleInterplotViewMode() {
-        displayActiveInterplotContent();
       }
 
       function renderCfgVariablesTable(vars) {
