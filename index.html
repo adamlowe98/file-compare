@@ -55,7 +55,7 @@
       .nav-tabs {
         display: flex;
         justify-content: center;
-        gap: 1rem;
+        gap: 0.75rem;
         margin-bottom: 2rem;
         flex-wrap: wrap;
       }
@@ -463,7 +463,8 @@
 
       <div class="nav-tabs">
         <button class="nav-tab active" id="tab-drawings" onclick="switchTool('drawings')">PDF and DGN viewer</button>
-        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Settings & InterPlot CFG Viewer</button>
+        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Settings File Viewer</button>
+        <button class="nav-tab" id="tab-interplot" onclick="switchTool('interplot')">InterPlot CFG Viewer</button>
         <button class="nav-tab" id="tab-ctb" onclick="switchTool('ctb')">AutoCAD .ctb converter</button>
         <button class="nav-tab" id="tab-papersize" onclick="switchTool('papersize')">Paper Size JSON Generator</button>
       </div>
@@ -635,8 +636,8 @@
       <!-- SETTINGS FILE VIEWER TOOL -->
       <div id="tool-settings" class="tool-section">
         <section class="upload-section">
-          <input type="file" id="settings-file-input" multiple accept=".tbl,.pen,.plt,.cfg,.txt,.ini,.xml,.json,.set" />
-          <label for="settings-file-input" class="upload-btn">Add Settings / InterPlot CFG Files</label>
+          <input type="file" id="settings-file-input" multiple accept=".tbl,.pen,.plt,.txt,.ini,.xml,.json,.set" />
+          <label for="settings-file-input" class="upload-btn">Add Settings Files (.tbl, .pen, .plt, etc.)</label>
         </section>
         <div id="settings-viewer-container" class="hidden">
           <h2 class="section-title">Loaded Settings Files</h2>
@@ -654,14 +655,41 @@
           <div class="viewer-box">
             <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
           </div>
+        </div>
+      </div>
+
+      <!-- INTERPLOT CFG VIEWER TOOL -->
+      <div id="tool-interplot" class="tool-section">
+        <section class="upload-section">
+          <input type="file" id="interplot-file-input" multiple accept=".cfg,.txt" />
+          <label for="interplot-file-input" class="upload-btn">Add InterPlot CFG Files</label>
+        </section>
+        <div id="interplot-viewer-container" class="hidden">
+          <h2 class="section-title">Loaded InterPlot CFG Files</h2>
+          <div class="file-chip-list" id="interplot-chip-list"></div>
+          
+          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem; align-items: center;">
+            <div class="toggle-container">
+              <span class="toggle-label" id="interplot-toggle-label-raw">Raw Content</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="interplot-view-toggle" onchange="toggleInterplotViewMode()" checked />
+                <span class="slider"></span>
+              </label>
+              <span class="toggle-label" id="interplot-toggle-label-fmt" style="color: var(--text-main);">Simplified</span>
+            </div>
+          </div>
+
+          <div class="viewer-box">
+            <pre class="settings-output" id="interplot-output-pre">Select a file above to inspect its contents.</pre>
+          </div>
 
           <!-- InterPlot CFG Variable Quick Read Panel -->
           <div class="cfg-parsed-panel" id="cfg-parsed-panel">
-            <h3>InterPlot CFG Quick Variables Inspector</h3>
+            <h3>InterPlot CFG Variable Inspector</h3>
             <div style="margin-bottom: 0.75rem;">
               <input type="text" id="cfg-var-search" placeholder="Filter variables (e.g. IPLOT_, TIMEOUT)..." oninput="filterCfgVariables()" style="width: 100%; max-width: 350px;" />
             </div>
-            <div style="overflow-x: auto; max-height: 250px;">
+            <div style="overflow-x: auto; max-height: 300px;">
               <table class="cfg-var-table">
                 <thead>
                   <tr>
@@ -835,6 +863,7 @@
       let allPdfData = [];
       let allDgnData = [];
       let loadedSettingsFiles = [];
+      let loadedInterplotFiles = [];
       let currentUnit = 'MM';
       let activeCtbRows = [];
       let currentLoadedFileName = "converted_styles";
@@ -859,7 +888,7 @@
       };
 
       function switchTool(toolName) {
-        ['drawings', 'settings', 'ctb', 'papersize'].forEach(t => {
+        ['drawings', 'settings', 'interplot', 'ctb', 'papersize'].forEach(t => {
           document.getElementById(`tab-${t}`).classList.remove('active');
           document.getElementById(`tool-${t}`).classList.remove('active');
         });
@@ -1089,7 +1118,7 @@
         renderDrawingTables(filteredPdf, filteredDgn);
       }
 
-      // Settings File Viewer Handler with Toggle Switch & Deletion Support
+      // Settings File Viewer Handler (.tbl, .pen, .plt, etc.)
       document.getElementById('settings-file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -1098,8 +1127,7 @@
           if (!loadedSettingsFiles.some(sf => sf.name === file.name)) {
             const rawText = await file.text();
             const formattedText = formatSettingsContent(rawText);
-            const parsedVariables = parseCfgVariables(rawText);
-            loadedSettingsFiles.push({ name: file.name, raw: rawText, formatted: formattedText, variables: parsedVariables });
+            loadedSettingsFiles.push({ name: file.name, raw: rawText, formatted: formattedText });
           }
         }
 
@@ -1170,28 +1198,11 @@
         return finalLines.join('\n');
       }
 
-      function parseCfgVariables(text) {
-        const lines = text.split(/\r?\n/);
-        const vars = [];
-        const regex = /^\s*([A-Za-z0-9_.-]+)\s*=\s*(.*)$/;
-
-        lines.forEach(line => {
-          let trimmed = line.trim();
-          if (trimmed.startsWith('#') || trimmed.startsWith(';') || !trimmed) return;
-
-          const match = line.match(regex);
-          if (match) {
-            vars.push({ name: match[1].trim(), value: match[2].trim() });
-          }
-        });
-        return vars;
-      }
-
       function renderSettingsChips() {
         const list = document.getElementById('file-chip-list');
         list.innerHTML = '';
         
-        let activeFileName = document.querySelector('.file-chip.active')?.getAttribute('data-filename');
+        let activeFileName = document.querySelector('#tool-settings .file-chip.active')?.getAttribute('data-filename');
 
         loadedSettingsFiles.forEach((fileObj, idx) => {
           const chip = document.createElement('div');
@@ -1212,7 +1223,7 @@
           chip.appendChild(removeBtn);
 
           chip.onclick = () => {
-            document.querySelectorAll('.file-chip').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('#tool-settings .file-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             displayActiveSettingsContent();
           };
@@ -1221,7 +1232,7 @@
 
         if (loadedSettingsFiles.length > 0) {
           document.getElementById('settings-viewer-container').classList.remove('hidden');
-          if (!document.querySelector('.file-chip.active') && loadedSettingsFiles.length > 0) {
+          if (!document.querySelector('#tool-settings .file-chip.active') && loadedSettingsFiles.length > 0) {
             list.firstChild.classList.add('active');
           }
           displayActiveSettingsContent();
@@ -1229,7 +1240,7 @@
       }
 
       function displayActiveSettingsContent() {
-        const activeChip = document.querySelector('.file-chip.active');
+        const activeChip = document.querySelector('#tool-settings .file-chip.active');
         if (!activeChip) return;
         const fileName = activeChip.getAttribute('data-filename');
         const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
@@ -1240,12 +1251,116 @@
         
         document.getElementById('toggle-label-raw').style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
         document.getElementById('toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
-
-        renderCfgVariablesTable(fileObj.variables);
       }
 
       function toggleSettingsViewMode() {
         displayActiveSettingsContent();
+      }
+
+      // InterPlot CFG Viewer Handler
+      document.getElementById('interplot-file-input').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        for (let file of files) {
+          if (!loadedInterplotFiles.some(sf => sf.name === file.name)) {
+            const rawText = await file.text();
+            const formattedText = formatSettingsContent(rawText);
+            const parsedVariables = parseCfgVariables(rawText);
+            loadedInterplotFiles.push({ name: file.name, raw: rawText, formatted: formattedText, variables: parsedVariables });
+          }
+        }
+
+        renderInterplotChips();
+        e.target.value = '';
+      });
+
+      function removeInterplotFile(fileName, event) {
+        event.stopPropagation();
+        loadedInterplotFiles = loadedInterplotFiles.filter(f => f.name !== fileName);
+        renderInterplotChips();
+
+        if (loadedInterplotFiles.length === 0) {
+          document.getElementById('interplot-viewer-container').classList.add('hidden');
+        }
+      }
+
+      function parseCfgVariables(text) {
+        const lines = text.split(/\r?\n/);
+        const vars = [];
+        const regex = /^\s*([A-Za-z0-9_.-]+)\s*=\s*(.*)$/;
+
+        lines.forEach(line => {
+          let trimmed = line.trim();
+          if (trimmed.startsWith('#') || trimmed.startsWith(';') || !trimmed) return;
+
+          const match = line.match(regex);
+          if (match) {
+            vars.push({ name: match[1].trim(), value: match[2].trim() });
+          }
+        });
+        return vars;
+      }
+
+      function renderInterplotChips() {
+        const list = document.getElementById('interplot-chip-list');
+        list.innerHTML = '';
+        
+        let activeFileName = document.querySelector('#tool-interplot .file-chip.active')?.getAttribute('data-filename');
+
+        loadedInterplotFiles.forEach((fileObj, idx) => {
+          const chip = document.createElement('div');
+          const isActive = activeFileName ? activeFileName === fileObj.name : idx === 0;
+
+          chip.className = `file-chip ${isActive ? 'active' : ''}`;
+          chip.setAttribute('data-filename', fileObj.name);
+          
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = fileObj.name;
+          chip.appendChild(nameSpan);
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-chip';
+          removeBtn.innerHTML = '&times;';
+          removeBtn.title = 'Remove file';
+          removeBtn.onclick = (ev) => removeInterplotFile(fileObj.name, ev);
+          chip.appendChild(removeBtn);
+
+          chip.onclick = () => {
+            document.querySelectorAll('#tool-interplot .file-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            displayActiveInterplotContent();
+          };
+          list.appendChild(chip);
+        });
+
+        if (loadedInterplotFiles.length > 0) {
+          document.getElementById('interplot-viewer-container').classList.remove('hidden');
+          if (!document.querySelector('#tool-interplot .file-chip.active') && loadedInterplotFiles.length > 0) {
+            list.firstChild.classList.add('active');
+          }
+          displayActiveInterplotContent();
+        }
+      }
+
+      function displayActiveInterplotContent() {
+        const activeChip = document.querySelector('#tool-interplot .file-chip.active');
+        if (!activeChip) return;
+        const fileName = activeChip.getAttribute('data-filename');
+        const fileObj = loadedInterplotFiles.find(f => f.name === fileName);
+        if (!fileObj) return;
+
+        const isFormatted = document.getElementById('interplot-view-toggle').checked;
+        document.getElementById('interplot-output-pre').textContent = isFormatted ? fileObj.formatted : fileObj.raw;
+        
+        document.getElementById('interplot-toggle-label-raw').style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
+        document.getElementById('interplot-toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
+
+        renderCfgVariablesTable(fileObj.variables);
+      }
+
+      function toggleInterplotViewMode() {
+        displayActiveInterplotContent();
       }
 
       function renderCfgVariablesTable(vars) {
@@ -1273,10 +1388,10 @@
       }
 
       function filterCfgVariables() {
-        const activeChip = document.querySelector('.file-chip.active');
+        const activeChip = document.querySelector('#tool-interplot .file-chip.active');
         if (!activeChip) return;
         const fileName = activeChip.getAttribute('data-filename');
-        const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
+        const fileObj = loadedInterplotFiles.find(f => f.name === fileName);
         if (fileObj) {
           renderCfgVariablesTable(fileObj.variables);
         }
@@ -1347,7 +1462,6 @@
         const height = parseFloat(document.getElementById('ps-height').value) || 0;
         const warningEl = document.getElementById('ps-warning');
 
-        // Check if name already exists in queued list (case-insensitive check)
         const nameExists = queuedPaperSizes.some(item => item.name.toLowerCase() === name.toLowerCase());
         if (nameExists) {
           warningEl.textContent = `A paper size with the name "${name}" has already been added. Duplicate names are not allowed.`;
