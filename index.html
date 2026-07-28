@@ -1139,6 +1139,11 @@
       function formatSettingsContent(text) {
         let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         
+        let matchIdx = normalized.indexOf('-');
+        if (matchIdx !== -1) {
+          normalized = normalized.substring(matchIdx);
+        }
+
         let result = '';
         let inQuotes = false;
         let parenDepth = 0;
@@ -1727,8 +1732,8 @@
           if (r.plotColor === 'white') {
             tblContent += `rgb(255,255,255), `;
           } else if (r.plotColor.includes('grey')) {
-            const pct = parseInt(r.plotColor.replace('grey ', '')) || 50;
-            const val = Math.round(255 * (1 - pct / 100));
+            const parserPct = parseInt(r.plotColor.replace('grey ', '')) || 50;
+            const val = Math.round(255 * (1 - parserPct / 100));
             tblContent += `rgb(${val},${val},${val}), `;
           } else {
             tblContent += `rgb(0,0,0), `;
