@@ -668,23 +668,8 @@
           <h2 class="section-title">Loaded InterPlot CFG Files</h2>
           <div class="file-chip-list" id="interplot-chip-list"></div>
           
-          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem; align-items: center;">
-            <div class="toggle-container">
-              <span class="toggle-label" id="interplot-toggle-label-raw">Raw Content</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="interplot-view-toggle" onchange="toggleInterplotViewMode()" checked />
-                <span class="slider"></span>
-              </label>
-              <span class="toggle-label" id="interplot-toggle-label-fmt" style="color: var(--text-main);">Simplified</span>
-            </div>
-          </div>
-
-          <div class="viewer-box">
-            <pre class="settings-output" id="interplot-output-pre">Select a file above to inspect its contents.</pre>
-          </div>
-
-          <!-- InterPlot CFG Variable Quick Read Panel -->
-          <div class="cfg-parsed-panel" id="cfg-parsed-panel">
+          <!-- InterPlot CFG Variable Quick Read Panel (Moved Above Raw Content Viewer) -->
+          <div class="cfg-parsed-panel" id="cfg-parsed-panel" style="margin-top: 0; margin-bottom: 1.5rem;">
             <h3>InterPlot CFG Variable Inspector</h3>
             <div style="margin-bottom: 0.75rem;">
               <input type="text" id="cfg-var-search" placeholder="Filter variables (e.g. IPLOT_, TIMEOUT)..." oninput="filterCfgVariables()" style="width: 100%; max-width: 350px;" />
@@ -702,6 +687,21 @@
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem; align-items: center;">
+            <div class="toggle-container">
+              <span class="toggle-label" id="interplot-toggle-label-raw">Raw Content</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="interplot-view-toggle" onchange="toggleInterplotViewMode()" checked />
+                <span class="slider"></span>
+              </label>
+              <span class="toggle-label" id="interplot-toggle-label-fmt" style="color: var(--text-main);">Simplified</span>
+            </div>
+          </div>
+
+          <div class="viewer-box">
+            <pre class="settings-output" id="interplot-output-pre">Select a file above to inspect its contents.</pre>
           </div>
         </div>
       </div>
@@ -1450,7 +1450,6 @@
         const presetSelect = document.getElementById('ps-preset');
         const warningEl = document.getElementById('ps-warning');
         
-        // If they edit dimensions, check if it matches an unadded preset
         let w = parseFloat(document.getElementById('ps-width').value) || 0;
         let h = parseFloat(document.getElementById('ps-height').value) || 0;
         const unit = document.getElementById('ps-unit').value;
@@ -1462,7 +1461,6 @@
 
         let matchedPreset = 'custom';
         for (let [key, dims] of Object.entries(PRESET_SIZES_MM)) {
-          // Check standard orientation or swapped orientation
           if ((Math.abs(dims[0] - w) < 2 && Math.abs(dims[1] - h) < 2) || 
               (Math.abs(dims[1] - w) < 2 && Math.abs(dims[0] - h) < 2)) {
             matchedPreset = key;
@@ -1493,7 +1491,6 @@
         const preset = document.getElementById('ps-preset').value;
         const warningEl = document.getElementById('ps-warning');
 
-        // Check rule 1: Premade presets can only be added once
         if (preset !== 'custom') {
           const presetAlreadyAdded = queuedPaperSizes.some(item => item.name.toLowerCase() === preset.toLowerCase());
           if (presetAlreadyAdded) {
@@ -1503,7 +1500,6 @@
           }
         }
 
-        // Check rule 2: Custom or any names cannot have duplicates to avoid conflicts
         const nameExists = queuedPaperSizes.some(item => item.name.toLowerCase() === name.toLowerCase());
         if (nameExists) {
           warningEl.textContent = `A paper size with the name "${name}" has already been added. Duplicate names are not allowed.`;
