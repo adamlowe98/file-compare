@@ -642,6 +642,18 @@
         <div id="settings-viewer-container" class="hidden">
           <h2 class="section-title">Loaded Settings Files</h2>
           <div class="file-chip-list" id="file-chip-list"></div>
+          
+          <div class="controls" style="justify-content: flex-end; margin-bottom: 1rem; align-items: center;">
+            <div class="toggle-container">
+              <span class="toggle-label" id="toggle-label-raw" style="color: var(--text-main);">Raw Content</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="settings-view-toggle" onchange="toggleSettingsViewMode()" />
+                <span class="slider"></span>
+              </label>
+              <span class="toggle-label" id="toggle-label-fmt">Simplified</span>
+            </div>
+          </div>
+
           <div class="viewer-box">
             <pre class="settings-output" id="settings-output-pre">Select a file above to inspect its contents.</pre>
           </div>
@@ -1105,7 +1117,8 @@
         for (let file of files) {
           if (!loadedSettingsFiles.some(sf => sf.name === file.name)) {
             const rawText = await file.text();
-            loadedSettingsFiles.push({ name: file.name, raw: rawText });
+            const formattedText = formatSettingsContent(rawText);
+            loadedSettingsFiles.push({ name: file.name, raw: rawText, formatted: formattedText });
           }
         }
 
@@ -1121,6 +1134,57 @@
         if (loadedSettingsFiles.length === 0) {
           document.getElementById('settings-viewer-container').classList.add('hidden');
         }
+      }
+
+      function formatSettingsContent(text) {
+        let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        
+        let result = '';
+        let inQuotes = false;
+        let parenDepth = 0;
+        let squareDepth = 0;
+        let curlyDepth = 0;
+
+        for (let i = 0; i < normalized.length; i++) {
+          let char = normalized[i];
+
+          if (char === '"' && (i === 0 || normalized[i - 1] !== '\\')) {
+            inQuotes = !inQuotes;
+            result += char;
+          } else if (!inQuotes) {
+            if (char === '(') parenDepth++;
+            else if (char === ')' && parenDepth > 0) parenDepth--;
+            else if (char === '[') squareDepth++;
+            else if (char === ']' && squareDepth > 0) squareDepth--;
+            else if (char === '{') curlyDepth++;
+            else if (char === '}' && curlyDepth > 0) curlyDepth--;
+
+            if (char === '-' && parenDepth === 0 && squareDepth === 0 && curlyDepth === 0) {
+              result += '\n-';
+            } else {
+              result += char;
+            }
+          } else {
+            result += char;
+          }
+        }
+
+        let lines = result.split('\n');
+        let finalLines = [];
+
+        lines.forEach(line => {
+          let trimmed = line.trim();
+          if (trimmed && trimmed !== '-') {
+            if (trimmed.startsWith('-')) {
+              trimmed = trimmed.substring(1).trim();
+            }
+            if (trimmed) {
+              finalLines.push(trimmed);
+            }
+          }
+        });
+
+        return finalLines.join('\n');
       }
 
       function renderSettingsChips() {
@@ -1171,7 +1235,15 @@
         const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
         if (!fileObj) return;
 
-        document.getElementById('settings-output-pre').textContent = fileObj.raw;
+        const isFormatted = document.getElementById('settings-view-toggle').checked;
+        document.getElementById('settings-output-pre').textContent = isFormatted ? fileObj.formatted : fileObj.raw;
+        
+        document.getElementById('toggle-label-raw').style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
+        document.getElementById('toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
+      }
+
+      function toggleSettingsViewMode() {
+        displayActiveSettingsContent();
       }
 
       // InterPlot CFG Viewer Handler
@@ -1208,7 +1280,6 @@
 
         lines.forEach(line => {
           let trimmed = line.trim();
-          // Exclude commented out lines starting with # or ;
           if (trimmed.startsWith('#') || trimmed.startsWith(';') || !trimmed) return;
 
           const match = line.match(regex);
