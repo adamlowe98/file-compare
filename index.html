@@ -446,6 +446,12 @@
         background: #1e293b;
         color: var(--text-muted);
       }
+
+      .warning-banner {
+        color: #f87171;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+      }
     </style>
   </head>
   <body>
@@ -742,7 +748,7 @@
       <div id="tool-papersize" class="tool-section">
         <h2 class="section-title">Custom Paper Size JSON Generator</h2>
         <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">
-          Build a collection of multiple paper sizes by selecting presets or entering custom sizes, then generate or download the final JSON structure.
+          Build a collection of multiple unique paper sizes. Each preset or custom name can only be added once.
         </p>
 
         <div class="form-grid">
@@ -769,7 +775,7 @@
           </div>
           <div class="form-group">
             <label for="ps-name">Paper Size Name / ID:</label>
-            <input type="text" id="ps-name" placeholder="e.g. Custom_Arch_X" value="A4" />
+            <input type="text" id="ps-name" placeholder="e.g. Custom_Arch_X" value="A4" oninput="onCustomNameInput()" />
           </div>
           <div class="form-group">
             <label for="ps-unit">Units:</label>
@@ -788,8 +794,9 @@
           </div>
         </div>
 
-        <div class="controls" style="justify-content: flex-start; gap: 0.75rem;">
+        <div class="controls" style="justify-content: flex-start; flex-direction: column; align-items: flex-start;">
           <button class="action-btn" onclick="addPaperSizeItem()">+ Add Paper Size</button>
+          <div id="ps-warning" class="warning-banner hidden"></div>
         </div>
 
         <div id="added-papers-container" class="hidden" style="margin-bottom: 1.5rem;">
@@ -1282,6 +1289,9 @@
         const unitSelect = document.getElementById('ps-unit');
         const widthInput = document.getElementById('ps-width');
         const heightInput = document.getElementById('ps-height');
+        const warningEl = document.getElementById('ps-warning');
+
+        warningEl.classList.add('hidden');
 
         if (preset === 'custom') {
           nameInput.value = 'Custom_Paper';
@@ -1323,6 +1333,11 @@
 
       function onCustomDimensionInput() {
         document.getElementById('ps-preset').value = 'custom';
+        document.getElementById('ps-warning').classList.add('hidden');
+      }
+
+      function onCustomNameInput() {
+        document.getElementById('ps-warning').classList.add('hidden');
       }
 
       function addPaperSizeItem() {
@@ -1330,7 +1345,17 @@
         const unit = document.getElementById('ps-unit').value;
         const width = parseFloat(document.getElementById('ps-width').value) || 0;
         const height = parseFloat(document.getElementById('ps-height').value) || 0;
+        const warningEl = document.getElementById('ps-warning');
 
+        // Check if name already exists in queued list (case-insensitive check)
+        const nameExists = queuedPaperSizes.some(item => item.name.toLowerCase() === name.toLowerCase());
+        if (nameExists) {
+          warningEl.textContent = `A paper size with the name "${name}" has already been added. Duplicate names are not allowed.`;
+          warningEl.classList.remove('hidden');
+          return;
+        }
+
+        warningEl.classList.add('hidden');
         queuedPaperSizes.push({ name, units: unit, dimensions: { width, height } });
         renderQueuedPaperSizes();
       }
@@ -1338,6 +1363,7 @@
       function removeQueuedPaperSize(index) {
         queuedPaperSizes.splice(index, 1);
         renderQueuedPaperSizes();
+        document.getElementById('ps-warning').classList.add('hidden');
       }
 
       function renderQueuedPaperSizes() {
