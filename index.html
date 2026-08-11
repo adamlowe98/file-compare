@@ -66,6 +66,21 @@
         margin: 0;
       }
 
+      header .contact-info {
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      header .contact-info a {
+        color: var(--primary);
+        text-decoration: none;
+      }
+
+      header .contact-info a:hover {
+        text-decoration: underline;
+      }
+
       .nav-tabs {
         display: flex;
         justify-content: center;
@@ -474,6 +489,9 @@
       <header>
         <h1>All in one Plotting Tool</h1>
         <p>Inspect drawing dimensions, configuration files, compile MicroStation .pen / .tbl configurations, and manage custom paper sizes.</p>
+        <div class="contact-info">
+          If anyone has any questions, feature requests or finds any bugs please contact <a href="mailto:Adam.Lowe@bentley.com">Adam.Lowe@bentley.com</a>
+        </div>
       </header>
 
       <div class="nav-tabs">
