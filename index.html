@@ -119,7 +119,7 @@
         padding: 3rem 2rem;
         border: 2px dashed var(--border);
         border-radius: 8px;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         background-color: rgba(15, 23, 42, 0.4);
       }
 
@@ -477,9 +477,13 @@
       }
 
       .warning-banner {
-        color: #f87171;
-        font-size: 0.85rem;
-        margin-top: 0.5rem;
+        background-color: rgba(239, 68, 68, 0.15);
+        border: 1px solid #ef4444;
+        color: #fca5a5;
+        padding: 0.85rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
       }
     </style>
   </head>
@@ -740,6 +744,9 @@
             Properly view true plot values, mapped screen colors, and lineweights. Only valid AutoCAD .ctb files are accepted.
           </p>
         </section>
+
+        <!-- In-App Error Notification Banner for CTB Uploads -->
+        <div id="ctb-error-banner" class="warning-banner hidden"></div>
 
         <div id="ctb-viewer-container" class="hidden">
           <div class="ctb-table-container">
@@ -1871,7 +1878,7 @@
         URL.revokeObjectURL(url);
       }
 
-      // AutoCAD .ctb converter Parser Engine with Strict Validation
+      // AutoCAD .ctb converter Parser Engine with In-App Error Notification
       const ACI_HEX = {
         1: '#FF0000', 2: '#FFFF00', 3: '#00FF00', 4: '#00FFFF', 
         5: '#0000FF', 6: '#FF00FF', 7: '#000000', 8: '#818181', 9: '#BEBEBE'
@@ -1888,11 +1895,17 @@
         if (!file) return;
 
         const viewerContainer = document.getElementById('ctb-viewer-container');
+        const errorBanner = document.getElementById('ctb-error-banner');
+        errorBanner.classList.add('hidden');
+        errorBanner.textContent = '';
+
         const ext = file.name.split('.').pop().toLowerCase();
 
-        // Strict extension validation
+        // Strict extension validation with in-app error feedback
         if (ext !== 'ctb') {
-          alert("Invalid file format. Only genuine AutoCAD .ctb files are accepted by this converter tool.");
+          errorBanner.textContent = "Invalid file format. Only genuine AutoCAD .ctb files are accepted by this converter tool.";
+          errorBanner.classList.remove('hidden');
+          viewerContainer.classList.add('hidden');
           e.target.value = '';
           return;
         }
@@ -1902,7 +1915,8 @@
           
           // Minimum size validation for AutoCAD CTB binary structures
           if (buffer.byteLength < 500) {
-            alert("Invalid CTB file: The file is too small or does not match a valid AutoCAD color-dependent plot style table binary structure.");
+            errorBanner.textContent = "Invalid CTB file: The file is too small or does not match a valid AutoCAD color-dependent plot style table binary structure.";
+            errorBanner.classList.remove('hidden');
             viewerContainer.classList.add('hidden');
             e.target.value = '';
             return;
@@ -1962,7 +1976,8 @@
           renderCtbTable(activeCtbRows);
 
         } catch (err) {
-          alert("Error parsing CTB file: " + err.message);
+          errorBanner.textContent = "Error parsing CTB file: " + err.message;
+          errorBanner.classList.remove('hidden');
           viewerContainer.classList.add('hidden');
         }
 
