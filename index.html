@@ -495,12 +495,12 @@
       </header>
 
       <div class="nav-tabs">
-        <button class="nav-tab active" id="tab-drawings" onclick="switchTool('drawings')">PDF and DGN viewer</button>
-        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Settings File Viewer</button>
-        <button class="nav-tab" id="tab-interplot" onclick="switchTool('interplot')">InterPlot CFG Viewer</button>
-        <button class="nav-tab" id="tab-ctb" onclick="switchTool('ctb')">AutoCAD .ctb converter</button>
-        <button class="nav-tab" id="tab-papersize" onclick="switchTool('papersize')">Paper Size JSON Generator</button>
-        <button class="nav-tab" id="tab-validator" onclick="switchTool('validator')">File Validator</button>
+        <button class="nav-tab active" id="tab-drawings" data-tab="drawings">PDF and DGN viewer</button>
+        <button class="nav-tab" id="tab-settings" data-tab="settings">Settings File Viewer</button>
+        <button class="nav-tab" id="tab-interplot" data-tab="interplot">InterPlot CFG Viewer</button>
+        <button class="nav-tab" id="tab-ctb" data-tab="ctb">AutoCAD .ctb converter</button>
+        <button class="nav-tab" id="tab-papersize" data-tab="papersize">Paper Size JSON Generator</button>
+        <button class="nav-tab" id="tab-validator" data-tab="validator">File Validator</button>
       </div>
 
       <!-- PDF AND DGN VIEWER TOOL -->
@@ -521,18 +521,18 @@
             <div class="controls" style="justify-content: flex-start;">
               <div class="filter-group">
                 <label for="pdf-unit-toggle">Unit:</label>
-                <select id="pdf-unit-toggle" onchange="updateDrawingUnit(this.value)">
+                <select id="pdf-unit-toggle">
                   <option value="MM">mm</option>
                   <option value="IN">in</option>
                 </select>
               </div>
               <div class="filter-group">
                 <label for="pdf-filter-dimensions">Dimensions / Name:</label>
-                <input type="text" id="pdf-filter-dimensions" placeholder="Search filename or dimension..." oninput="filterDrawingTables()" />
+                <input type="text" id="pdf-filter-dimensions" placeholder="Search filename or dimension..." />
               </div>
               <div class="filter-group">
                 <label for="pdf-filter-page-size">Drawing Size:</label>
-                <select id="pdf-filter-page-size" onchange="filterDrawingTables()">
+                <select id="pdf-filter-page-size">
                   <option value="ALL">All Sizes (Comprehensive)</option>
                   <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm)</option>
                   <option value="4A0">4A0 (1682 x 2378 mm)</option>
@@ -597,7 +597,7 @@
               </div>
               <div class="filter-group">
                 <label for="pdf-filter-multipage">Pagination:</label>
-                <select id="pdf-filter-multipage" onchange="filterDrawingTables()">
+                <select id="pdf-filter-multipage">
                   <option value="ALL">All Documents</option>
                   <option value="single">Single Page</option>
                   <option value="multi">Multi-Page</option>
@@ -624,11 +624,11 @@
             <div class="controls" style="justify-content: flex-start;">
               <div class="filter-group">
                 <label for="dgn-filter-name">Search DGN:</label>
-                <input type="text" id="dgn-filter-name" placeholder="Search filename..." oninput="filterDrawingTables()" />
+                <input type="text" id="dgn-filter-name" placeholder="Search filename..." />
               </div>
               <div class="filter-group">
                 <label for="dgn-filter-version">MicroStation Version:</label>
-                <select id="dgn-filter-version" onchange="filterDrawingTables()">
+                <select id="dgn-filter-version">
                   <option value="ALL">All Versions</option>
                   <option value="MicroStation 2026">MicroStation 2026</option>
                   <option value="MicroStation 2025">MicroStation 2025</option>
@@ -681,7 +681,7 @@
             <div class="toggle-container">
               <span class="toggle-label" id="toggle-label-raw" style="color: var(--text-main);">Raw Content</span>
               <label class="toggle-switch">
-                <input type="checkbox" id="settings-view-toggle" onchange="toggleSettingsViewMode()" />
+                <input type="checkbox" id="settings-view-toggle" />
                 <span class="slider"></span>
               </label>
               <span class="toggle-label" id="toggle-label-fmt">Simplified</span>
@@ -708,7 +708,7 @@
           <div class="cfg-parsed-panel" id="cfg-parsed-panel" style="margin-top: 0; margin-bottom: 1.5rem;">
             <h3>InterPlot CFG Variable Inspector</h3>
             <div style="margin-bottom: 0.75rem;">
-              <input type="text" id="cfg-var-search" placeholder="Filter variables (e.g. IPLOT_, TIMEOUT)..." oninput="filterCfgVariables()" style="width: 100%; max-width: 350px;" />
+              <input type="text" id="cfg-var-search" placeholder="Filter variables (e.g. IPLOT_, TIMEOUT)..." style="width: 100%; max-width: 350px;" />
             </div>
             <div style="overflow-x: auto; max-height: 300px;">
               <table class="cfg-var-table">
@@ -746,15 +746,15 @@
             <div class="ctb-header-bar">
               <span id="ctb-file-title">CTB Plot Style Inspector</span>
               <div class="action-group">
-                <button class="action-btn" onclick="exportToPenFile()">Download .pen File</button>
-                <button class="action-btn action-btn-secondary" onclick="exportToTblFile()">Download .tbl File</button>
+                <button class="action-btn" id="btn-export-pen">Download .pen File</button>
+                <button class="action-btn action-btn-secondary" id="btn-export-tbl">Download .tbl File</button>
               </div>
             </div>
             
             <div class="controls">
               <div class="filter-group">
                 <label for="ctb-filter-color">Filter by plot color:</label>
-                <select id="ctb-filter-color" onchange="filterCtbTable()">
+                <select id="ctb-filter-color">
                   <option value="ALL">-</option>
                   <option value="black">black</option>
                   <option value="white">white</option>
@@ -769,7 +769,7 @@
               </div>
               <div class="filter-group">
                 <label for="ctb-filter-weight">Filter by weight:</label>
-                <select id="ctb-filter-weight" onchange="filterCtbTable()">
+                <select id="ctb-filter-weight">
                   <option value="ALL">-</option>
                   <option value="0.00">0.00 mm</option>
                   <option value="0.10">0.10 mm</option>
@@ -807,7 +807,7 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="ps-preset">Select Size Preset:</label>
-            <select id="ps-preset" onchange="onPresetChange()">
+            <select id="ps-preset">
               <option value="custom">-- Custom Size --</option>
               <option value="Bentley 1200x1200">Bentley Custom (1200 x 1200 mm)</option>
               <option value="4A0">4A0 (1682 x 2378 mm)</option>
@@ -872,27 +872,27 @@
           </div>
           <div class="form-group">
             <label for="ps-name">Paper Size Name / ID:</label>
-            <input type="text" id="ps-name" placeholder="e.g. Custom_Arch_X" value="A4" oninput="onCustomNameInput()" />
+            <input type="text" id="ps-name" placeholder="e.g. Custom_Arch_X" value="A4" />
           </div>
           <div class="form-group">
             <label for="ps-unit">Units:</label>
-            <select id="ps-unit" onchange="onUnitChange()">
+            <select id="ps-unit">
               <option value="mm">Millimeters (mm)</option>
               <option value="in">Inches (in)</option>
             </select>
           </div>
           <div class="form-group">
             <label for="ps-width">Width:</label>
-            <input type="number" id="ps-width" value="210" step="any" oninput="onCustomDimensionInput()" />
+            <input type="number" id="ps-width" value="210" step="any" />
           </div>
           <div class="form-group">
             <label for="ps-height">Height:</label>
-            <input type="number" id="ps-height" value="297" step="any" oninput="onCustomDimensionInput()" />
+            <input type="number" id="ps-height" value="297" step="any" />
           </div>
         </div>
 
         <div class="controls" style="justify-content: flex-start; flex-direction: column; align-items: flex-start;">
-          <button class="action-btn" onclick="addPaperSizeItem()">+ Add Paper Size</button>
+          <button class="action-btn" id="btn-add-paper">+ Add Paper Size</button>
           <div id="ps-warning" class="warning-banner hidden"></div>
         </div>
 
@@ -915,14 +915,14 @@
         </div>
 
         <div class="controls" style="justify-content: flex-end;">
-          <button class="action-btn" onclick="generatePaperSizeJson()">Generate JSON</button>
+          <button class="action-btn" id="btn-gen-json">Generate JSON</button>
         </div>
 
         <div class="viewer-box" style="margin-top: 1rem;">
           <pre class="settings-output" id="ps-json-output">// Add paper sizes above and click "Generate JSON".</pre>
         </div>
         <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
-          <button class="action-btn action-btn-secondary" onclick="downloadPaperSizeJson()">Download JSON File</button>
+          <button class="action-btn action-btn-secondary" id="btn-dl-json">Download JSON File</button>
         </div>
       </div>
       
@@ -1046,7 +1046,6 @@
 
         const ext = file.name.split('.').pop().toLowerCase();
         
-        // AutoCAD CTB check
         if (ext === 'ctb') {
           showValidatorResult(resultDiv, 'error', `
             <strong>✗ Invalid Format:</strong> ${file.name} is an AutoCAD .ctb file (Binary).
@@ -1062,10 +1061,8 @@
         try {
           const buffer = await file.arrayBuffer();
           const bytes = new Uint8Array(buffer);
-          
           let errors = [];
 
-          // 1. Check for binary content (null bytes)
           if (bytes.includes(0)) {
             const nullIndexes = [];
             for (let idx = 0; idx < bytes.length; idx++) {
@@ -1086,7 +1083,6 @@
               line: 'File Encoding',
               desc: `File contains characters that are incompatible with standard UTF-8 text encoding (${decErr.message}).`
             });
-            // Fallback decode for inspection
             text = new TextDecoder('iso-8859-1').decode(bytes);
           }
 
@@ -1103,7 +1099,6 @@
             "linecap", "envr_variable", "envr_value", "pen", "section", "map"
           ]);
 
-          // 2. Scan line by line
           for (let i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
             if (!line || line.startsWith('!') || line.startsWith('#')) continue;
@@ -1149,11 +1144,9 @@
             });
           }
 
-          // 3. Render precise detailed breakdown results
           if (errors.length > 0) {
             let errorHtml = `<strong>✗ Invalid:</strong> ${file.name} failed strict MicroStation pen table requirements. Here is the exact problem breakdown:`;
             errorHtml += `<ul style="margin: 10px 0 0 20px; padding: 0; font-size: 0.9rem; color: #fca5a5; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">`;
-            
             errors.forEach(err => {
               errorHtml += `<li><strong>[${err.line}]:</strong> ${err.desc}</li>`;
             });
@@ -1202,7 +1195,6 @@
         el.innerHTML = htmlStr;
       }
 
-      // PDF and DGN Viewer Handler with cumulative appending
       document.getElementById('file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -1436,7 +1428,6 @@
         renderDrawingTables(filteredPdf, filteredDgn);
       }
 
-      // Settings File Viewer Handler (.tbl, .pen, .plt, etc.)
       document.getElementById('settings-file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -1574,12 +1565,7 @@
         document.getElementById('toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
       }
 
-      function toggleSettingsViewMode() {
-        displayActiveSettingsContent();
-      }
-
-      // InterPlot CFG Viewer Handler
-      document.getElementById('interplot-file-input').addEventListener('change', async (e) => {
+      document.getElementById('settings-file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
@@ -1708,7 +1694,6 @@
         }
       }
 
-      // Paper Size JSON Generator functions
       function onPresetChange() {
         const preset = document.getElementById('ps-preset').value;
         const nameInput = document.getElementById('ps-name');
@@ -1790,10 +1775,6 @@
         }
 
         warningEl.classList.add('hidden');
-      }
-
-      function onCustomNameInput() {
-        document.getElementById('ps-warning').classList.add('hidden');
       }
 
       function addPaperSizeItem() {
@@ -1887,7 +1868,6 @@
         URL.revokeObjectURL(url);
       }
 
-      // AutoCAD .ctb converter Parser Engine
       const ACI_HEX = {
         1: '#FF0000', 2: '#FFFF00', 3: '#00FF00', 4: '#00FFFF', 
         5: '#0000FF', 6: '#FF00FF', 7: '#000000', 8: '#818181', 9: '#BEBEBE'
@@ -2081,9 +2061,43 @@
         URL.revokeObjectURL(url);
       }
 
-      // Initialize preset size dropdown labels on load
+      // Secure Event Listeners (Safe for packaged Windows apps / CSP)
       window.addEventListener('DOMContentLoaded', () => {
         updateDrawingUnit('MM');
+
+        // Navigation Tabs
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const target = tab.getAttribute('data-tab');
+            if (target) switchTool(target);
+          });
+        });
+
+        // Event bindings for buttons & inputs
+        document.getElementById('pdf-unit-toggle').addEventListener('change', (e) => updateDrawingUnit(e.target.value));
+        document.getElementById('pdf-filter-dimensions').addEventListener('input', filterDrawingTables);
+        document.getElementById('pdf-filter-page-size').addEventListener('change', filterDrawingTables);
+        document.getElementById('pdf-filter-multipage').addEventListener('change', filterDrawingTables);
+
+        document.getElementById('dgn-filter-name').addEventListener('input', filterDrawingTables);
+        document.getElementById('dgn-filter-version').addEventListener('change', filterDrawingTables);
+
+        document.getElementById('settings-view-toggle').addEventListener('change', toggleSettingsViewMode);
+        document.getElementById('cfg-var-search').addEventListener('input', filterCfgVariables);
+
+        document.getElementById('btn-export-pen').addEventListener('click', exportToPenFile);
+        document.getElementById('btn-export-tbl').addEventListener('click', exportToTblFile);
+        document.getElementById('ctb-filter-color').addEventListener('change', filterCtbTable);
+        document.getElementById('ctb-filter-weight').addEventListener('change', filterCtbTable);
+
+        document.getElementById('ps-preset').addEventListener('change', onPresetChange);
+        document.getElementById('ps-unit').addEventListener('change', onUnitChange);
+        document.getElementById('ps-width').addEventListener('input', onCustomDimensionInput);
+        document.getElementById('ps-height').addEventListener('input', onCustomDimensionInput);
+        document.getElementById('ps-name').addEventListener('input', onCustomNameInput);
+        document.getElementById('btn-add-paper').addEventListener('click', addPaperSizeItem);
+        document.getElementById('btn-gen-json').addEventListener('click', generatePaperSizeJson);
+        document.getElementById('btn-dl-json').addEventListener('click', downloadPaperSizeJson);
       });
     </script>
   </body>
