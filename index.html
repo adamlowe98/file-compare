@@ -326,6 +326,7 @@
         word-break: break-all;
       }
 
+      /* Toggle Switch Styles */
       .toggle-container {
         display: flex;
         align-items: center;
@@ -703,6 +704,7 @@
           <h2 class="section-title">Loaded InterPlot CFG Files</h2>
           <div class="file-chip-list" id="interplot-chip-list"></div>
           
+          <!-- InterPlot CFG Variable Quick Read Panel -->
           <div class="cfg-parsed-panel" id="cfg-parsed-panel" style="margin-top: 0; margin-bottom: 1.5rem;">
             <h3>InterPlot CFG Variable Inspector</h3>
             <div style="margin-bottom: 0.75rem;">
@@ -1044,6 +1046,7 @@
 
         const ext = file.name.split('.').pop().toLowerCase();
         
+        // AutoCAD CTB check
         if (ext === 'ctb') {
           showValidatorResult(resultDiv, 'error', `
             <strong>✗ Invalid Format:</strong> ${file.name} is an AutoCAD .ctb file (Binary).
@@ -1062,6 +1065,7 @@
           
           let errors = [];
 
+          // 1. Check for binary content (null bytes)
           if (bytes.includes(0)) {
             const nullIndexes = [];
             for (let idx = 0; idx < bytes.length; idx++) {
@@ -1082,6 +1086,7 @@
               line: 'File Encoding',
               desc: `File contains characters that are incompatible with standard UTF-8 text encoding (${decErr.message}).`
             });
+            // Fallback decode for inspection
             text = new TextDecoder('iso-8859-1').decode(bytes);
           }
 
@@ -1098,6 +1103,7 @@
             "linecap", "envr_variable", "envr_value", "pen", "section", "map"
           ]);
 
+          // 2. Scan line by line
           for (let i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
             if (!line || line.startsWith('!') || line.startsWith('#')) continue;
@@ -1143,6 +1149,7 @@
             });
           }
 
+          // 3. Render precise detailed breakdown results
           if (errors.length > 0) {
             let errorHtml = `<strong>✗ Invalid:</strong> ${file.name} failed strict MicroStation pen table requirements. Here is the exact problem breakdown:`;
             errorHtml += `<ul style="margin: 10px 0 0 20px; padding: 0; font-size: 0.9rem; color: #fca5a5; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">`;
@@ -1195,6 +1202,7 @@
         el.innerHTML = htmlStr;
       }
 
+      // PDF and DGN Viewer Handler with cumulative appending
       document.getElementById('file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -1321,30 +1329,30 @@
 
       function updateDrawingUnit(unit) {
         currentUnit = unit;
-        const dimLabel = document.getElementById('dim-unit-label');
-        const dgnDimLabel = document.getElementById('dgn-dim-unit-label');
-        if (dimLabel) dimLabel.textContent = unit.toLowerCase();
-        if (dgnDimLabel) dgnDimLabel.textContent = unit.toLowerCase();
+        document.getElementById('dim-unit-label').textContent = unit.toLowerCase();
+        document.getElementById('dgn-dim-unit-label').textContent = unit.toLowerCase();
         
         const select = document.getElementById('pdf-filter-page-size');
-        if (select) {
-          const opts = select.options;
-          for (let i = 0; i < opts.length; i++) {
-            let val = opts[i].value;
-            if (val === 'ALL' || val.includes('Extended')) continue;
-            let dims = getDimensionsForSize(val, unit);
-            if (dims) opts[i].text = `${val} (${dims})`;
+        const opts = select.options;
+        for (let i = 0; i < opts.length; i++) {
+          let val = opts[i].value;
+          if (val === 'ALL' || val.includes('Extended')) {
+            continue;
+          }
+          let dims = getDimensionsForSize(val, unit);
+          if (dims) {
+            opts[i].text = `${val} (${dims})`;
           }
         }
         
         const psSelect = document.getElementById('ps-preset');
-        if (psSelect) {
-          const psOpts = psSelect.options;
-          for (let i = 0; i < psOpts.length; i++) {
-            let val = psOpts[i].value;
-            if (val === 'custom') continue;
-            let dims = getDimensionsForSize(val, unit);
-            if (dims) psOpts[i].text = `${val} (${dims})`;
+        const psOpts = psSelect.options;
+        for (let i = 0; i < psOpts.length; i++) {
+          let val = psOpts[i].value;
+          if (val === 'custom') continue;
+          let dims = getDimensionsForSize(val, unit);
+          if (dims) {
+            psOpts[i].text = `${val} (${dims})`;
           }
         }
 
@@ -1373,7 +1381,6 @@
 
       function renderDrawingTables(filteredPdf = allPdfData, filteredDgn = allDgnData) {
         const pdfBody = document.getElementById('pdf-results-body');
-        if (!pdfBody) return;
         pdfBody.innerHTML = '';
         
         filteredPdf.forEach(f => {
@@ -1386,33 +1393,28 @@
           }
           pdfBody.appendChild(tr);
         });
-        const pdfContainer = document.getElementById('pdf-container');
-        if (pdfContainer) pdfContainer.style.display = allPdfData.length > 0 ? 'block' : 'none';
+        document.getElementById('pdf-container').style.display = allPdfData.length > 0 ? 'block' : 'none';
 
         const dgnBody = document.getElementById('dgn-results-body');
-        if (dgnBody) {
-          dgnBody.innerHTML = '';
-          filteredDgn.forEach(f => {
-            const tr = document.createElement('tr');
-            const dims = currentUnit === 'MM' ? `${f.widthMm} x ${f.heightMm}` : `${f.widthIn} x ${f.heightIn}`;
-            tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td>${dims}</td><td><strong>${f.drawingSize}</strong></td><td>${f.formatVersion}</td>`;
-            dgnBody.appendChild(tr);
-          });
-        }
-        const dgnContainer = document.getElementById('dgn-container');
-        if (dgnContainer) dgnContainer.style.display = allDgnData.length > 0 ? 'block' : 'none';
+        dgnBody.innerHTML = '';
+        filteredDgn.forEach(f => {
+          const tr = document.createElement('tr');
+          const dims = currentUnit === 'MM' ? `${f.widthMm} x ${f.heightMm}` : `${f.widthIn} x ${f.heightIn}`;
+          tr.innerHTML = `<td>${f.name}</td><td>${f.sizeString}</td><td>${dims}</td><td><strong>${f.drawingSize}</strong></td><td>${f.formatVersion}</td>`;
+          dgnBody.appendChild(tr);
+        });
+        document.getElementById('dgn-container').style.display = allDgnData.length > 0 ? 'block' : 'none';
 
-        const summaryResults = document.getElementById('results-summary');
-        if (summaryResults) summaryResults.textContent = `Showing ${filteredPdf.length + filteredDgn.length} files`;
+        document.getElementById('results-summary').textContent = `Showing ${filteredPdf.length + filteredDgn.length} files`;
       }
 
       function filterDrawingTables() {
-        const pdfDimQuery = document.getElementById('pdf-filter-dimensions')?.value.toLowerCase() || '';
-        const sizeFilter = document.getElementById('pdf-filter-page-size')?.value || 'ALL';
-        const multipageFilter = document.getElementById('pdf-filter-multipage')?.value || 'ALL';
+        const pdfDimQuery = document.getElementById('pdf-filter-dimensions').value.toLowerCase();
+        const sizeFilter = document.getElementById('pdf-filter-page-size').value;
+        const multipageFilter = document.getElementById('pdf-filter-multipage').value;
 
-        const dgnNameQuery = document.getElementById('dgn-filter-name')?.value.toLowerCase() || '';
-        const dgnVerFilter = document.getElementById('dgn-filter-version')?.value || 'ALL';
+        const dgnNameQuery = document.getElementById('dgn-filter-name').value.toLowerCase();
+        const dgnVerFilter = document.getElementById('dgn-filter-version').value;
 
         const filteredPdf = allPdfData.filter(f => {
           if (f.error) return true;
@@ -1435,24 +1437,21 @@
       }
 
       // Settings File Viewer Handler (.tbl, .pen, .plt, etc.)
-      const settingsFileInput = document.getElementById('settings-file-input');
-      if (settingsFileInput) {
-        settingsFileInput.addEventListener('change', async (e) => {
-          const files = Array.from(e.target.files);
-          if (files.length === 0) return;
+      document.getElementById('settings-file-input').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
 
-          for (let file of files) {
-            if (!loadedSettingsFiles.some(sf => sf.name === file.name)) {
-              const rawText = await file.text();
-              const formattedText = formatSettingsContent(rawText);
-              loadedSettingsFiles.push({ name: file.name, raw: rawText, formatted: formattedText });
-            }
+        for (let file of files) {
+          if (!loadedSettingsFiles.some(sf => sf.name === file.name)) {
+            const rawText = await file.text();
+            const formattedText = formatSettingsContent(rawText);
+            loadedSettingsFiles.push({ name: file.name, raw: rawText, formatted: formattedText });
           }
+        }
 
-          renderSettingsChips();
-          e.target.value = '';
-        });
-      }
+        renderSettingsChips();
+        e.target.value = '';
+      });
 
       function removeSettingsFile(fileName, event) {
         event.stopPropagation();
@@ -1460,8 +1459,7 @@
         renderSettingsChips();
 
         if (loadedSettingsFiles.length === 0) {
-          const settingsViewerContainer = document.getElementById('settings-viewer-container');
-          if (settingsViewerContainer) settingsViewerContainer.classList.add('hidden');
+          document.getElementById('settings-viewer-container').classList.add('hidden');
         }
       }
 
@@ -1523,7 +1521,6 @@
 
       function renderSettingsChips() {
         const list = document.getElementById('file-chip-list');
-        if (!list) return;
         list.innerHTML = '';
         
         let activeFileName = document.querySelector('#tool-settings .file-chip.active')?.getAttribute('data-filename');
@@ -1555,8 +1552,7 @@
         });
 
         if (loadedSettingsFiles.length > 0) {
-          const settingsViewerContainer = document.getElementById('settings-viewer-container');
-          if (settingsViewerContainer) settingsViewerContainer.classList.remove('hidden');
+          document.getElementById('settings-viewer-container').classList.remove('hidden');
           if (!document.querySelector('#tool-settings .file-chip.active') && loadedSettingsFiles.length > 0) {
             list.firstChild.classList.add('active');
           }
@@ -1571,14 +1567,11 @@
         const fileObj = loadedSettingsFiles.find(f => f.name === fileName);
         if (!fileObj) return;
 
-        const isFormatted = document.getElementById('settings-view-toggle')?.checked || false;
-        const outputPre = document.getElementById('settings-output-pre');
-        if (outputPre) outputPre.textContent = isFormatted ? fileObj.formatted : fileObj.raw;
+        const isFormatted = document.getElementById('settings-view-toggle').checked;
+        document.getElementById('settings-output-pre').textContent = isFormatted ? fileObj.formatted : fileObj.raw;
         
-        const rawLabel = document.getElementById('toggle-label-raw');
-        const fmtLabel = document.getElementById('toggle-label-fmt');
-        if (rawLabel) rawLabel.style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
-        if (fmtLabel) fmtLabel.style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
+        document.getElementById('toggle-label-raw').style.color = isFormatted ? 'var(--text-muted)' : 'var(--text-main)';
+        document.getElementById('toggle-label-fmt').style.color = isFormatted ? 'var(--text-main)' : 'var(--text-muted)';
       }
 
       function toggleSettingsViewMode() {
@@ -1586,24 +1579,21 @@
       }
 
       // InterPlot CFG Viewer Handler
-      const interplotFileInput = document.getElementById('interplot-file-input');
-      if (interplotFileInput) {
-        interplotFileInput.addEventListener('change', async (e) => {
-          const files = Array.from(e.target.files);
-          if (files.length === 0) return;
+      document.getElementById('interplot-file-input').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
 
-          for (let file of files) {
-            if (!loadedInterplotFiles.some(sf => sf.name === file.name)) {
-              const rawText = await file.text();
-              const parsedVariables = parseCfgVariables(rawText);
-              loadedInterplotFiles.push({ name: file.name, raw: rawText, variables: parsedVariables });
-            }
+        for (let file of files) {
+          if (!loadedInterplotFiles.some(sf => sf.name === file.name)) {
+            const rawText = await file.text();
+            const parsedVariables = parseCfgVariables(rawText);
+            loadedInterplotFiles.push({ name: file.name, raw: rawText, variables: parsedVariables });
           }
+        }
 
-          renderInterplotChips();
-          e.target.value = '';
-        });
-      }
+        renderInterplotChips();
+        e.target.value = '';
+      });
 
       function removeInterplotFile(fileName, event) {
         event.stopPropagation();
@@ -1611,8 +1601,7 @@
         renderInterplotChips();
 
         if (loadedInterplotFiles.length === 0) {
-          const interplotContainer = document.getElementById('interplot-viewer-container');
-          if (interplotContainer) interplotContainer.classList.add('hidden');
+          document.getElementById('interplot-viewer-container').classList.add('hidden');
         }
       }
 
@@ -1635,7 +1624,6 @@
 
       function renderInterplotChips() {
         const list = document.getElementById('interplot-chip-list');
-        if (!list) return;
         list.innerHTML = '';
         
         let activeFileName = document.querySelector('#tool-interplot .file-chip.active')?.getAttribute('data-filename');
@@ -1667,8 +1655,7 @@
         });
 
         if (loadedInterplotFiles.length > 0) {
-          const interplotViewerContainer = document.getElementById('interplot-viewer-container');
-          if (interplotViewerContainer) interplotViewerContainer.classList.remove('hidden');
+          document.getElementById('interplot-viewer-container').classList.remove('hidden');
           if (!document.querySelector('#tool-interplot .file-chip.active') && loadedInterplotFiles.length > 0) {
             list.firstChild.classList.add('active');
           }
@@ -1683,14 +1670,12 @@
         const fileObj = loadedInterplotFiles.find(f => f.name === fileName);
         if (!fileObj) return;
 
-        const interplotOutput = document.getElementById('interplot-output-pre');
-        if (interplotOutput) interplotOutput.textContent = fileObj.raw;
+        document.getElementById('interplot-output-pre').textContent = fileObj.raw;
         renderCfgVariablesTable(fileObj.variables);
       }
 
       function renderCfgVariablesTable(vars) {
         const tbody = document.getElementById('cfg-var-tbody');
-        if (!tbody) return;
         tbody.innerHTML = '';
 
         if (!vars || vars.length === 0) {
@@ -1698,7 +1683,7 @@
           return;
         }
 
-        const query = document.getElementById('cfg-var-search')?.value.toLowerCase() || '';
+        const query = document.getElementById('cfg-var-search').value.toLowerCase();
         const filtered = vars.filter(v => v.name.toLowerCase().includes(query) || v.value.toLowerCase().includes(query));
 
         if (filtered.length === 0) {
@@ -1725,50 +1710,50 @@
 
       // Paper Size JSON Generator functions
       function onPresetChange() {
-        const preset = document.getElementById('ps-preset')?.value;
+        const preset = document.getElementById('ps-preset').value;
         const nameInput = document.getElementById('ps-name');
         const unitSelect = document.getElementById('ps-unit');
         const widthInput = document.getElementById('ps-width');
         const heightInput = document.getElementById('ps-height');
         const warningEl = document.getElementById('ps-warning');
 
-        if (warningEl) warningEl.classList.add('hidden');
+        warningEl.classList.add('hidden');
 
         if (preset === 'custom') {
-          if (nameInput) nameInput.value = 'Custom_Paper';
+          nameInput.value = 'Custom_Paper';
           return;
         }
 
-        if (nameInput) nameInput.value = preset;
+        nameInput.value = preset;
         if (PRESET_SIZES_MM[preset]) {
           let [wMm, hMm] = PRESET_SIZES_MM[preset];
-          let unit = unitSelect ? unitSelect.value : 'mm';
+          let unit = unitSelect.value;
           if (unit === 'in') {
-            if (widthInput) widthInput.value = (wMm / 25.4).toFixed(2);
-            if (heightInput) heightInput.value = (hMm / 25.4).toFixed(2);
+            widthInput.value = (wMm / 25.4).toFixed(2);
+            heightInput.value = (hMm / 25.4).toFixed(2);
           } else {
-            if (widthInput) widthInput.value = wMm;
-            if (heightInput) heightInput.value = hMm;
+            widthInput.value = wMm;
+            heightInput.value = hMm;
           }
         }
       }
 
       function onUnitChange() {
-        const unit = document.getElementById('ps-unit')?.value;
+        const unit = document.getElementById('ps-unit').value;
         const widthInput = document.getElementById('ps-width');
         const heightInput = document.getElementById('ps-height');
         
-        let w = parseFloat(widthInput?.value);
-        let h = parseFloat(heightInput?.value);
+        let w = parseFloat(widthInput.value);
+        let h = parseFloat(heightInput.value);
 
         if (isNaN(w) || isNaN(h)) return;
 
         if (unit === 'in') {
-          if (widthInput) widthInput.value = (w / 25.4).toFixed(2);
-          if (heightInput) heightInput.value = (h / 25.4).toFixed(2);
+          widthInput.value = (w / 25.4).toFixed(2);
+          heightInput.value = (h / 25.4).toFixed(2);
         } else {
-          if (widthInput) widthInput.value = (w * 25.4).toFixed(1);
-          if (heightInput) heightInput.value = (h * 25.4).toFixed(1);
+          widthInput.value = (w * 25.4).toFixed(1);
+          heightInput.value = (h * 25.4).toFixed(1);
         }
 
         updateDrawingUnit(unit === 'in' ? 'IN' : 'MM');
@@ -1778,9 +1763,9 @@
         const presetSelect = document.getElementById('ps-preset');
         const warningEl = document.getElementById('ps-warning');
         
-        let w = parseFloat(document.getElementById('ps-width')?.value) || 0;
-        let h = parseFloat(document.getElementById('ps-height')?.value) || 0;
-        const unit = document.getElementById('ps-unit')?.value;
+        let w = parseFloat(document.getElementById('ps-width').value) || 0;
+        let h = parseFloat(document.getElementById('ps-height').value) || 0;
+        const unit = document.getElementById('ps-unit').value;
         
         if (unit === 'in') {
           w *= 25.4;
@@ -1796,51 +1781,46 @@
           }
         }
 
-        if (presetSelect) presetSelect.value = matchedPreset;
+        presetSelect.value = matchedPreset;
         if (matchedPreset !== 'custom') {
           const nameInput = document.getElementById('ps-name');
-          if (nameInput && !queuedPaperSizes.some(item => item.name.toLowerCase() === matchedPreset.toLowerCase())) {
+          if (!queuedPaperSizes.some(item => item.name.toLowerCase() === matchedPreset.toLowerCase())) {
             nameInput.value = matchedPreset;
           }
         }
 
-        if (warningEl) warningEl.classList.add('hidden');
+        warningEl.classList.add('hidden');
       }
 
       function onCustomNameInput() {
-        const warningEl = document.getElementById('ps-warning');
-        if (warningEl) warningEl.classList.add('hidden');
+        document.getElementById('ps-warning').classList.add('hidden');
       }
 
       function addPaperSizeItem() {
-        const name = document.getElementById('ps-name')?.value.trim() || 'Custom_Paper';
-        const unit = document.getElementById('ps-unit')?.value || 'mm';
-        const width = parseFloat(document.getElementById('ps-width')?.value) || 0;
-        const height = parseFloat(document.getElementById('ps-height')?.value) || 0;
-        const preset = document.getElementById('ps-preset')?.value || 'custom';
+        const name = document.getElementById('ps-name').value.trim() || 'Custom_Paper';
+        const unit = document.getElementById('ps-unit').value;
+        const width = parseFloat(document.getElementById('ps-width').value) || 0;
+        const height = parseFloat(document.getElementById('ps-height').value) || 0;
+        const preset = document.getElementById('ps-preset').value;
         const warningEl = document.getElementById('ps-warning');
 
         if (preset !== 'custom') {
           const presetAlreadyAdded = queuedPaperSizes.some(item => item.name.toLowerCase() === preset.toLowerCase());
           if (presetAlreadyAdded) {
-            if (warningEl) {
-              warningEl.textContent = `The preset "${preset}" has already been added. Premade page sizes can only be added once.`;
-              warningEl.classList.remove('hidden');
-            }
+            warningEl.textContent = `The preset "${preset}" has already been added. Premade page sizes can only be added once.`;
+            warningEl.classList.remove('hidden');
             return;
           }
         }
 
         const nameExists = queuedPaperSizes.some(item => item.name.toLowerCase() === name.toLowerCase());
         if (nameExists) {
-          if (warningEl) {
-            warningEl.textContent = `A paper size with the name "${name}" has already been added. Duplicate names are not allowed.`;
-            warningEl.classList.remove('hidden');
-          }
+          warningEl.textContent = `A paper size with the name "${name}" has already been added. Duplicate names are not allowed.`;
+          warningEl.classList.remove('hidden');
           return;
         }
 
-        if (warningEl) warningEl.classList.add('hidden');
+        warningEl.classList.add('hidden');
         queuedPaperSizes.push({ name, units: unit, dimensions: { width, height } });
         renderQueuedPaperSizes();
       }
@@ -1848,14 +1828,12 @@
       function removeQueuedPaperSize(index) {
         queuedPaperSizes.splice(index, 1);
         renderQueuedPaperSizes();
-        const warningEl = document.getElementById('ps-warning');
-        if (warningEl) warningEl.classList.add('hidden');
+        document.getElementById('ps-warning').classList.add('hidden');
       }
 
       function renderQueuedPaperSizes() {
         const container = document.getElementById('added-papers-container');
         const tbody = document.getElementById('added-papers-tbody');
-        if (!tbody || !container) return;
         tbody.innerHTML = '';
 
         if (queuedPaperSizes.length === 0) {
@@ -1878,9 +1856,8 @@
       }
 
       function generatePaperSizeJson() {
-        const jsonOutput = document.getElementById('ps-json-output');
         if (queuedPaperSizes.length === 0) {
-          if (jsonOutput) jsonOutput.textContent = '// No paper sizes queued. Please add at least one paper size first.';
+          document.getElementById('ps-json-output').textContent = '// No paper sizes queued. Please add at least one paper size first.';
           return '';
         }
 
@@ -1889,7 +1866,7 @@
         };
 
         const jsonString = JSON.stringify(payload, null, 2);
-        if (jsonOutput) jsonOutput.textContent = jsonString;
+        document.getElementById('ps-json-output').textContent = jsonString;
         return jsonString;
       }
 
@@ -1922,75 +1899,69 @@
         return baseColors[(index - 1) % baseColors.length];
       }
 
-      const ctbFileInput = document.getElementById('ctb-file-input');
-      if (ctbFileInput) {
-        ctbFileInput.addEventListener('change', async (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
+      document.getElementById('ctb-file-input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-          currentLoadedFileName = file.name.replace(/\.[^/.]+$/, "");
-          const buffer = await file.arrayBuffer();
-          const view = new DataView(buffer);
-          activeCtbRows = [];
+        currentLoadedFileName = file.name.replace(/\.[^/.]+$/, "");
+        const buffer = await file.arrayBuffer();
+        const view = new DataView(buffer);
+        activeCtbRows = [];
 
-          const STANDARD_WEIGHTS = [0.00, 0.10, 0.19, 0.26, 0.38, 0.53, 0.75, 1.20];
-          const GREY_SHADES = ['black', 'white', 'grey 20%', 'grey 30%', 'grey 40%', 'grey 50%', 'grey 60%', 'grey 80%', 'grey 90%'];
+        const STANDARD_WEIGHTS = [0.00, 0.10, 0.19, 0.26, 0.38, 0.53, 0.75, 1.20];
+        const GREY_SHADES = ['black', 'white', 'grey 20%', 'grey 30%', 'grey 40%', 'grey 50%', 'grey 60%', 'grey 80%', 'grey 90%'];
 
-          for (let i = 1; i <= 255; i++) {
-            const offset = 128 + (i * 64);
-            let plotColor = 'black';
-            let lineweight = 0.10;
+        for (let i = 1; i <= 255; i++) {
+          const offset = 128 + (i * 64);
+          let plotColor = 'black';
+          let lineweight = 0.10;
 
-            if (offset + 48 < view.byteLength) {
-              const rawWeight = view.getFloat32(offset + 24, true);
-              if (!isNaN(rawWeight) && rawWeight >= 0 && rawWeight <= 5.0) {
-                lineweight = rawWeight;
-              } else {
-                lineweight = STANDARD_WEIGHTS[i % STANDARD_WEIGHTS.length];
-              }
-
-              const colorSelector = view.getUint8(offset + 8);
-              if (colorSelector === 7) {
-                plotColor = 'white';
-              } else if (colorSelector > 2) {
-                plotColor = GREY_SHADES[colorSelector % GREY_SHADES.length];
-              } else {
-                plotColor = 'black';
-              }
+          if (offset + 48 < view.byteLength) {
+            const rawWeight = view.getFloat32(offset + 24, true);
+            if (!isNaN(rawWeight) && rawWeight >= 0 && rawWeight <= 5.0) {
+              lineweight = rawWeight;
             } else {
-              const byteVal = new Uint8Array(buffer)[i % buffer.byteLength] || i;
-              lineweight = STANDARD_WEIGHTS[byteVal % STANDARD_WEIGHTS.length];
-              plotColor = byteVal % 7 === 0 ? 'white' : 'black';
+              lineweight = STANDARD_WEIGHTS[i % STANDARD_WEIGHTS.length];
             }
 
-            const cleanWeight = isNaN(lineweight) || lineweight < 0 ? 0.10 : Number(lineweight.toFixed(2));
-            const formattedWeight = cleanWeight.toFixed(2) + ' mm';
-            const screenHex = getAciColor(i);
-            const textColor = ['2', '4', '7', '9'].includes(String(i % 10)) ? '#000000' : '#FFFFFF';
-
-            activeCtbRows.push({
-              index: i,
-              screenHex: screenHex,
-              textColor: textColor,
-              description: i === 1 || i === 3 || i === 6 || i === 21 ? 'Land F/X-Solid black. Defau...' : '',
-              plotColor: plotColor,
-              weight: formattedWeight,
-              weightVal: cleanWeight
-            });
+            const colorSelector = view.getUint8(offset + 8);
+            if (colorSelector === 7) {
+              plotColor = 'white';
+            } else if (colorSelector > 2) {
+              plotColor = GREY_SHADES[colorSelector % GREY_SHADES.length];
+            } else {
+              plotColor = 'black';
+            }
+          } else {
+            const byteVal = new Uint8Array(buffer)[i % buffer.byteLength] || i;
+            lineweight = STANDARD_WEIGHTS[byteVal % STANDARD_WEIGHTS.length];
+            plotColor = byteVal % 7 === 0 ? 'white' : 'black';
           }
 
-          const ctbTitle = document.getElementById('ctb-file-title');
-          if (ctbTitle) ctbTitle.textContent = `${file.name} / Loaded`;
-          const ctbViewerContainer = document.getElementById('ctb-viewer-container');
-          if (ctbViewerContainer) ctbViewerContainer.classList.remove('hidden');
-          renderCtbTable(activeCtbRows);
-          e.target.value = '';
-        });
-      }
+          const cleanWeight = isNaN(lineweight) || lineweight < 0 ? 0.10 : Number(lineweight.toFixed(2));
+          const formattedWeight = cleanWeight.toFixed(2) + ' mm';
+          const screenHex = getAciColor(i);
+          const textColor = ['2', '4', '7', '9'].includes(String(i % 10)) ? '#000000' : '#FFFFFF';
+
+          activeCtbRows.push({
+            index: i,
+            screenHex: screenHex,
+            textColor: textColor,
+            description: i === 1 || i === 3 || i === 6 || i === 21 ? 'Land F/X-Solid black. Defau...' : '',
+            plotColor: plotColor,
+            weight: formattedWeight,
+            weightVal: cleanWeight
+          });
+        }
+
+        document.getElementById('ctb-file-title').textContent = `${file.name} / Loaded`;
+        document.getElementById('ctb-viewer-container').classList.remove('hidden');
+        renderCtbTable(activeCtbRows);
+        e.target.value = '';
+      });
 
       function renderCtbTable(rows) {
         const tbody = document.getElementById('ctb-table-body');
-        if (!tbody) return;
         tbody.innerHTML = '';
 
         rows.forEach(r => {
@@ -2024,8 +1995,8 @@
       }
 
       function filterCtbTable() {
-        const cFilter = document.getElementById('ctb-filter-color')?.value || 'ALL';
-        const wFilter = document.getElementById('ctb-filter-weight')?.value || 'ALL';
+        const cFilter = document.getElementById('ctb-filter-color').value;
+        const wFilter = document.getElementById('ctb-filter-weight').value;
 
         const filtered = activeCtbRows.filter(r => {
           if (cFilter !== 'ALL' && r.plotColor !== cFilter) return false;
@@ -2110,6 +2081,7 @@
         URL.revokeObjectURL(url);
       }
 
+      // Initialize preset size dropdown labels on load
       window.addEventListener('DOMContentLoaded', () => {
         updateDrawingUnit('MM');
       });
