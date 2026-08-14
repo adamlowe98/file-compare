@@ -500,6 +500,7 @@
         <button class="nav-tab" id="tab-interplot" onclick="switchTool('interplot')">InterPlot CFG Viewer</button>
         <button class="nav-tab" id="tab-ctb" onclick="switchTool('ctb')">AutoCAD .ctb converter</button>
         <button class="nav-tab" id="tab-papersize" onclick="switchTool('papersize')">Paper Size JSON Generator</button>
+        <button class="nav-tab" id="tab-validator" onclick="switchTool('validator')">File Validator</button>
       </div>
 
       <!-- PDF AND DGN VIEWER TOOL -->
@@ -924,6 +925,23 @@
           <button class="action-btn action-btn-secondary" onclick="downloadPaperSizeJson()">Download JSON File</button>
         </div>
       </div>
+      
+      <!-- FILE VALIDATOR TOOL -->
+      <div id="tool-validator" class="tool-section">
+        <section class="upload-section">
+          <input type="file" id="validator-file-input" accept=".tbl,.pen,.ctb" />
+          <label for="validator-file-input" class="upload-btn">Upload .tbl, .pen, or .ctb File</label>
+          <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
+            Verify if a file is a valid MicroStation Pen Table configuration.
+          </p>
+        </section>
+
+        <div id="validator-result-container" class="hidden">
+          <h2 class="section-title">Validation Result</h2>
+          <div id="validationResult" style="padding: 15px; border-radius: 8px; margin-top: 1rem; font-size: 1.05rem;">
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -1000,13 +1018,60 @@
       };
 
       function switchTool(toolName) {
-        ['drawings', 'settings', 'interplot', 'ctb', 'papersize'].forEach(t => {
-          document.getElementById(`tab-${t}`).classList.remove('active');
-          document.getElementById(`tool-${t}`).classList.remove('active');
+        ['drawings', 'settings', 'interplot', 'ctb', 'papersize', 'validator'].forEach(t => {
+          const tab = document.getElementById(`tab-${t}`);
+          const section = document.getElementById(`tool-${t}`);
+          if (tab) tab.classList.remove('active');
+          if (section) section.classList.remove('active');
         });
         document.getElementById(`tab-${toolName}`).classList.add('active');
         document.getElementById(`tool-${toolName}`).classList.add('active');
       }
+
+      // File Validator Logic
+      document.getElementById('validator-file-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        const resultContainer = document.getElementById('validator-result-container');
+        const resultDiv = document.getElementById('validationResult');
+        resultContainer.classList.remove('hidden');
+
+        reader.onload = function(event) {
+          const buffer = new Uint8Array(event.target.result);
+          
+          // Get the first 100 bytes as string for text signature checking
+          const headerText = new TextDecoder().decode(buffer.slice(0, 100));
+          
+          // Logic: MicroStation .pen/.tbl usually contain "PEN_TABLE", "SECTION", or similar structured tags
+          const isMicroStation = headerText.includes("PEN_TABLE") || headerText.includes("SECTION") || headerText.includes("MAP");
+          
+          // AutoCAD .ctb binary signature check (often starts with 0x00 0x00 0x00 0x01 or similar non-text headers)
+          const isCTB = (buffer[0] === 0x00 && buffer[1] === 0x00 && buffer[2] === 0x00 && buffer[3] === 0x01) || file.name.toLowerCase().endsWith('.ctb');
+
+          if (isMicroStation) {
+            resultDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.15)'; // light green bg
+            resultDiv.style.border = '1px solid #10b981';
+            resultDiv.style.color = '#34d399';
+            resultDiv.innerHTML = `<strong>✓ Valid:</strong> ${file.name} is a recognized MicroStation Pen Table file.`;
+          } else if (isCTB) {
+            resultDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.15)'; // light red bg
+            resultDiv.style.border = '1px solid #ef4444';
+            resultDiv.style.color = '#fca5a5';
+            resultDiv.innerHTML = `<strong>✗ Invalid:</strong> ${file.name} was detected as an AutoCAD .ctb file. MicroStation requires a Pen Table (.pen/.tbl) format.`;
+          } else {
+            resultDiv.style.backgroundColor = 'rgba(245, 158, 11, 0.15)'; // light orange bg
+            resultDiv.style.border = '1px solid #f59e0b';
+            resultDiv.style.color = '#fbbf24';
+            resultDiv.innerHTML = `<strong>✗ Invalid:</strong> Format not recognized for ${file.name}. No MicroStation signatures found.<br><br><small style="color: var(--text-muted); font-family: monospace;">Debug Bytes: ${buffer.slice(0, 8).join(' ')}</small>`;
+          }
+        };
+        reader.readAsArrayBuffer(file);
+        
+        // Reset input so the same file can be selected again
+        e.target.value = '';
+      });
 
       // PDF and DGN Viewer Handler with cumulative appending
       document.getElementById('file-input').addEventListener('change', async (e) => {
