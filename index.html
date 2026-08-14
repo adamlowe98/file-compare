@@ -26,7 +26,7 @@
       }
 
       .container {
-        max-width: 1150px;
+        max-width: 1200px;
         margin: 0 auto;
         background: var(--card-bg);
         padding: 2.5rem;
@@ -84,25 +84,25 @@
       .nav-tabs {
         display: flex;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 0.4rem;
         margin-bottom: 2rem;
         flex-wrap: nowrap;
-        overflow-x: auto;
         width: 100%;
-        padding-bottom: 0.25rem;
       }
 
       .nav-tab {
         background-color: #0f172a;
         color: var(--text-muted);
         border: 1px solid var(--border);
-        padding: 0.6rem 0.85rem;
+        padding: 0.6rem 0.75rem;
         border-radius: 8px;
         cursor: pointer;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         white-space: nowrap;
         transition: all 0.2s;
+        flex: 1;
+        text-align: center;
       }
 
       .nav-tab.active {
@@ -504,12 +504,12 @@
       </header>
 
       <div class="nav-tabs">
-        <button class="nav-tab active" id="tab-drawings" onclick="switchTool('drawings')">PDF and DGN viewer</button>
-        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Settings File Viewer</button>
-        <button class="nav-tab" id="tab-interplot" onclick="switchTool('interplot')">InterPlot CFG Viewer</button>
-        <button class="nav-tab" id="tab-ctb" onclick="switchTool('ctb')">AutoCAD .ctb converter</button>
-        <button class="nav-tab" id="tab-papersize" onclick="switchTool('papersize')">Paper Size JSON Generator</button>
-        <button class="nav-tab" id="tab-validator" onclick="switchTool('validator')">File Validator</button>
+        <button class="nav-tab active" id="tab-drawings" onclick="switchTool('drawings')">PDF & DGN</button>
+        <button class="nav-tab" id="tab-settings" onclick="switchTool('settings')">Settings Viewer</button>
+        <button class="nav-tab" id="tab-interplot" onclick="switchTool('interplot')">InterPlot CFG</button>
+        <button class="nav-tab" id="tab-ctb" onclick="switchTool('ctb')">AutoCAD .ctb</button>
+        <button class="nav-tab" id="tab-papersize" onclick="switchTool('papersize')">Paper Size JSON</button>
+        <button class="nav-tab" id="tab-validator" onclick="switchTool('validator')">MS Pen File Validator</button>
       </div>
 
       <!-- PDF AND DGN VIEWER TOOL -->
@@ -941,15 +941,15 @@
       <!-- FILE VALIDATOR TOOL -->
       <div id="tool-validator" class="tool-section">
         <section class="upload-section">
-          <input type="file" id="validator-file-input" accept=".tbl,.pen,.ctb,.txt" />
-          <label for="validator-file-input" class="upload-btn">Upload .tbl, .pen, or Configuration File</label>
+          <input type="file" id="validator-file-input" accept=".tbl,.pen,.ctb" />
+          <label for="validator-file-input" class="upload-btn">Upload .tbl, .pen, or .ctb File</label>
           <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
-            Inspect every line of your file with real-time green/red syntax status matching.
+            Only .tbl, .pen, and .ctb files are accepted for validation and inspection.
           </p>
         </section>
 
         <div id="validator-result-container" class="hidden">
-          <h2 class="section-title">Line-by-Line Validation Result</h2>
+          <h2 class="section-title">Validation Result</h2>
           <div id="validationResult" style="margin-top: 1rem;">
           </div>
         </div>
@@ -1040,7 +1040,7 @@
         document.getElementById(`tool-${toolName}`).classList.add('active');
       }
 
-      // Enhanced Line-by-Line MicroStation .pen / .tbl File Validator with full scripting support
+      // Strict File Validator Handler (Limited strictly to .tbl, .pen, and .ctb)
       document.getElementById('validator-file-input').addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -1049,9 +1049,19 @@
         const resultDiv = document.getElementById('validationResult');
         resultContainer.classList.remove('hidden');
 
-        resultDiv.innerHTML = '<div style="color: var(--text-muted); padding: 10px;">Scanning and analyzing file line-by-line...</div>';
-
         const ext = file.name.split('.').pop().toLowerCase();
+
+        // Strict extension enforcement
+        if (ext !== 'tbl' && ext !== 'pen' && ext !== 'ctb') {
+          resultDiv.innerHTML = `
+            <div style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 1rem; border-radius: 6px;">
+              <strong>✗ Invalid File Type:</strong> Only .tbl, .pen, and .ctb files are accepted by the file validator tool.
+            </div>`;
+          e.target.value = '';
+          return;
+        }
+
+        resultDiv.innerHTML = '<div style="color: var(--text-muted); padding: 10px;">Scanning and analyzing file line-by-line...</div>';
 
         try {
           const buffer = await file.arrayBuffer();
@@ -1070,27 +1080,22 @@
           const lines = text.split(/\r?\n/);
           
           const validKeywords = new Set([
-            // Metadata & Structural blocks
             "pen_table_description", "description", "version", "author", "date", "title", "comments",
             "section", "map", "pen", "element_search_criteria", "element_output_actions",
             "criteria", "actions", "match", "action", "block", "rule", "filter", "group", "item",
             "header_block", "endheader", "footer_block", "endfooter",
-            // Conditional / Scripting statements
             "if", "then", "else", "elseif", "endif",
-            // Element selection properties
             "color", "weight", "style", "level", "class", "type", "file", "design_file",
             "font", "text_string", "text", "cell", "pattern", "shared_cell", "line", "arc",
             "ellipse", "polygon", "b_spline", "mesh", "surface", "solid", "dimension", "point",
             "tag", "attribute", "line_code", "line_style", "view", "view_number", "element",
             "entity", "closed", "filled", "thickness", "priority", "z_order", "layer", "name",
-            // Output Actions & Properties
             "output_color", "output_weight", "output_style", "output_level", "rgb",
             "map_color", "map_weight", "boundary_color", "boundary_weight", "fill_color",
             "endcap", "linejoin", "linecap", "screening", "screening_percent", "transparency",
             "raster", "font_mapping", "text_substitution", "style_mapping", "weight_mapping",
             "color_mapping", "level_mapping", "scale", "offset", "rotation", "dash", "gap",
             "min_weight", "max_weight", "min_color", "max_color", "rgb_color", "output_rgb",
-            // Environment variables, parameters & operators
             "envr_variable", "envr_value", "variable", "value", "setting", "option",
             "operator", "range", "from", "to", "and", "or", "not", "true", "false", "yes", "no"
           ]);
@@ -1159,7 +1164,7 @@
           let summaryBanner = '';
           if (errorCount === 0) {
             summaryBanner = `<div style="background-color: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-              <strong>✓ Valid MicroStation Pen Table:</strong> ${file.name} passed all line-by-line checks (${lines.length} lines scanned, ${validCount} valid statements).
+              <strong>✓ Valid Pen / Table File:</strong> ${file.name} passed all line-by-line checks (${lines.length} lines scanned, ${validCount} valid statements).
             </div>`;
           } else {
             summaryBanner = `<div style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
