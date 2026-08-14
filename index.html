@@ -1028,7 +1028,7 @@
         document.getElementById(`tool-${toolName}`).classList.add('active');
       }
 
-      // In-Depth Detailed File Validator Logic
+      // In-Depth File Validator Logic
       document.getElementById('validator-file-input').addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -1037,6 +1037,7 @@
         const resultDiv = document.getElementById('validationResult');
         resultContainer.classList.remove('hidden');
 
+        // Loading state
         resultDiv.style.backgroundColor = 'rgba(15, 23, 42, 0.5)';
         resultDiv.style.border = '1px solid var(--border)';
         resultDiv.style.color = 'var(--text-muted)';
@@ -1046,13 +1047,7 @@
         
         // AutoCAD CTB check
         if (ext === 'ctb') {
-          showValidatorResult(resultDiv, 'error', `
-            <strong>✗ Invalid Format:</strong> ${file.name} is an AutoCAD .ctb file (Binary).
-            <ul style="margin: 8px 0 0 20px; font-size: 0.9rem; color: #fca5a5;">
-              <li><strong>Issue:</strong> AutoCAD color-dependent plot styles (.ctb) use a proprietary binary layout.</li>
-              <li><strong>Requirement:</strong> MicroStation pen tables require text-based format (.pen or .tbl). Use the "AutoCAD .ctb converter" tool tab to convert this file first.</li>
-            </ul>
-          `);
+          showValidatorResult(resultDiv, 'error', `<strong>✗ Invalid Format:</strong> ${file.name} is an AutoCAD .ctb file (Binary). MicroStation requires text-based .pen or .tbl files.`);
           e.target.value = '';
           return;
         }
@@ -1061,37 +1056,21 @@
           const buffer = await file.arrayBuffer();
           const bytes = new Uint8Array(buffer);
           
-          let errors = [];
-
           // 1. Check for binary content (null bytes)
           if (bytes.includes(0)) {
-            const nullIndexes = [];
-            for (let idx = 0; idx < bytes.length; idx++) {
-              if (bytes[idx] === 0) nullIndexes.push(idx);
-              if (nullIndexes.length >= 3) break;
-            }
-            errors.push({
-              line: 'Binary Header / Content',
-              desc: `Found null byte (<code>0x00</code>) binary markers at offset byte position(s): ${nullIndexes.join(', ')}. MicroStation .pen/.tbl files must contain plain text only.`
-            });
+            showValidatorResult(resultDiv, 'error', `<strong>✗ Invalid Content:</strong> ${file.name} contains binary data. MicroStation .pen files must be plain text.`);
+            e.target.value = '';
+            return;
           }
 
-          let text = "";
-          try {
-            text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-          } catch (decErr) {
-            errors.push({
-              line: 'File Encoding',
-              desc: `File contains characters that are incompatible with standard UTF-8 text encoding (${decErr.message}).`
-            });
-            // Fallback decode for inspection
-            text = new TextDecoder('iso-8859-1').decode(bytes);
-          }
-
+          const text = new TextDecoder().decode(bytes);
           const lines = text.split(/\r?\n/);
+          
+          let errors = [];
           let braceDepth = 0;
           let validKeywordsFound = 0;
 
+          // 2. Standard MicroStation Pen Table / Interplot keywords dictionary
           const validKeywords = new Set([
             "pen_table_description", "element_search_criteria", "element_output_actions",
             "color", "weight", "style", "level", "class", "type", "file", "design_file",
@@ -1101,88 +1080,74 @@
             "linecap", "envr_variable", "envr_value", "pen", "section", "map"
           ]);
 
-          // 2. Scan line by line
+          // 3. Scan file line-by-line
           for (let i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
+            
+            // Skip comments and empty lines (! and # are valid comment prefixes)
             if (!line || line.startsWith('!') || line.startsWith('#')) continue;
 
+            // Track block structures (braces)
             if (line.includes('{')) braceDepth += (line.match(/\{/g) || []).length;
             if (line.includes('}')) braceDepth -= (line.match(/\}/g) || []).length;
             
             if (braceDepth < 0) {
-              errors.push({
-                line: `Line ${i + 1}`,
-                desc: `Unmatched closing brace '}' found without a corresponding opening block.`
-              });
-              braceDepth = 0;
+              errors.push(`Line ${i + 1}: Unmatched closing brace '}'.`);
+              braceDepth = 0; // reset to avoid cascading false positives
             }
 
+            // Extract the leading keyword (e.g., "color(1)" -> "color", "pen_table_description" -> "pen_table_description")
             const match = line.match(/^([a-zA-Z0-9_]+)/);
             if (match) {
               const keyword = match[1].toLowerCase();
               if (validKeywords.has(keyword)) {
                 validKeywordsFound++;
               } else {
+                // If it's completely unrecognized syntax that doesn't look like a standard assignment or block
                 if (!line.includes('=') && !line.includes('{') && line !== '}') {
-                  errors.push({
-                    line: `Line ${i + 1}`,
-                    desc: `Unrecognized keyword or malformed statement: <code>"${line.substring(0, 50)}"</code>`
-                  });
+                   errors.push(`Line ${i + 1}: Unrecognized syntax or invalid keyword -> "${keyword}"`);
                 }
               }
             } else {
+              // Lines that don't start with a letter/number and aren't just closing braces
               if (line !== '}') {
-                errors.push({
-                  line: `Line ${i + 1}`,
-                  desc: `Invalid line syntax format: <code>"${line.substring(0, 50)}"</code>`
-                });
+                errors.push(`Line ${i + 1}: Invalid syntax -> "${line.substring(0, 40)}..."`);
               }
             }
           }
 
+          // 4. Final Structure Checks
           if (braceDepth > 0) {
-            errors.push({
-              line: 'End of File',
-              desc: `Missing ${braceDepth} closing brace(s) '}' to properly close open property blocks.`
-            });
+            errors.push(`End of File: Missing ${braceDepth} closing brace(s) '}'.`);
           }
 
-          // 3. Render precise detailed breakdown results
+          // 5. Output Generation
           if (errors.length > 0) {
-            let errorHtml = `<strong>✗ Invalid:</strong> ${file.name} failed strict MicroStation pen table requirements. Here is the exact problem breakdown:`;
-            errorHtml += `<ul style="margin: 10px 0 0 20px; padding: 0; font-size: 0.9rem; color: #fca5a5; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">`;
+            let errorHtml = `<strong>✗ Invalid:</strong> ${file.name} does not meet strict MicroStation .pen/.tbl requirements.<br><br><ul style="margin-top: 10px; margin-bottom: 0; padding-left: 20px; font-size: 0.9rem; color: #fca5a5; max-height: 200px; overflow-y: auto;">`;
             
-            errors.forEach(err => {
-              errorHtml += `<li><strong>[${err.line}]:</strong> ${err.desc}</li>`;
+            // Show up to 15 errors so we don't crash the UI on massive garbage files
+            errors.slice(0, 15).forEach(err => {
+              errorHtml += `<li>${err}</li>`;
             });
+            
+            if (errors.length > 15) errorHtml += `<li>...and ${errors.length - 15} more syntax errors.</li>`;
             errorHtml += `</ul>`;
+            
             showValidatorResult(resultDiv, 'error', errorHtml);
           } else if (validKeywordsFound === 0) {
-            showValidatorResult(resultDiv, 'warning', `
-              <strong>⚠ Warning:</strong> ${file.name} is a readable text file, but contains no recognized MicroStation configuration tags or pen table blocks.
-              <ul style="margin: 6px 0 0 20px; font-size: 0.85rem; color: #fbbf24;">
-                <li><strong>Checked lines:</strong> ${lines.length} lines parsed.</li>
-                <li><strong>Keywords found:</strong> 0 valid MicroStation attributes detected. Ensure this is an active .pen or .tbl file.</li>
-              </ul>
-            `);
+            showValidatorResult(resultDiv, 'warning', `<strong>⚠ Warning:</strong> ${file.name} is structurally a text file, but no valid MicroStation pen table criteria or actions were found inside.`);
           } else {
-            showValidatorResult(resultDiv, 'success', `
-              <strong>✓ Valid:</strong> ${file.name} successfully passed all MicroStation configuration rules.
-              <ul style="margin: 6px 0 0 20px; font-size: 0.85rem; color: #34d399;">
-                <li><strong>Total Lines:</strong> ${lines.length} lines scanned.</li>
-                <li><strong>Matched Tags:</strong> ${validKeywordsFound} valid configuration keywords verified.</li>
-                <li><strong>Block Integrity:</strong> Curly braces `{}` and assignments are properly structured.</li>
-              </ul>
-            `);
+            showValidatorResult(resultDiv, 'success', `<strong>✓ Valid:</strong> ${file.name} successfully passed all MicroStation syntax checks.<br><small style="opacity: 0.8; display: block; margin-top: 5px;">Scanned ${lines.length} lines, validated ${validKeywordsFound} configuration tags.</small>`);
           }
 
         } catch (err) {
-          showValidatorResult(resultDiv, 'error', `<strong>✗ Read Error:</strong> Could not parse file contents (${err.message}).`);
+          showValidatorResult(resultDiv, 'error', `<strong>✗ Error reading file:</strong> ${err.message}`);
         }
 
         e.target.value = '';
       });
 
+      // Helper function for styling the output box
       function showValidatorResult(el, type, htmlStr) {
         if (type === 'error') {
           el.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
@@ -1343,6 +1308,7 @@
           }
         }
         
+        // Also update JSON generator dropdown labels
         const psSelect = document.getElementById('ps-preset');
         const psOpts = psSelect.options;
         for (let i = 0; i < psOpts.length; i++) {
@@ -1754,6 +1720,7 @@
           heightInput.value = (h * 25.4).toFixed(1);
         }
 
+        // Also sync dropdown text for units
         updateDrawingUnit(unit === 'in' ? 'IN' : 'MM');
       }
 
