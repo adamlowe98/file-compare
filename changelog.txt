@@ -1,0 +1,48 @@
+ALL-IN-ONE PLOTTING TOOL
+================================================================================
+
+CHANGELOG - VERSION 2.0.1 (LATEST RELEASE)
+--------------------------------------------------------------------------------
+
+1. INTRODUCTION OF THE MS PEN FILE VALIDATOR (NEW FEATURE)
+--------------------------------------------------------------------------------
+- Brand New Tool Addition:
+  * Introduced the MS Pen File Validator tool as a brand-new addition to the application suite, 
+    designed to inspect configuration files with real-time green/red syntax status matching.
+- Strict Format Enforcement:
+  * Restricted file upload inputs exclusively to three formats: MicroStation pen tables (.pen), 
+    printer lookup tables (.tbl), and AutoCAD color-dependent plot style tables (.ctb).
+- Instant Error Handling & Blocking:
+  * Added active interception for any unauthorized file extension. Upload attempts using 
+    unsupported formats immediately halt parsing execution.
+  * Implemented inline warning notification blocks dynamically injected into the UI to 
+    alert users of file type rejections.
+  * Added automatic input flushing (`e.target.value = ''`) upon invalid file detection 
+    to clear cache states and allow immediate re-uploads.
+- Syntax Verification Engine:
+  * Integrated a line-by-line scanner that evaluates MicroStation configuration syntax, 
+    tracks comment prefixes (!, #, ;), and validates structural brace pairing ({, }).
+
+
+2. NAVIGATION BAR & UI LAYOUT OVERHAUL
+--------------------------------------------------------------------------------
+- Single-Row Flex Alignment:
+  * Restructured the top navigation wrapper container (`.nav-tabs`) and child elements 
+    (`.nav-tab`) to seamlessly integrate the new MS Pen File Validator tab without responsive wrapping.
+  * Applied flex-grow properties (`flex: 1`) and text-align centering to distribute 
+    horizontal space evenly across all six tool tabs.
+- Padding & Compact Sizing:
+  * Reduced horizontal gaps (`0.4rem`) and adjusted padding dimensions (`0.6rem 0.75rem`) 
+    so the validator and neighboring tabs fit cleanly within a single horizontal row.
+  * Scaled font typography slightly (`0.8rem`) to preserve visual proportions across 
+    compact viewports.
+
+
+3. HELPER INSTRUCTIONS & TEXT COPY UPDATES
+--------------------------------------------------------------------------------
+- Drop-Zone Labeling:
+  * Added helper text and sub-labels inside the new MS Pen File Validator upload card to 
+    explicitly inform users of the enforced .tbl, .pen, and .ctb constraints.
+- Streamlined Tab Text:
+  * Shortened button labels across navigation tabs to maintain structural balance 
+    and prevent text truncation.
