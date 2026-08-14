@@ -1028,7 +1028,7 @@
         document.getElementById(`tool-${toolName}`).classList.add('active');
       }
 
-      // Enhanced Line-by-Line MicroStation .pen / .tbl File Validator
+      // Enhanced Line-by-Line MicroStation .pen / .tbl File Validator with full scripting support
       document.getElementById('validator-file-input').addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -1067,20 +1067,27 @@
           const lines = text.split(/\r?\n/);
           
           const validKeywords = new Set([
+            // Metadata & Structural blocks
             "pen_table_description", "description", "version", "author", "date", "title", "comments",
             "section", "map", "pen", "element_search_criteria", "element_output_actions",
             "criteria", "actions", "match", "action", "block", "rule", "filter", "group", "item",
+            "header_block", "endheader", "footer_block", "endfooter",
+            // Conditional / Scripting statements
+            "if", "then", "else", "elseif", "endif",
+            // Element selection properties
             "color", "weight", "style", "level", "class", "type", "file", "design_file",
             "font", "text_string", "text", "cell", "pattern", "shared_cell", "line", "arc",
             "ellipse", "polygon", "b_spline", "mesh", "surface", "solid", "dimension", "point",
             "tag", "attribute", "line_code", "line_style", "view", "view_number", "element",
             "entity", "closed", "filled", "thickness", "priority", "z_order", "layer", "name",
+            // Output Actions & Properties
             "output_color", "output_weight", "output_style", "output_level", "rgb",
             "map_color", "map_weight", "boundary_color", "boundary_weight", "fill_color",
             "endcap", "linejoin", "linecap", "screening", "screening_percent", "transparency",
             "raster", "font_mapping", "text_substitution", "style_mapping", "weight_mapping",
             "color_mapping", "level_mapping", "scale", "offset", "rotation", "dash", "gap",
             "min_weight", "max_weight", "min_color", "max_color", "rgb_color", "output_rgb",
+            // Environment variables, parameters & operators
             "envr_variable", "envr_value", "variable", "value", "setting", "option",
             "operator", "range", "from", "to", "and", "or", "not", "true", "false", "yes", "no"
           ]);
