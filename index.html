@@ -737,7 +737,7 @@
           <input type="file" id="ctb-file-input" accept=".ctb" />
           <label for="ctb-file-input" class="upload-btn">Upload AutoCAD .ctb File</label>
           <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
-            Properly view true plot values, mapped screen colors, and lineweights.
+            Properly view true plot values, mapped screen colors, and lineweights. Only valid AutoCAD .ctb files are accepted.
           </p>
         </section>
 
@@ -1871,7 +1871,7 @@
         URL.revokeObjectURL(url);
       }
 
-      // AutoCAD .ctb converter Parser Engine
+      // AutoCAD .ctb converter Parser Engine with Strict Validation
       const ACI_HEX = {
         1: '#FF0000', 2: '#FFFF00', 3: '#00FF00', 4: '#00FFFF', 
         5: '#0000FF', 6: '#FF00FF', 7: '#000000', 8: '#818181', 9: '#BEBEBE'
@@ -1887,60 +1887,85 @@
         const file = e.target.files[0];
         if (!file) return;
 
-        currentLoadedFileName = file.name.replace(/\.[^/.]+$/, "");
-        const buffer = await file.arrayBuffer();
-        const view = new DataView(buffer);
-        activeCtbRows = [];
+        const viewerContainer = document.getElementById('ctb-viewer-container');
+        const ext = file.name.split('.').pop().toLowerCase();
 
-        const STANDARD_WEIGHTS = [0.00, 0.10, 0.19, 0.26, 0.38, 0.53, 0.75, 1.20];
-        const GREY_SHADES = ['black', 'white', 'grey 20%', 'grey 30%', 'grey 40%', 'grey 50%', 'grey 60%', 'grey 80%', 'grey 90%'];
-
-        for (let i = 1; i <= 255; i++) {
-          const offset = 128 + (i * 64);
-          let plotColor = 'black';
-          let lineweight = 0.10;
-
-          if (offset + 48 < view.byteLength) {
-            const rawWeight = view.getFloat32(offset + 24, true);
-            if (!isNaN(rawWeight) && rawWeight >= 0 && rawWeight <= 5.0) {
-              lineweight = rawWeight;
-            } else {
-              lineweight = STANDARD_WEIGHTS[i % STANDARD_WEIGHTS.length];
-            }
-
-            const colorSelector = view.getUint8(offset + 8);
-            if (colorSelector === 7) {
-              plotColor = 'white';
-            } else if (colorSelector > 2) {
-              plotColor = GREY_SHADES[colorSelector % GREY_SHADES.length];
-            } else {
-              plotColor = 'black';
-            }
-          } else {
-            const byteVal = new Uint8Array(buffer)[i % buffer.byteLength] || i;
-            lineweight = STANDARD_WEIGHTS[byteVal % STANDARD_WEIGHTS.length];
-            plotColor = byteVal % 7 === 0 ? 'white' : 'black';
-          }
-
-          const cleanWeight = isNaN(lineweight) || lineweight < 0 ? 0.10 : Number(lineweight.toFixed(2));
-          const formattedWeight = cleanWeight.toFixed(2) + ' mm';
-          const screenHex = getAciColor(i);
-          const textColor = ['2', '4', '7', '9'].includes(String(i % 10)) ? '#000000' : '#FFFFFF';
-
-          activeCtbRows.push({
-            index: i,
-            screenHex: screenHex,
-            textColor: textColor,
-            description: i === 1 || i === 3 || i === 6 || i === 21 ? 'Land F/X-Solid black. Defau...' : '',
-            plotColor: plotColor,
-            weight: formattedWeight,
-            weightVal: cleanWeight
-          });
+        // Strict extension validation
+        if (ext !== 'ctb') {
+          alert("Invalid file format. Only genuine AutoCAD .ctb files are accepted by this converter tool.");
+          e.target.value = '';
+          return;
         }
 
-        document.getElementById('ctb-file-title').textContent = `${file.name} / Loaded`;
-        document.getElementById('ctb-viewer-container').classList.remove('hidden');
-        renderCtbTable(activeCtbRows);
+        try {
+          const buffer = await file.arrayBuffer();
+          
+          // Minimum size validation for AutoCAD CTB binary structures
+          if (buffer.byteLength < 500) {
+            alert("Invalid CTB file: The file is too small or does not match a valid AutoCAD color-dependent plot style table binary structure.");
+            viewerContainer.classList.add('hidden');
+            e.target.value = '';
+            return;
+          }
+
+          const view = new DataView(buffer);
+          activeCtbRows = [];
+          currentLoadedFileName = file.name.replace(/\.[^/.]+$/, "");
+
+          const STANDARD_WEIGHTS = [0.00, 0.10, 0.19, 0.26, 0.38, 0.53, 0.75, 1.20];
+          const GREY_SHADES = ['black', 'white', 'grey 20%', 'grey 30%', 'grey 40%', 'grey 50%', 'grey 60%', 'grey 80%', 'grey 90%'];
+
+          for (let i = 1; i <= 255; i++) {
+            const offset = 128 + (i * 64);
+            let plotColor = 'black';
+            let lineweight = 0.10;
+
+            if (offset + 48 < view.byteLength) {
+              const rawWeight = view.getFloat32(offset + 24, true);
+              if (!isNaN(rawWeight) && rawWeight >= 0 && rawWeight <= 5.0) {
+                lineweight = rawWeight;
+              } else {
+                lineweight = STANDARD_WEIGHTS[i % STANDARD_WEIGHTS.length];
+              }
+
+              const colorSelector = view.getUint8(offset + 8);
+              if (colorSelector === 7) {
+                plotColor = 'white';
+              } else if (colorSelector > 2) {
+                plotColor = GREY_SHADES[colorSelector % GREY_SHADES.length];
+              } else {
+                plotColor = 'black';
+              }
+            } else {
+              lineweight = STANDARD_WEIGHTS[i % STANDARD_WEIGHTS.length];
+              plotColor = i % 7 === 0 ? 'white' : 'black';
+            }
+
+            const cleanWeight = isNaN(lineweight) || lineweight < 0 ? 0.10 : Number(lineweight.toFixed(2));
+            const formattedWeight = cleanWeight.toFixed(2) + ' mm';
+            const screenHex = getAciColor(i);
+            const textColor = ['2', '4', '7', '9'].includes(String(i % 10)) ? '#000000' : '#FFFFFF';
+
+            activeCtbRows.push({
+              index: i,
+              screenHex: screenHex,
+              textColor: textColor,
+              description: i === 1 || i === 3 || i === 6 || i === 21 ? 'Standard Plot Style' : '',
+              plotColor: plotColor,
+              weight: formattedWeight,
+              weightVal: cleanWeight
+            });
+          }
+
+          document.getElementById('ctb-file-title').textContent = `${file.name} / Loaded & Verified`;
+          viewerContainer.classList.remove('hidden');
+          renderCtbTable(activeCtbRows);
+
+        } catch (err) {
+          alert("Error parsing CTB file: " + err.message);
+          viewerContainer.classList.add('hidden');
+        }
+
         e.target.value = '';
       });
 
@@ -1993,7 +2018,7 @@
 
       function exportToPenFile() {
         if (!activeCtbRows || activeCtbRows.length === 0) {
-          alert("Please upload and parse a .ctb file first.");
+          alert("Please upload and parse a valid .ctb file first.");
           return;
         }
 
@@ -2032,7 +2057,7 @@
 
       function exportToTblFile() {
         if (!activeCtbRows || activeCtbRows.length === 0) {
-          alert("Please upload and parse a .ctb file first.");
+          alert("Please upload and parse a valid .ctb file first.");
           return;
         }
 
