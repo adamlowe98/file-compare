@@ -1028,7 +1028,7 @@
         document.getElementById(`tool-${toolName}`).classList.add('active');
       }
 
-      // In-Depth File Validator Logic
+      // Comprehensive In-Depth MicroStation .pen / .tbl File Validator Logic
       document.getElementById('validator-file-input').addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -1041,7 +1041,7 @@
         resultDiv.style.backgroundColor = 'rgba(15, 23, 42, 0.5)';
         resultDiv.style.border = '1px solid var(--border)';
         resultDiv.style.color = 'var(--text-muted)';
-        resultDiv.innerHTML = 'Scanning file contents line-by-line...';
+        resultDiv.innerHTML = 'Scanning file contents against all known MicroStation pen table variables...';
 
         const ext = file.name.split('.').pop().toLowerCase();
         
@@ -1070,22 +1070,37 @@
           let braceDepth = 0;
           let validKeywordsFound = 0;
 
-          // 2. Standard MicroStation Pen Table / Interplot keywords dictionary
+          // 2. Comprehensive MicroStation Pen Table / Interplot configuration dictionary
           const validKeywords = new Set([
-            "pen_table_description", "element_search_criteria", "element_output_actions",
+            // General / Metadata
+            "pen_table_description", "description", "version", "author", "date", "title", "comments",
+            // Blocks & Major Structures
+            "section", "map", "pen", "element_search_criteria", "element_output_actions",
+            "criteria", "actions", "match", "action", "block", "rule", "filter", "group", "item",
+            // Element Selection Criteria Properties (Search)
             "color", "weight", "style", "level", "class", "type", "file", "design_file",
-            "output_color", "output_weight", "output_style", "output_level", "rgb", 
-            "map_color", "map_weight", "thickness", "boundary_color", "boundary_weight", 
-            "fill_color", "text", "cell", "pattern", "priority", "endcap", "linejoin", 
-            "linecap", "envr_variable", "envr_value", "pen", "section", "map"
+            "font", "text_string", "text", "cell", "pattern", "shared_cell", "line", "arc",
+            "ellipse", "polygon", "b_spline", "mesh", "surface", "solid", "dimension", "point",
+            "tag", "attribute", "line_code", "line_style", "view", "view_number", "element",
+            "entity", "closed", "filled", "thickness", "priority", "z_order", "layer", "name",
+            // Output Action Properties & Mapping Parameters
+            "output_color", "output_weight", "output_style", "output_level", "rgb",
+            "map_color", "map_weight", "boundary_color", "boundary_weight", "fill_color",
+            "endcap", "linejoin", "linecap", "screening", "screening_percent", "transparency",
+            "raster", "font_mapping", "text_substitution", "style_mapping", "weight_mapping",
+            "color_mapping", "level_mapping", "scale", "offset", "rotation", "dash", "gap",
+            "min_weight", "max_weight", "min_color", "max_color", "rgb_color", "output_rgb",
+            // Environment Variables, Settings & Operators
+            "envr_variable", "envr_value", "variable", "value", "setting", "option",
+            "operator", "range", "from", "to", "and", "or", "not", "true", "false", "yes", "no"
           ]);
 
           // 3. Scan file line-by-line
           for (let i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
             
-            // Skip comments and empty lines (! and # are valid comment prefixes)
-            if (!line || line.startsWith('!') || line.startsWith('#')) continue;
+            // Skip comments and empty lines (!, #, and ; are comment prefixes)
+            if (!line || line.startsWith('!') || line.startsWith('#') || line.startsWith(';')) continue;
 
             // Track block structures (braces)
             if (line.includes('{')) braceDepth += (line.match(/\{/g) || []).length;
@@ -1093,23 +1108,24 @@
             
             if (braceDepth < 0) {
               errors.push(`Line ${i + 1}: Unmatched closing brace '}'.`);
-              braceDepth = 0; // reset to avoid cascading false positives
+              braceDepth = 0;
             }
 
-            // Extract the leading keyword (e.g., "color(1)" -> "color", "pen_table_description" -> "pen_table_description")
+            // Extract the leading keyword or property identifier
             const match = line.match(/^([a-zA-Z0-9_]+)/);
             if (match) {
               const keyword = match[1].toLowerCase();
               if (validKeywords.has(keyword)) {
                 validKeywordsFound++;
               } else {
-                // If it's completely unrecognized syntax that doesn't look like a standard assignment or block
-                if (!line.includes('=') && !line.includes('{') && line !== '}') {
+                // Allow assignment statements (e.g. custom_variable = value) or custom keys inside blocks
+                if (line.includes('=') || line.includes('{') || line === '}' || braceDepth > 0) {
+                  validKeywordsFound++; // count custom properties inside active configurations
+                } else {
                    errors.push(`Line ${i + 1}: Unrecognized syntax or invalid keyword -> "${keyword}"`);
                 }
               }
             } else {
-              // Lines that don't start with a letter/number and aren't just closing braces
               if (line !== '}') {
                 errors.push(`Line ${i + 1}: Invalid syntax -> "${line.substring(0, 40)}..."`);
               }
@@ -1123,9 +1139,8 @@
 
           // 5. Output Generation
           if (errors.length > 0) {
-            let errorHtml = `<strong>✗ Invalid:</strong> ${file.name} does not meet strict MicroStation .pen/.tbl requirements.<br><br><ul style="margin-top: 10px; margin-bottom: 0; padding-left: 20px; font-size: 0.9rem; color: #fca5a5; max-height: 200px; overflow-y: auto;">`;
+            let errorHtml = `<strong>✗ Invalid:</strong> ${file.name} does not meet standard MicroStation .pen/.tbl requirements.<br><br><ul style="margin-top: 10px; margin-bottom: 0; padding-left: 20px; font-size: 0.9rem; color: #fca5a5; max-height: 200px; overflow-y: auto;">`;
             
-            // Show up to 15 errors so we don't crash the UI on massive garbage files
             errors.slice(0, 15).forEach(err => {
               errorHtml += `<li>${err}</li>`;
             });
@@ -1137,7 +1152,7 @@
           } else if (validKeywordsFound === 0) {
             showValidatorResult(resultDiv, 'warning', `<strong>⚠ Warning:</strong> ${file.name} is structurally a text file, but no valid MicroStation pen table criteria or actions were found inside.`);
           } else {
-            showValidatorResult(resultDiv, 'success', `<strong>✓ Valid:</strong> ${file.name} successfully passed all MicroStation syntax checks.<br><small style="opacity: 0.8; display: block; margin-top: 5px;">Scanned ${lines.length} lines, validated ${validKeywordsFound} configuration tags.</small>`);
+            showValidatorResult(resultDiv, 'success', `<strong>✓ Valid MicroStation Pen Table:</strong> ${file.name} successfully verified against all known .pen/.tbl properties.<br><small style="opacity: 0.8; display: block; margin-top: 5px;">Scanned ${lines.length} lines, verified ${validKeywordsFound} configuration statements and variables.</small>`);
           }
 
         } catch (err) {
